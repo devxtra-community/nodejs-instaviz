@@ -21,7 +21,7 @@ const connection = async () => {
 app.use("/upload", uploadRouter)
 
 //routing
-app.use
+
 
 
 //listening 
