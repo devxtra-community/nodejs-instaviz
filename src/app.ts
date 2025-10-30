@@ -2,19 +2,29 @@ import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
 import mongoose from 'mongoose'
+import uploadRouter from './routes/route.js'
+
 const app = express()
+
+
+//database connection
 const connection = async () => {
     try {
         await mongoose.connect(process.env.mongo_uri!);
-        console.log("Mongoose connected")
+        console.log("Mongoose connected");
     }
     catch (err) {
         console.log(err)
     }
 }
-app.use("/", (req, res) => {
-    res.send("HELLO ")
-})
+//middleware
+app.use("/upload", uploadRouter)
+
+//routing
+app.use
+
+
+//listening 
 app.listen(4000, () => {
     connection()
     console.log(`http://localhost:4000`)
