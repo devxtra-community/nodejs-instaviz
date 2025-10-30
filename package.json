@@ -1,35 +1,28 @@
 {
-  "name": "nodejs-instaviz",
+  "name": "config2",
   "version": "1.0.0",
-  "description": "��#\u0000 \u0000n\u0000o\u0000d\u0000e\u0000j\u0000s\u0000-\u0000i\u0000n\u0000s\u0000t\u0000a\u0000v\u0000i\u0000z\u0000\r\u0000 \u0000",
+  "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only App.ts"
+    "dev": "nodemon --watch src --ext ts --exec \"npx tsx  src/app.ts\"",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/devxtra-community/nodejs-instaviz.git"
-  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/devxtra-community/nodejs-instaviz/issues"
-  },
-  "homepage": "https://github.com/devxtra-community/nodejs-instaviz#readme",
   "dependencies": {
-    "cors": "^2.8.5",
+    "@types/express": "^5.0.3",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "mongoose": "^8.19.2",
-    "nodemon": "^3.1.10"
+    "mongoose": "^8.19.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/node": "^24.9.2",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^24.8.1",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }
 }

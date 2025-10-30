@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
 import mongoose from 'mongoose'
+import uploadRouter from './routes/route.js'
+
 const app = express()
 
 
@@ -9,18 +11,14 @@ const app = express()
 const connection = async () => {
     try {
         await mongoose.connect(process.env.mongo_uri!);
-        console.log("Mongoose connected")
+        console.log("Mongoose connected");
     }
     catch (err) {
         console.log(err)
     }
 }
-
-
 //middleware
-app.use("/", (req, res) => {
-    res.send("HELLO ")
-})
+app.use("/upload", uploadRouter)
 
 //routing
 app.use
