@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
 import mongoose from 'mongoose'
-import uploadRouter from './routes/route.js'
+import uploadRouter from './routes/uploadRouter.ts'
 
 const app = express()
 
@@ -19,9 +19,10 @@ const connection = async () => {
 }
 //middleware
 app.use("/upload", uploadRouter)
+app.use("/user", uploadRouter)
 
 //routing
-app.use
+// app.use
 
 
 //listening 
