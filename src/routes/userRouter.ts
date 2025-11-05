@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginCheck } from "../controller/UserController.ts";
+import { loginCheck } from "../controllers/UserController.js";
 
 const userRouter = Router();
 userRouter.get('/login', loginCheck);

@@ -1,32 +1,45 @@
-import express from 'express';
-import dotenv from 'dotenv'
-dotenv.config()
-import mongoose from 'mongoose'
-import uploadRouter from './routes/uploadRouter.ts'
+import express, { Request, Response } from 'express';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import uploadRouter from './routes/uploadRouter.js';
+import paymentRouter from './routes/paymentRoutes.js';
 
-const app = express()
+dotenv.config();
+const app = express();
 
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.mongo_uri!);
+    console.log("✅ MongoDB Connected");
+  } catch (err) {
+    console.error("❌ MongoDB Error:", err);
+  }
+};
 
-//database connection
-const connection = async () => {
-    try {
-        await mongoose.connect(process.env.mongo_uri!);
-        console.log("Mongoose connected");
-    }
-    catch (err) {
-        console.log(err)
-    }
-}
-//middleware
-app.use("/upload", uploadRouter)
-app.use("/user", uploadRouter)
+// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
-//routing
-// app.use
+app.use((req, res, next) => {
+  if (req.originalUrl === "/payment/webhook") {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
+// Routes
+app.use("/upload", uploadRouter);
+app.use("/user", uploadRouter);
+app.use("/payment", paymentRouter); 
 
-//listening 
-app.listen(4000, () => {
-    connection()
-    console.log(`http://localhost:4000`)
-})
+// Start Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  connectDB();
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
