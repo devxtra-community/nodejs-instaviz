@@ -1,6 +1,7 @@
 import type { Request, Response } from "express"
 import otpModel from "../../model/otpModel.ts";
 import Joi from "joi";
+import userModel from "../../model/user.ts";
 
 
 
@@ -68,7 +69,12 @@ export const verifyOtp = async(req:Request,res:Response) =>{
         if(!optData==otp){
             return res.status(400).json({message:"Invalid otp"})
         }
-        
+        const createUser = await userModel.insertOne({"userusestates"})
+
+          return res.status(200).json({
+            success: true,
+            message: "Registration completed successfully",
+            })
 
 
 
