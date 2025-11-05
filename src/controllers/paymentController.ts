@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { stripe } from "../config/stripe.js";
-import { CheckoutRequestBody } from "../types/paymentTypes.js";
+import { stripe } from "../config/stripe.ts";
+import { CheckoutRequestBody } from "../types/paymentTypes.ts";
 
 const priceMap: Record<string, number> = {
   Starter: 15,
