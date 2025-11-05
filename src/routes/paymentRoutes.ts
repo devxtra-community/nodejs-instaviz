@@ -9,4 +9,4 @@ router.post("/create-checkout-session", createCheckoutSession);
 // Stripe Webhook
 router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
 
-export default router;
+export default router;  

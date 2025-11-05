@@ -23,13 +23,13 @@ export const createCheckoutSession = async (
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      mode: "subscription", // or 'payment'
+      mode: "payment",
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: { name: `${plan} Plan` },
-            unit_amount: priceMap[plan] * 100, // cents
+            unit_amount: priceMap[plan] * 100,
           },
           quantity: 1,
         },
@@ -40,9 +40,12 @@ export const createCheckoutSession = async (
 
     res.status(200).json({ url: session.url });
   } catch (error: any) {
-    console.error("Stripe Error:", error.message);
-    res.status(500).json({ error: "Something went wrong creating session" });
+    console.error("🔥 Stripe Error (createCheckoutSession):", error);
+    res.status(500).json({
+      error: error.message || "Something went wrong creating session",
+    });
   }
+
 };
 
 export const handleWebhook = async (req: Request, res: Response): Promise<void> => {
@@ -63,8 +66,7 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
-    console.log("✅ Payment successful:", session);
-    // TODO: Save to DB
+    console.log("Payment successful:", session);
   }
 
   res.json({ received: true });
