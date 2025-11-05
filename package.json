@@ -25,6 +25,7 @@
   "devDependencies": {
     "@types/mongoose": "^5.11.96",
     "@types/node": "^24.8.1",
+    "@types/nodemailer": "^7.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
