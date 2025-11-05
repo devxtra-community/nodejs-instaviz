@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import uploadRouter from './routes/uploadRouter.js';
-import paymentRouter from './routes/paymentRoutes.js';
+import uploadRouter from './routes/uploadRouter.ts';
+import paymentRouter from './routes/paymentRoutes.ts';
 
 dotenv.config();
 const app = express();
@@ -36,9 +36,7 @@ app.use("/upload", uploadRouter);
 app.use("/user", uploadRouter);
 app.use("/payment", paymentRouter); 
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(process.env.PORT,() => {
   connectDB();
-  console.log(`server started at: http://localhost:${PORT}`);
+  console.log(` Server running on : http://localhost:${process.env.PORT}`);
 });
