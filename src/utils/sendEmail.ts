@@ -1,13 +1,16 @@
+import { log } from 'console'
 import nodemailer from 'nodemailer'
 export const sendOtp = async(email:string,otp:number) =>{
+    console.log("reached here at send otp");
+    
     try{
         let sendMail = nodemailer.createTransport({
         service:"gmail",
         auth:{
-            user:"shanu.work.org@gmail.com",
-            pass:".,/$#@nu.,/$#@nu"
+            user:process.env.EMAIL,
+            pass:process.env.EMAIL_PASS
         }
-    }) 
+    })  
 
     const info = await sendMail.sendMail({
         from:"shanuvr.work.org@gmail.com",
