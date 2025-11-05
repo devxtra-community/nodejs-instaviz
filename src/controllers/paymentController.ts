@@ -7,8 +7,6 @@ const priceMap: Record<string, number> = {
   Pro: 29,
   Enterprise: 59,
 };
-
-// ✅ Create Stripe Checkout Session
 export const createCheckoutSession = async (
   req: Request<{}, {}, CheckoutRequestBody>,
   res: Response
@@ -23,13 +21,13 @@ export const createCheckoutSession = async (
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      mode: "subscription", // or 'payment'
+      mode: "subscription",
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: { name: `${plan} Plan` },
-            unit_amount: priceMap[plan] * 100, // cents
+            unit_amount: priceMap[plan] * 100, 
           },
           quantity: 1,
         },
@@ -64,7 +62,6 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
     console.log("✅ Payment successful:", session);
-    // TODO: Save to DB
   }
 
   res.json({ received: true });

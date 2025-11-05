@@ -11,16 +11,15 @@ const app = express();
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.mongo_uri!);
-    console.log("✅ MongoDB Connected");
+    console.log(" MongoDB Connected successfully");
   } catch (err) {
-    console.error("❌ MongoDB Error:", err);
+    console.error(" MongoDB Error occured:", err);
   }
 };
 
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL,
-  methods: ["GET", "POST"],
   credentials: true
 }));
 
@@ -41,5 +40,5 @@ app.use("/payment", paymentRouter);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   connectDB();
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`server started at: http://localhost:${PORT}`);
 });
