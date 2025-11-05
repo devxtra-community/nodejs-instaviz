@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { fileupload } from '../controller/uploadController.ts'
+import { fileupload } from '../controllers/uploadController.js'
 
 const uploadRouter = Router()
 uploadRouter.get("/fileupload", fileupload);
