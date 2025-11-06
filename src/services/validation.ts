@@ -1,7 +1,6 @@
 import Joi from "joi";
 export const theValidation = Joi.object({
-      firstName: Joi.string().min(3).max(20).required(),
-      lastName: Joi.string().min(3).max(20).required(),
+      name: Joi.string().min(3).max(20).required(),
       email: Joi.string().email().required(),
       password: Joi.string()
         .pattern(

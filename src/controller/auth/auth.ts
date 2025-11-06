@@ -22,7 +22,7 @@ export const loginCheck = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
     
     const { error } = theValidation.validate(req.body, { abortEarly: false });
 
@@ -63,9 +63,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
     if (!optData.otp == otp) {
       return res.status(400).json({ message: "Invalid otp" });
     }
-    const fullName = `${firstName} ${lastName}`
+    
     const hashedPassword = await bcrypt.hash(password, 10)
-    const createUser = await userModel.insertOne({ name: fullName, email, password: hashedPassword });
+    const createUser = await userModel.insertOne({ name:name, email, password: hashedPassword });
 
     return res.status(200).json({
       success: true,
