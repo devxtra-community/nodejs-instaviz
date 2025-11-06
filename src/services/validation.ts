@@ -1,6 +1,7 @@
-import Joi from "joi";
+import Joi from "../../node_modules/joi/lib/index";
 export const theValidation = Joi.object({
-      name: Joi.string().min(3).max(20).required(),
+      firstName: Joi.string().min(3).max(20).required(),
+      lastName: Joi.string().min(3).max(20).required(),
       email: Joi.string().email().required(),
       password: Joi.string()
         .pattern(

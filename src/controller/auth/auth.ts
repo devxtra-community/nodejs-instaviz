@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt"
 import otpModel from "../../model/otpModel.ts";
-import Joi from "joi";
+import Joi from "../../../node_modules/joi/lib/index";
 import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
@@ -55,7 +55,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, password, otp } = req.body;
+    const { name, email, password, otp } = req.body;
     const optData = await otpModel.findOne({ email });
     if (!optData) {
       return res.status(400).json({ message: "otp not found" });
