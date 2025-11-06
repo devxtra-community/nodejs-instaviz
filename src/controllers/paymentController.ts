@@ -8,7 +8,6 @@ const priceMap: Record<string, number> = {
   Enterprise: 59,
 };
 
-// ✅ Create Stripe Checkout Session
 export const createCheckoutSession = async (
   req: Request<{}, {}, CheckoutRequestBody>,
   res: Response
@@ -40,7 +39,7 @@ export const createCheckoutSession = async (
 
     res.status(200).json({ url: session.url });
   } catch (error: any) {
-    console.error("🔥 Stripe Error (createCheckoutSession):", error);
+    console.error("Stripe Error (createCheckoutSession):", error);
     res.status(500).json({
       error: error.message || "Something went wrong creating session",
     });
