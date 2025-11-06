@@ -103,13 +103,14 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 // google authentication
 
-export const googleCallback = (req: Request, res: Response) => {
-  const user = req.user as User;
+  export const googleCallback = (req: Request, res: Response) => {
+    const user = req.user as User;
 
-  const token = signJwt({
-    id: user.googleId,
-    email: user.email
-  });
-  res.json({ message: "Google login successfull", token, user })
-};
+    const token = signJwt({
+      id: user.googleId,
+      email: user.email
+    });
+    const frontendURL = "http://localhost:3000"; 
+    res.redirect(`${frontendURL}/auth/callback?token=${token}`);
+  };
 
