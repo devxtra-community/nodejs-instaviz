@@ -28,7 +28,6 @@ const connection = async () => {
 
 app.use(cors({
   origin: process.env.CLIENT_URL,
-  methods: ["GET", "POST"],
   credentials: true
 }));
 
