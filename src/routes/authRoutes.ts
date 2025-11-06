@@ -2,9 +2,9 @@ import passport from "passport";
 import { Router } from "express";
 import { googleCallback } from "../controller/auth/auth.ts";
 
-const router = Router();
+const googleRouter = Router();
 
-router.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
-router.get('/google/callback', passport.authenticate("google", { session: false }), googleCallback);
+googleRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
+googleRouter.get('/google/callback', passport.authenticate("google", { session: false }), googleCallback);
 
-export default router;
+export default googleRouter;
