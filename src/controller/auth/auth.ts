@@ -6,6 +6,10 @@ import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
 
+// google authentication
+import { signJwt } from "../../services/jwtServices.ts";
+import type { User } from "../../model/user.ts";
+
 export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -51,7 +55,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const {firstName, lastName, email, password, otp } = req.body;
+    const { firstName, lastName, email, password, otp } = req.body;
     const optData = await otpModel.findOne({ email });
     if (!optData) {
       return res.status(400).json({ message: "otp not found" });
@@ -60,8 +64,8 @@ export const verifyOtp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid otp" });
     }
     const fullName = `${firstName} ${lastName}`
-    const hashedPassword = await bcrypt.hash(password,10)
-    const createUser = await userModel.insertOne({name:fullName,email, password:hashedPassword});
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const createUser = await userModel.insertOne({ name: fullName, email, password: hashedPassword });
 
     return res.status(200).json({
       success: true,
@@ -72,3 +76,17 @@ export const verifyOtp = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server errror" });
   }
 };
+
+
+// google authentication
+
+export const googleCallback = (req: Request, res: Response) => {
+  const user = req.user as User;
+
+  const token = signJwt({
+    id: user.googleId,
+    email: user.email
+  });
+  res.json({ message: "Google login successfull", token, user })
+};
+
