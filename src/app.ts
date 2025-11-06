@@ -1,23 +1,31 @@
-import express, { Request, Response } from 'express';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import express from 'express';
+import dotenv from 'dotenv'
+dotenv.config()
+import mongoose from 'mongoose'
 import cors from 'cors';
-import uploadRouter from './routes/uploadRouter.js';
+import passport from './config/passport.ts';
+import googleRouter from './routes/authRoutes.ts';
+import uploadRouter from './routes/uploadRouter.ts'
+import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 
-dotenv.config();
-const app = express();
+const app = express()
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(passport.initialize())
 
-const connectDB = async () => {
+
+//database connection
+const connection = async () => {
   try {
     await mongoose.connect(process.env.mongo_uri!);
-    console.log("✅ MongoDB Connected");
-  } catch (err) {
-    console.error("❌ MongoDB Error:", err);
+    console.log("Mongoose connected");
   }
-};
+  catch (err) {
+    console.log(err)
+  }
+}
 
-// Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL,
   methods: ["GET", "POST"],
@@ -32,12 +40,16 @@ app.use((req, res, next) => {
   }
 });
 
-// Routes
-app.use("/upload", uploadRouter);
-app.use("/user", uploadRouter);
-app.use("/payment", paymentRouter); 
+//middleware
+app.use("/upload", uploadRouter)
+app.use("/user", userRouter)
+app.use("/auth", googleRouter)
 
+//routing
+// app.use
+
+//listening 
 app.listen(process.env.PORT,() => {
-  connectDB();
+  connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
