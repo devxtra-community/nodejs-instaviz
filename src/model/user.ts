@@ -5,7 +5,8 @@ enum Status {
     Disabled = "disabled"
 };
 
-interface User {
+export interface User {
+    googleId: number
     name: string,
     email: string,
     password: string,
@@ -15,7 +16,9 @@ interface User {
 };
 
 const userSchema = new Schema<User>({
-
+    googleId: {
+        type: Number, required: true
+    },
     name: {
         type: String, required: true
     },
