@@ -26,13 +26,45 @@ const connection = async () => {
 app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use('/auth', router)
+import express, { Request, Response } from 'express';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import uploadRouter from './routes/uploadRouter.ts';
+import paymentRouter from './routes/paymentRoutes.ts';
 
-//routing
-// app.use
+dotenv.config();
+const app = express();
 
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.mongo_uri!);
+    console.log(" MongoDB Connected successfully");
+  } catch (err) {
+    console.error(" MongoDB Error occured:", err);
+  }
+};
 
-//listening 
-app.listen(4000, () => {
-    connection()
-    console.log(`http://localhost:4000`)
-})
+// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true
+}));
+
+app.use((req, res, next) => {
+  if (req.originalUrl === "/payment/webhook") {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
+
+// Routes
+app.use("/upload", uploadRouter);
+app.use("/user", uploadRouter);
+app.use("/payment", paymentRouter); 
+
+app.listen(process.env.PORT,() => {
+  connectDB();
+  console.log(` Server running on : http://localhost:${process.env.PORT}`);
+});
