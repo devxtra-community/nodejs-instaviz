@@ -11,9 +11,9 @@ const app = express();
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.mongo_uri!);
-    console.log("✅ MongoDB Connected");
+    console.log(" MongoDB Connected");
   } catch (err) {
-    console.error("❌ MongoDB Error:", err);
+    console.error(" MongoDB Error:", err);
   }
 };
 
