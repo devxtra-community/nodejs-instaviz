@@ -4,6 +4,7 @@ import otpModel from "../../model/otpModel.ts";
 import Joi from "joi";
 import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
+import { theValidation } from "../../services/validation.ts";
 
 export const loginCheck = async (req: Request, res: Response) => {
   try {
@@ -18,31 +19,7 @@ export const loginCheck = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
-    const theValidation = Joi.object({
-      firstName: Joi.string().min(3).max(20).required(),
-      lastName: Joi.string().min(3).max(20).required(),
-      email: Joi.string().email().required(),
-      password: Joi.string()
-        .pattern(
-          new RegExp(
-            "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$"
-          )
-        )
-        .min(8)
-        .messages({
-          "string.pattern.base":
-            "Password must contain letters, numbers, and symbols",
-          "string.min": "Password must be at least 8 characters",
-        }),
-      confirmPassword: Joi.string()
-        .valid(Joi.ref("password"))
-        .required()
-        .messages({
-          "any.only": "Password and Confirm Password must match",
-          "any.required": "Confirm Password is required",
-        }),
-    });
-
+    
     const { error } = theValidation.validate(req.body, { abortEarly: false });
 
     if (error) {

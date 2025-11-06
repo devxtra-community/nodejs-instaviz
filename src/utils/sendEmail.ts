@@ -1,4 +1,3 @@
-import { log } from 'console'
 import nodemailer from 'nodemailer'
 export const sendOtp = async(email:string,otp:number) =>{
     console.log("reached here at send otp");
