@@ -17,7 +17,7 @@ export interface User {
 
 const userSchema = new Schema<User>({
     googleId: {
-        type: Number, required: true
+        type: Number, required: false
     },
     name: {
         type: String, required: true
