@@ -1,7 +1,10 @@
 import { Router } from "express";
-import { loginCheck } from "../controller/UserController.ts";
+import { register,loginCheck,verifyOtp } from "../controller/auth/auth.ts";
+
 
 const userRouter = Router();
-userRouter.get('/login', loginCheck);
+userRouter.post('/login', loginCheck);
+userRouter.post("/register",register);
+userRouter.post("/verifyOtp",verifyOtp);
 
 export default userRouter;
