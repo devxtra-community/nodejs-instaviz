@@ -20,7 +20,6 @@ const connectDB = async () => {
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL,
-  methods: ["GET", "POST"],
   credentials: true
 }));
 
