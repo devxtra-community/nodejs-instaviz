@@ -1,10 +1,12 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt"
 import otpModel from "../../model/otpModel.ts";
-import Joi from "../../../node_modules/joi/lib/index";
+import Joi, { number } from "../../../node_modules/joi/lib/index";
 import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
+import { generateOtp } from "../../utils/otpGenerate.ts";
+
 
 // google authentication
 import { signJwt } from "../../services/jwtServices.ts";
@@ -21,6 +23,7 @@ export const loginCheck = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
+  
   try {
     const { name, email, password, confirmPassword } = req.body;
     
@@ -40,13 +43,17 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "user already exists" });
     }
 
-    const otp = Math.floor(Math.random() * 900000);
+    const otp = generateOtp();
+    console.log(otp);
+    
 
-    const createOtpDoc = await otpModel.create({ email, otp });
+
+    const createOtpDoc = await otpModel.create({name,password, email, otp });
 
     await sendOtp(email, otp);
 
-    res.status(200).json({ message: "plz verify the otp to continue" });
+
+    res.status(200).json({ message: "plz verify the otp to continue",otp:true });
   } catch (err) {
     console.error("Register Error", err);
     res.status(500).json({ message: "someting went wrong", success: false });
@@ -54,23 +61,49 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const verifyOtp = async (req: Request, res: Response) => {
+  console.log("reached here at verify otp");   
   try {
-    const { name, email, password, otp } = req.body;
-    const optData = await otpModel.findOne({ email });
-    if (!optData) {
+   const {email} = req.query;
+   const {otp} = req.body;
+   console.log(`${email},${otp}`)
+    const otpData = await otpModel.findOne({ email });
+    console.log("before logging otp data");
+    
+    console.log(otpData);
+    
+    console.log("after loging otp data");
+    
+    
+    if (!otpData) {
+      console.log("no otp data");
+      
       return res.status(400).json({ message: "otp not found" });
     }
-    if (!optData.otp == otp) {
+    if (otpData.otp.toString() !== otp.toString()) {
+      console.log("otp mismatch");
+      
       return res.status(400).json({ message: "Invalid otp" });
     }
     
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const createUser = await userModel.insertOne({ name:name, email, password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(otpData.password, 10)
+    console.log("after hashed pass");
+    
+    const createUser = await userModel.create({ name:otpData.name, email:otpData.email, password: hashedPassword });
+    console.log("after create user");
+    
+    console.log(createUser);
+
+    console.log("after loging create logging");
+
+    await otpModel.deleteOne({ email });
+    
+    
 
     return res.status(200).json({
       success: true,
       message: "Registration completed successfully",
     });
+
   } catch (err) {
     console.log("veryfyotp catch woerked", err);
     res.status(500).json({ message: "Internal server errror" });

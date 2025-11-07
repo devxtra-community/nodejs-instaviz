@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-export const sendOtp = async(email:string,otp:number) =>{
+export const sendOtp = async(email:string,otp:string) =>{
     console.log("reached here at send otp");
     
     try{
