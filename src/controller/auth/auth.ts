@@ -21,6 +21,7 @@ export const loginCheck = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
+  
   try {
     const { name, email, password, confirmPassword } = req.body;
     
@@ -42,11 +43,14 @@ export const register = async (req: Request, res: Response) => {
 
     const otp = Math.floor(Math.random() * 900000);
 
-    const createOtpDoc = await otpModel.create({ email, otp });
+    const hashedPass = await bcrypt.hash(password,10)
+
+    const createOtpDoc = await otpModel.create({name,password, email, otp });
 
     await sendOtp(email, otp);
 
-    res.status(200).json({ message: "plz verify the otp to continue" });
+
+    res.status(200).json({ message: "plz verify the otp to continue",otp:true });
   } catch (err) {
     console.error("Register Error", err);
     res.status(500).json({ message: "someting went wrong", success: false });
@@ -54,18 +58,29 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const verifyOtp = async (req: Request, res: Response) => {
+  console.log("reached here at verify otp");   
   try {
-    const { name, email, password, otp } = req.body;
-    const optData = await otpModel.findOne({ email });
-    if (!optData) {
+   const {email} = req.query;
+   const {otp} = req.body;
+   console.log(`${email},${otp}`)
+    const otpData = await otpModel.findOne({ email });
+    console.log(otpData);
+    
+    if (!otpData) {
+      console.log("no otp data");
+      
       return res.status(400).json({ message: "otp not found" });
     }
-    if (!optData.otp == otp) {
+    if (otpData.otp.toString() !== otp.toString()) {
+      console.log("otp mismatch");
+      
       return res.status(400).json({ message: "Invalid otp" });
     }
     
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const createUser = await userModel.insertOne({ name:name, email, password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(otpData.password, 10)
+    const createUser = await userModel.create({ name:otpData.name, email:otpData.email, password: hashedPassword });
+    console.log("after createuser");
+    
 
     return res.status(200).json({
       success: true,
