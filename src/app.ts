@@ -2,10 +2,12 @@ import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
 import mongoose from 'mongoose'
+import cors from 'cors';
 import passport from './config/passport.ts';
 import googleRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
+import paymentRouter from './routes/paymentRoutes.js';
 
 const app = express()
 app.use(express.json())
@@ -23,16 +25,25 @@ const connection = async () => {
     console.log(err)
   }
 }
+
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true
+}));
+
+app.use("/payment/webhook", express.raw({ type: "application/json" }));
+
 //middleware
 app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", googleRouter)
+app.use("/payment",paymentRouter)
 
 //routing
 // app.use
 
 //listening 
-app.listen(4000, () => {
-  connection()
-  console.log(`http://localhost:4000`)
-})
+app.listen(process.env.PORT,() => {
+  connection();
+  console.log(` Server running on http://localhost:${process.env.PORT}`);
+});
