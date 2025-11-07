@@ -8,7 +8,6 @@ const priceMap: Record<string, number> = {
   Enterprise: 59,
 };
 
-// ✅ Create Stripe Checkout Session
 export const createCheckoutSession = async (
   req: Request<{}, {}, CheckoutRequestBody>,
   res: Response
