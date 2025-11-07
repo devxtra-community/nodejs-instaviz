@@ -1,10 +1,12 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt"
 import otpModel from "../../model/otpModel.ts";
-import Joi from "../../../node_modules/joi/lib/index";
+import Joi, { number } from "../../../node_modules/joi/lib/index";
 import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
+import { generateOtp } from "../../utils/otpGenerate.ts";
+
 
 // google authentication
 import { signJwt } from "../../services/jwtServices.ts";
@@ -41,9 +43,10 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "user already exists" });
     }
 
-    const otp = Math.floor(Math.random() * 900000);
+    const otp = generateOtp();
+    console.log(otp);
+    
 
-    const hashedPass = await bcrypt.hash(password,10)
 
     const createOtpDoc = await otpModel.create({name,password, email, otp });
 
@@ -64,7 +67,12 @@ export const verifyOtp = async (req: Request, res: Response) => {
    const {otp} = req.body;
    console.log(`${email},${otp}`)
     const otpData = await otpModel.findOne({ email });
+    console.log("before logging otp data");
+    
     console.log(otpData);
+    
+    console.log("after loging otp data");
+    
     
     if (!otpData) {
       console.log("no otp data");
@@ -78,14 +86,24 @@ export const verifyOtp = async (req: Request, res: Response) => {
     }
     
     const hashedPassword = await bcrypt.hash(otpData.password, 10)
+    console.log("after hashed pass");
+    
     const createUser = await userModel.create({ name:otpData.name, email:otpData.email, password: hashedPassword });
-    console.log("after createuser");
+    console.log("after create user");
+    
+    console.log(createUser);
+
+    console.log("after loging create logging");
+
+    await otpModel.deleteOne({ email });
+    
     
 
     return res.status(200).json({
       success: true,
       message: "Registration completed successfully",
     });
+
   } catch (err) {
     console.log("veryfyotp catch woerked", err);
     res.status(500).json({ message: "Internal server errror" });
