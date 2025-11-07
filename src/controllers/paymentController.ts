@@ -16,7 +16,7 @@ export const createCheckoutSession = async (
     const { plan } = req.body;
 
     if (!priceMap[plan]) {
-      res.status(400).json({ error: "Invalid plan selected" });
+      res.status(400).json({ message: "Invalid plan selected",success:false});
       return;
     }
 
@@ -37,12 +37,10 @@ export const createCheckoutSession = async (
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
     });
 
-    res.status(200).json({ url: session.url });
+    res.status(200).json({ url: session.url ,message:"checkout created",success:true});
   } catch (error: any) {
     console.error("Stripe Error (createCheckoutSession):", error);
-    res.status(500).json({
-      error: error.message || "Something went wrong creating session",
-    });
+    res.status(500).json({message: error.message || "Something went wrong creating session",success:false});
   }
 
 };
@@ -59,7 +57,7 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
     );
   } catch (err: any) {
     console.error("Webhook Error:", err.message);
-    res.status(400).send(`Webhook Error: ${err.message}`);
+    res.status(400).json({message:`Webhook Error: ${err.message}`,success:false});
     return;
   }
 
@@ -68,5 +66,5 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
     console.log("Payment successful:", session);
   }
 
-  res.json({ received: true });
+  res.json({ received: true ,message:"payment received",success:true});
 };
