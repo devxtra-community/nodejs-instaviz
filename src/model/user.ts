@@ -29,7 +29,8 @@ const userSchema = new Schema<User>({
         type: String, required: true
     },
     token: {
-        type: Number
+        type: Number,
+     
     },
     status: {
         type: String,
