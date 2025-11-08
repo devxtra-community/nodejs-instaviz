@@ -24,7 +24,7 @@ export default passport.use(
                         ? `${profile.name.givenName || ""} ${profile.name.familyName || ""}`.trim()
                         : profile.displayName;
 
-                let user = await userModel.findOne({ googleId });
+                let user = await userModel.findOne({ email });
 
                 if (!user) {
                     user = await userModel.create({

@@ -33,7 +33,8 @@ const userSchema = new Schema<User>({
         type: String, required: false
     },
     token: {
-        type: Number
+        type: Number,
+        default: 3
     },
     status: {
         type: String,
