@@ -6,31 +6,35 @@ enum Status {
 };
 
 export interface User {
-    googleId: number
-    name: string,
+    googleId?: number
+    name?: string,
+    picture?: string,
     email: string,
-    password: string,
+    password?: string,
     token: number,
-    status: Status,
-    isDeleted: boolean
+    status?: Status,
+    isDeleted?: boolean
 };
 
 const userSchema = new Schema<User>({
     googleId: {
-        type: Number, required: false
+        type: String, unique: true, sparse: true
     },
     name: {
-        type: String, required: true
+        type: String
+    },
+    picture: {
+        type: String
     },
     email: {
         type: String, required: true
     },
     password: {
-        type: String, required: true
+        type: String, required: false
     },
     token: {
         type: Number,
-     
+        default: 3
     },
     status: {
         type: String,

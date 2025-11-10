@@ -15,16 +15,26 @@ export default passport.use(
         },
         async (_accessToken, _refreshToken, profile: Profile, done) => {
             try {
-                const existingUser = await userModel.findOne({ googleId: profile.id });
-                if (existingUser) {
-                    return done(null, existingUser)
+                const googleId = profile.id;
+                const email = profile.emails?.[0]?.value;
+                const picture = profile.photos?.[0]?.value;
+
+                const displayName =
+                    typeof profile.name === "object"
+                        ? `${profile.name.givenName || ""} ${profile.name.familyName || ""}`.trim()
+                        : profile.displayName;
+
+                let user = await userModel.findOne({ email });
+
+                if (!user) {
+                    user = await userModel.create({
+                        googleId,
+                        email,
+                        name: displayName,
+                        picture,
+                    });
                 }
-                const newUser = await userModel.create({
-                    googleId: profile.id,
-                    name: profile.name,
-                    email: profile.emails?.[0].value,
-                })
-                done(null, newUser)
+                done(null, user)
             }
             catch (err) {
                 done(err, undefined)
