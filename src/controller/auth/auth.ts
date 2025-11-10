@@ -6,19 +6,91 @@ import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
 import { generateOtp } from "../../utils/otpGenerate.ts";
+import  Jwt  from "jsonwebtoken";
+import { loginSchema } from "../../services/validation.ts";
 
 
 // google authentication
 import { signJwt } from "../../services/jwtServices.ts";
 import type { User } from "../../model/user.ts";
+import { json } from "body-parser";
 
 export const loginCheck = async (req: Request, res: Response) => {
+  console.log(" reached here login");
+  console.log(req.body);
+  
+  
   try {
     const { email, password } = req.body;
-    console.log(email, password);
+   if(!email || !password){
+    return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+   }
+    const { error} = loginSchema.validate(req.body,{abortEarly:false})
+    if(error){
+      const details = error.details.map((err)=>err.message)
+      return res.status(400).json({success:false,message:"validation failed"})
+    }
+     
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please register first.",
+      });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const accessToken = signJwt({id:user._id,email:user.email})
+    
+    const refreshToken = Jwt.sign({
+            id:user._id,email:user.email,
+        }, process.env.REFRESH_SECRET!, { expiresIn: '30d' });
+
+
+        res.cookie("refreshToken",refreshToken,
+          {
+            httpOnly:true,
+            secure:false,
+            sameSite:"strict",
+            maxAge:30*24*60*60*1000,
+    
+          }
+        )
+   
+  
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+
+    
+    
+  
   } catch (err) {
-    console.log(err);
-    return;
+    console.log("catch in login worked");
+    
+    console.error("Login error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
@@ -138,3 +210,12 @@ export const googleCallback = (req: Request, res: Response) => {
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
+
+export const testpro = (req:Request,res:Response)=>{
+try{
+  return res.json({message:"reached protecteed route"})
+
+}catch(err){
+ return res.json({message:"error",error:err})
+}
+}

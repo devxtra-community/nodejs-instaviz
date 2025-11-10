@@ -4,6 +4,7 @@ dotenv.config()
 import mongoose from 'mongoose'
 import cors from 'cors';
 import passport from './config/passport.ts';
+import cookieParser from "cookie-parser";
 import googleRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
@@ -13,6 +14,7 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(passport.initialize())
+app.use(cookieParser())
 
 
 //database connection
