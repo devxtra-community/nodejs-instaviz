@@ -5,7 +5,7 @@ import { testpro } from "../controller/auth/auth.ts";
 
 
 const userRouter = Router();
-userRouter.post('/login', loginCheck);
+userRouter.post('/login',loginCheck);
 userRouter.post("/register",register);
 userRouter.post("/verifyOtp",verifyOtp);
 userRouter.get("/test",verifyToken,testpro)

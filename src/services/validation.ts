@@ -22,3 +22,8 @@ export const theValidation = Joi.object({
           "any.required": "Confirm Password is required",
         }),
     });
+
+    export const loginSchema  = Joi.object({
+      name:Joi.string().required().min(3).max(20),
+      password:Joi.string().required().min(8)
+    })

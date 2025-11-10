@@ -7,6 +7,7 @@ import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
 import { generateOtp } from "../../utils/otpGenerate.ts";
 import  Jwt  from "jsonwebtoken";
+import { loginSchema } from "../../services/validation.ts";
 
 
 // google authentication
@@ -16,6 +17,8 @@ import { json } from "body-parser";
 
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
+  console.log(req.body);
+  
   
   try {
     const { email, password } = req.body;
@@ -25,6 +28,11 @@ export const loginCheck = async (req: Request, res: Response) => {
         message: "Email and password are required",
       });
    }
+    const { error} = loginSchema.validate(req.body,{abortEarly:false})
+    if(error){
+      const details = error.details.map((err)=>err.message)
+      return res.status(400).json({success:false,message:"validation failed"})
+    }
      
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -76,6 +84,8 @@ export const loginCheck = async (req: Request, res: Response) => {
     
   
   } catch (err) {
+    console.log("catch in login worked");
+    
     console.error("Login error:", err);
     return res.status(500).json({
       success: false,
