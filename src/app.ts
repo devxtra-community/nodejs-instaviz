@@ -33,18 +33,13 @@ app.use(cors({
   credentials: true
 }));
 
-app.use((req, res, next) => {
-  if (req.originalUrl === "/payment/webhook") {
-    next();
-  } else {
-    express.json()(req, res, next);
-  }
-});
+app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
 app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", googleRouter)
+app.use("/payment",paymentRouter)
 
 //routing
 // app.use
