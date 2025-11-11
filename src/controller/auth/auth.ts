@@ -1,15 +1,13 @@
 import type { Request, Response } from "express";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 import otpModel from "../../model/otpModel.ts";
 import Joi, { number } from "../../../node_modules/joi/lib/index";
 import userModel from "../../model/user.ts";
 import { sendOtp } from "../../utils/sendEmail.ts";
 import { theValidation } from "../../services/validation.ts";
 import { generateOtp } from "../../utils/otpGenerate.ts";
-import  Jwt  from "jsonwebtoken";
+import Jwt from "jsonwebtoken";
 import { loginSchema } from "../../services/validation.ts";
-
-
 
 // google authentication
 import { signJwt } from "../../services/jwtServices.ts";
@@ -19,22 +17,21 @@ import type { User } from "../../model/user.ts";
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
   console.log(req.body);
-  
-  
+
   try {
     const { email, password } = req.body;
-   if(!email || !password){
-    return res.status(400).json({
+    if (!email || !password) {
+      return res.status(400).json({
         success: false,
         message: "Email and password are required",
       });
-   }
-    const { error} = loginSchema.validate(req.body,{abortEarly:false})
-    if(error){
-      const details = error.details.map((err)=>err.message)
-      return res.status(400).json({success:false,message:details})
     }
-     
+    const { error } = loginSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      const details = error.details.map((err) => err.message);
+      return res.status(400).json({ success: false, message: details });
+    }
+
     const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(404).json({
@@ -84,7 +81,7 @@ return res.status(200).json({
   
   } catch (err) {
     console.log("catch in login worked");
-    
+
     console.error("Login error:", err);
     return res.status(500).json({
       success: false,
@@ -93,25 +90,18 @@ return res.status(200).json({
   }
 };
 
-
-
 // dummy bro
 
 export const getAllUser = async (req: Request, res: Response) => {
   try {
     const user = await userModel.find();
-    res.status(200).json({ message: "All users", user })
+    res.status(200).json({ message: "All users", user });
+  } catch (err) {
+    res.status(500).json(err);
   }
-  catch (err) {
-    res.status(500).json(err)
-  }
-} 
-
-
-
+};
 
 export const register = async (req: Request, res: Response) => {
-
   try {
     const { name, email, password, confirmPassword } = req.body;
 
@@ -140,6 +130,10 @@ export const register = async (req: Request, res: Response) => {
 
     await sendOtp(email, otp);
 
+    res
+      .status(200)
+      .json({ message: "plz verify the otp to continue", otp: true });
+
     res.status(200).json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
     console.error("Register Error", err);
@@ -152,14 +146,13 @@ export const verifyOtp = async (req: Request, res: Response) => {
   try {
     const { email } = req.query;
     const { otp } = req.body;
-    console.log(`${email},${otp}`)
+    console.log(`${email},${otp}`);
     const otpData = await otpModel.findOne({ email });
     console.log("before logging otp data");
 
     console.log(otpData);
 
     console.log("after loging otp data");
-
 
     if (!otpData) {
       console.log("no otp data");
@@ -172,10 +165,14 @@ export const verifyOtp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid otp" });
     }
 
-    const hashedPassword = await bcrypt.hash(otpData.password, 10)
+    const hashedPassword = await bcrypt.hash(otpData.password, 10);
     console.log("after hashed pass");
 
-    const createUser = await userModel.create({ name: otpData.name, email: otpData.email, password: hashedPassword });
+    const createUser = await userModel.create({
+      name: otpData.name,
+      email: otpData.email,
+      password: hashedPassword,
+    });
     console.log("after create user");
 
     console.log(createUser);
@@ -203,13 +200,11 @@ export const verifyOtp = async (req: Request, res: Response) => {
       success: true,
       message: "Registration completed successfully",
     });
-
   } catch (err) {
     console.log("veryfyotp catch woerked", err);
     res.status(500).json({ message: "Internal server errror" });
   }
 };
-
 
 // google authentication
 
@@ -218,18 +213,16 @@ export const googleCallback = (req: Request, res: Response) => {
 
   const token = signJwt({
     id: user.googleId,
-    email: user.email
+    email: user.email,
   });
   const frontendURL = "http://localhost:3000";
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
-
-export const testpro = (req:Request,res:Response)=>{
-try{
-  return res.json({message:"reached protecteed route"})
-
-}catch(err){
- return res.json({message:"error",error:err})
-}
-}
+export const testpro = (req: Request, res: Response) => {
+  try {
+    return res.json({ message: "reached protecteed route" });
+  } catch (err) {
+    return res.json({ message: "error", error: err });
+  }
+};
