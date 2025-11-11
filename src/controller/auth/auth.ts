@@ -10,10 +10,11 @@ import  Jwt  from "jsonwebtoken";
 import { loginSchema } from "../../services/validation.ts";
 
 
+
 // google authentication
 import { signJwt } from "../../services/jwtServices.ts";
 import type { User } from "../../model/user.ts";
-import { json } from "body-parser";
+
 
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
@@ -31,7 +32,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     const { error} = loginSchema.validate(req.body,{abortEarly:false})
     if(error){
       const details = error.details.map((err)=>err.message)
-      return res.status(400).json({success:false,message:"validation failed"})
+      return res.status(400).json({success:false,message:details})
     }
      
     const user = await userModel.findOne({ email });
@@ -106,6 +107,9 @@ export const getAllUser = async (req: Request, res: Response) => {
   }
 } 
 
+
+
+
 export const register = async (req: Request, res: Response) => {
 
   try {
@@ -132,10 +136,9 @@ export const register = async (req: Request, res: Response) => {
 
 
 
-    const createOtpDoc = await otpModel.create({ name, password, email, otp });
+    await otpModel.create({ name, password, email, otp });
 
     await sendOtp(email, otp);
-
 
     res.status(200).json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
@@ -178,8 +181,21 @@ export const verifyOtp = async (req: Request, res: Response) => {
     console.log(createUser);
 
     console.log("after loging create logging");
+       const accessToken = signJwt({id:otpData._id,email:otpData.email})
+       const refreshToken = Jwt.sign(
+        {id:otpData._id,email:otpData.email},
+        process.env.REFRESH_SECRET!,
+        {expiresIn:"30d"}
+       )
 
+       res.cookie("refreshToken",refreshToken,{
+        httpOnly:true,
+        secure:false,
+        sameSite: "strict",
+        maxAge:30*24*60*60*100
+       })
     await otpModel.deleteOne({ email });
+  
 
 
 

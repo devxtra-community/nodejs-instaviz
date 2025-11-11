@@ -4,4 +4,4 @@ import { verifyToken } from "../../middleware/verifytoken";
 
 export  const insightsRouter = express.Router()
 
-insightsRouter.get('/device' , verifyToken , getUserDevices)
+insightsRouter.get('/device' , getUserDevices)
