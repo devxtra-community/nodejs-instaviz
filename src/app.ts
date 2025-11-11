@@ -1,9 +1,12 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
 import cors from 'cors';
 import uploadRouter from './routes/uploadRouter.ts';
 import paymentRouter from './routes/paymentRoutes.ts';
+import { raw } from 'body-parser';
 
 dotenv.config();
 const app = express();
@@ -34,9 +37,9 @@ app.use((req, res, next) => {
 // Routes
 app.use("/upload", uploadRouter);
 app.use("/user", uploadRouter);
-app.use("/payment", paymentRouter); 
+app.use("/payment", paymentRouter);
 
-app.listen(process.env.PORT,() => {
+app.listen(process.env.PORT, () => {
   connectDB();
   console.log(` Server running on : http://localhost:${process.env.PORT}`);
 });
