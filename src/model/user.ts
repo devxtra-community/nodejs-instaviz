@@ -13,7 +13,9 @@ export interface User {
     password?: string,
     token: number,
     status?: Status,
-    isDeleted?: boolean
+    isDeleted?: boolean,
+    place:String,
+    phone:Number
 };
 
 const userSchema = new Schema<User>({
@@ -36,6 +38,17 @@ const userSchema = new Schema<User>({
         type: Number,
         default: 3
     },
+    place:{
+     
+        type:String,
+        
+    },
+
+    phone:{
+      type:Number
+
+    },
+
     status: {
         type: String,
         enum: Object.values(Status),

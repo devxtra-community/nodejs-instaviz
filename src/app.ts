@@ -9,6 +9,7 @@ import googleRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
+import { adminrouter } from './routes/adminroutes/userRouter.ts';
 
 const app = express()
 app.use(express.json())
@@ -40,6 +41,8 @@ app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", googleRouter)
 app.use("/payment",paymentRouter)
+
+app.use("/admin/dashboard",adminrouter)
 
 //routing
 // app.use
