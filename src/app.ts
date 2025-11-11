@@ -10,6 +10,7 @@ import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
+import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 
 const app = express()
 app.use(express.json())
@@ -42,7 +43,9 @@ app.use("/user", userRouter)
 app.use("/auth", googleRouter)
 app.use("/payment",paymentRouter)
 
+// admin routes
 app.use("/admin/dashboard",adminrouter)
+app.use('/admin/dashboard',insightsRouter)
 
 //routing
 // app.use

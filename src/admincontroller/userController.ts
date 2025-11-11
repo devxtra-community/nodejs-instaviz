@@ -1,7 +1,7 @@
 import { Request,Response } from "express";
 import userModel from "../model/user";
 
-//function for get aallusers count to admindashboard graph
+//function for get allusers count to admindashboard graph
 export const getAllusers = async(req:Request,res:Response)=>{
 
 try{
