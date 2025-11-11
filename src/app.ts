@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
 import mongoose from 'mongoose'
+import morgan from 'morgan';
 import cors from 'cors';
 import passport from './config/passport.ts';
 import cookieParser from "cookie-parser";
@@ -15,6 +16,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(passport.initialize())
 app.use(cookieParser())
+app.use(morgan("dev"));
 
 
 //database connection
@@ -39,13 +41,13 @@ app.use("/payment/webhook", express.raw({ type: "application/json" }));
 app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", googleRouter)
-app.use("/payment",paymentRouter)
+app.use("/payment", paymentRouter)
 
 //routing
 // app.use
 
 //listening 
-app.listen(process.env.PORT,() => {
+app.listen(process.env.PORT, () => {
   connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
