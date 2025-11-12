@@ -1,6 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
+
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
 import mongoose from 'mongoose'
 import morgan from 'morgan';
 import cors from 'cors';
@@ -10,6 +13,7 @@ import googleRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
+import { raw } from 'body-parser';
 
 const app = express()
 app.use(express.json())
