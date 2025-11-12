@@ -18,47 +18,56 @@ export interface User {
     phone:Number
 };
 
-const userSchema = new Schema<User>({
+const userSchema = new Schema(
+  {
     googleId: {
-        type: String, unique: true, sparse: true
+      type: String,
+      unique: true,
+      sparse: true
     },
     name: {
-        type: String
+      type: String
     },
     picture: {
-        type: String
+      type: String
     },
     email: {
-        type: String, required: true
+      type: String,
+      required: true
     },
     password: {
-        type: String, required: false
+      type: String,
+      required: false
     },
     token: {
-        type: Number,
-        default: 3
+      type: Number,
+      default: 3
     },
-    place:{
-     
-        type:String,
-        
+    place: {
+      type: String
     },
-
-    phone:{
-      type:Number
-
+    phone: {
+      type: Number
     },
-
     status: {
-        type: String,
-        enum: Object.values(Status),
-        default: Status.Active,
+      type: String,
+      enum: Object.values(Status),
+      default: Status.Active
     },
     isDeleted: {
-        type: Boolean, default: false
+      type: Boolean,
+      default: false
     },
 
-});
+    
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  { timestamps: true } 
+);
+
 
 const userModel = mongoose.model<User>("user", userSchema);
 
