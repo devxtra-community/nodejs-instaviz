@@ -1,16 +1,36 @@
-import { Response, Request} from "express";
+import { Request, Response } from "express";
 import { deviceModel } from "../model/admin/insights/deviceModel";
 
-export const getUserDevices = async (req: Request, res: Response) => {
+export const deviceUsage = async (req: Request, res: Response) => {
   try {
-    const user = (req as any).user; // get logged user-info from request
+    const user = (req as any).user || { _id: "65af1e99623a77abb102abc1" }; 
 
-    // find all devices from db where userId matches logged in user
-    const devices = await deviceModel
-      .find({ userId: user._id })
-      .sort({ createdAt: -1 });
-      res.json({devices})
+    const logs = await deviceModel.find({
+      userId: user._id,
+      action: "/fileupload"
+    });
+
+    let mobile = 0;
+    let desktop = 0;
+
+    logs.forEach((log) => {
+      const ua = log.userAgent?.toLowerCase() || "";
+      if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
+        mobile++;
+      } else {
+        desktop++;
+      }
+    });
+
+    const total = mobile + desktop;
+
+    res.json({
+      mobile: total ? Math.round((mobile / total) * 100) : 0,
+      desktop: total ? Math.round((desktop / total) * 100) : 0
+    });
+
   } catch (err) {
-    res.status(500).json({ message: "Error Fetching Devices", error: err });
+    console.log(" Error device stats:", err);
+    res.status(500).json({ message: "Error fetching stats" });
   }
 };
