@@ -16,6 +16,7 @@ export const fileupload = async (req: Request, res: Response) => {
         if (!req.file) {
             return res.status(404).json({ message: "File Not Uploaded" });
         }
+        
 
         const filepath = req.file.path;
         const results: any[] = [];
