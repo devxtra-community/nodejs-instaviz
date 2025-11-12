@@ -1,5 +1,5 @@
 import { Response , Request , NextFunction } from "express";
-import { deviceModel } from "../model/deviceModel";
+import { deviceModel } from "../model/admin/insights/deviceModel";
 
 export const deviceLogger = async (req : Request , res : Response , next : NextFunction)=>{
     try{

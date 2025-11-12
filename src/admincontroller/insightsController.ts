@@ -1,5 +1,5 @@
 import { Response, Request} from "express";
-import { deviceModel } from "../model/deviceModel";
+import { deviceModel } from "../model/admin/insights/deviceModel";
 
 export const getUserDevices = async (req: Request, res: Response) => {
   try {
