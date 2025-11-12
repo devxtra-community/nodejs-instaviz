@@ -44,7 +44,7 @@ app.use("/auth", googleRouter)
 app.use("/payment", paymentRouter)
 
 //routing
-// app.use
+// app.use                                                                        
 
 //listening 
 app.listen(process.env.PORT, () => {
