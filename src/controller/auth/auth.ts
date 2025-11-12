@@ -48,21 +48,23 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-   const accessToken = signJwt({id:user._id,email:user.email})
-const refreshToken = Jwt.sign(
-  { id:user._id,email:user.email },
-  process.env.REFRESH_SECRET!,
-  { expiresIn: '30d' }
-);
+    const accessToken = signJwt({ id: user._id, email: user.email });
 
-res.cookie("refreshToken", refreshToken, {
-  httpOnly:true,
-  secure:false,
-  sameSite:"strict",
-  maxAge:30*24*60*60*1000,
-});
-
-(req as any).user = user // attach user for device logging middleware
+    const refreshToken = Jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+      },
+      process.env.REFRESH_SECRET!,
+      { expiresIn: "30d" }
+    );
+      
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
 
 return res.status(200).json({
   success: true,
