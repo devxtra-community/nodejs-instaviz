@@ -1,10 +1,10 @@
 import { Router } from "express";
 
-import { addGustuser } from "../../admincontroller/usercontroller";
-import { loggedusers } from "../../admincontroller/usercontroller";
-import { fetchAllgustusers } from "../../admincontroller/usercontroller";
-import { getNewUsersPerMonth } from "../../admincontroller/usercontroller";
-import { getAllusers } from "../../admincontroller/usercontroller";
+import { addGustuser } from "../../admincontroller/userController";
+import { loggedusers } from "../../admincontroller/userController";
+import { fetchAllgustusers } from "../../admincontroller/userController";
+import { getNewUsersPerMonth } from "../../admincontroller/userController";
+import { getAllusers } from "../../admincontroller/userController";
 
 export const adminrouter = Router()
 
