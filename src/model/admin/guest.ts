@@ -14,7 +14,10 @@ const guestSchema = new Schema<Guest>({
         type: Number
     }
 
-});
+},
+{timestamps:true}
+
+);
 
 const guestModel = mongoose.model<Guest>('guest', guestSchema);
 
