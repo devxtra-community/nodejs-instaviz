@@ -1,7 +1,8 @@
 import { Router } from 'express'
-import { fileupload } from '../controllers/uploadController.js'
+import upload from '../middleware/multerUpload.ts';
+import { fileupload } from '../controllers/uploadController.ts'
 
 const uploadRouter = Router()
-uploadRouter.get("/", fileupload);
+uploadRouter.post("/fileupload", upload.single('file'), fileupload);
 
 export default uploadRouter;
