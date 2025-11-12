@@ -2,6 +2,7 @@ import { Request,Response } from "express";
 import userModel from "../model/user";//called userdatabase
 import guestModel from "../model/guest";
 
+
 //function for get allloged users count to admindashboard graph
 export const loggedusers = async(req:Request,res:Response)=>{
 
