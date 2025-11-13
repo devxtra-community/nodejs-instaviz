@@ -18,6 +18,8 @@ export interface User {
     phone:Number
 };
 
+
+
 const userSchema = new Schema(
   {
     googleId: {
@@ -59,14 +61,27 @@ const userSchema = new Schema(
       default: false
     },
 
-    
+   
+    lastActiveAt: {
+      type: Date
+    },
+    dailyActiveTime: {
+      type: Number,
+      default: 0 
+    },
+    averageActiveTime: {
+      type: Number,
+      default: 0 
+    },
+
     createdAt: {
       type: Date,
       default: Date.now
     }
   },
-  { timestamps: true } 
+  { timestamps: true }
 );
+
 
 
 const userModel = mongoose.model<User>("user", userSchema);

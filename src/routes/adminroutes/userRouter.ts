@@ -5,6 +5,8 @@ import { loggedusers } from "../../admincontroller/usercontroller";
 import { fetchAllgustusers } from "../../admincontroller/usercontroller";
 import { getNewUsersPerMonth } from "../../admincontroller/usercontroller";
 import { getAllusers } from "../../admincontroller/usercontroller";
+import { alluserspage } from "../../admincontroller/usercontroller";
+import { GetSingleuser } from "../../admincontroller/usercontroller";
 
 export const adminrouter = Router()
 
@@ -14,9 +16,8 @@ adminrouter.get("/gustusers",fetchAllgustusers)
 adminrouter.get("/getallusers",getAllusers)
 adminrouter.get("/newuserpermonth",getNewUsersPerMonth)
 
-
-
-
+adminrouter.get("/alluserspage",alluserspage)
+adminrouter.get("/singleuser/:id",GetSingleuser)
 
 
 

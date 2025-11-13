@@ -19,8 +19,14 @@ catch{
 
 
 
+
+
+
+
 //function for get new logged users count per month
 export const getNewUsersPerMonth = async (req: Request, res: Response) => {
+  console.log("reached");
+  
   try {
     const usersPerMonth = await userModel.aggregate([
       {
@@ -46,6 +52,13 @@ export const getNewUsersPerMonth = async (req: Request, res: Response) => {
  
   }
 };
+
+
+
+
+//function for  get aravarage time to all users
+
+
 
 
 
@@ -100,3 +113,44 @@ export const getAllusers = async (req: Request, res: Response) => {
     res.status(500).json({ message: "failed to fetch all users", error: err });
   }
 };
+
+
+
+
+//get allusers to a single page
+
+export const alluserspage = async(req:Request,res:Response)=>{
+
+  try{
+    const loggedusers = await userModel.find();
+    const gustusers = await guestModel.find();
+    const allusertopage = [...loggedusers,...gustusers].flat()
+
+    res.status(200).json({message:"allusers got to page",alluser:allusertopage,success:true})
+
+  }
+
+  catch(err){
+   res.status(500).json({message:"all users couldint get page",success:false,err})
+  
+
+  }
+}
+
+//user single page 
+
+export const GetSingleuser = async(req:Request,res:Response)=>{
+
+  try{
+    const id = req.params.id
+     const loggedusers = await userModel.find();
+     const gustusers = await guestModel.find();
+     const allusertopage = [...loggedusers,...gustusers].flat()
+     const singleUser = allusertopage.find((user: any) => user._id.toString() === id);
+     res.status(200).json({message:"single user page fetched",singleuser:singleUser,success:true})
+     }
+  catch(err){
+    res.status(500).json({message:"user single page cant fetch",err})
+  }
+
+}
