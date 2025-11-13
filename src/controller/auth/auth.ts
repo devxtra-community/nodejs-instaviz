@@ -186,20 +186,23 @@ export const verifyOtp = async (req: Request, res: Response) => {
     console.log(createUser);
 
     console.log("after loging create logging");
-    const accessToken = signJwt({ id: otpData._id, email: otpData.email });
-    const refreshToken = Jwt.sign(
-      { id: otpData._id, email: otpData.email },
-      process.env.REFRESH_SECRET!,
-      { expiresIn: "30d" }
-    );
+       const accessToken = signJwt({id:otpData._id,email:otpData.email})
+       const refreshToken = Jwt.sign(
+        {id:otpData._id,email:otpData.email},
+        process.env.REFRESH_SECRET!,
+        {expiresIn:"30d"}
+       )
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 100,
-    });
+       res.cookie("refreshToken",refreshToken,{
+        httpOnly:true,
+        secure:false,
+        sameSite: "strict",
+        maxAge:30*24*60*60*100
+       })
     await otpModel.deleteOne({ email });
+  
+
+
 
     return res.status(200).json({
       success: true,
@@ -210,6 +213,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server errror" });
   }
 };
+
 
 // google authentication
 export const googleCallback = (req: Request, res: Response) => {
