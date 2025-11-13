@@ -132,9 +132,6 @@ export const register = async (req: Request, res: Response) => {
 
     await sendOtp(email, otp);
 
-    res
-      .status(200)
-      .json({ message: "plz verify the otp to continue", otp: true });
 
     res.status(200).json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
