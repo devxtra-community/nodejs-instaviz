@@ -48,7 +48,6 @@ app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", googleRouter)
 app.use("/payment", paymentRouter)
-app.use("/payment",paymentRouter)
 
 // admin routes
 app.use("/admin/dashboard",adminrouter)
