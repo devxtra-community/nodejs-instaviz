@@ -74,10 +74,7 @@ export const loginCheck = async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
       },
-      process.env.REFRESH_SECRET!,
-      { expiresIn: "30d" }
-    );
-      
+    });
   } catch (err) {
     console.log("catch in login worked");
 
