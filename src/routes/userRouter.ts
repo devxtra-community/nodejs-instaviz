@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, loginCheck, verifyOtp, getAllUser } from "../controller/auth/auth.ts";
+import { register, loginCheck, verifyOtp, getUserProfile } from "../controller/auth/auth.ts";
 import { verifyToken } from "../middleware/verifytoken.ts";
 import { testpro } from "../controller/auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
@@ -15,7 +15,7 @@ userRouter.post("/newRefreshToken",refreshAccessToken)
 
 
 // dummy route dont take it serious
-userRouter.get('/alluser', getAllUser)
+userRouter.get('/:userId', getUserProfile)
 
 // user image uploader router
 userRouter.put('/upload', userImageUpdate)

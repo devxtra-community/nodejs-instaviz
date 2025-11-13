@@ -12,7 +12,7 @@ import { loginSchema } from "../../services/validation.ts";
 // google authentication
 import { signJwt } from "../../services/jwtServices.ts";
 import type { User } from "../../model/user.ts";
-
+import mongoose from "mongoose";
 
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
@@ -58,29 +58,26 @@ export const loginCheck = async (req: Request, res: Response) => {
       process.env.REFRESH_SECRET!,
       { expiresIn: "30d" }
     );
-      
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      secure: false,
+      sameSite: "strict",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-return res.status(200).json({
-  success: true,
-  message: "Login successful",
-  accessToken,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  },
-});
-
-
-    
-    
-  
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+      },
+      process.env.REFRESH_SECRET!,
+      { expiresIn: "30d" }
+    );
+      
   } catch (err) {
     console.log("catch in login worked");
 
@@ -94,12 +91,28 @@ return res.status(200).json({
 
 // dummy bro
 
-export const getAllUser = async (req: Request, res: Response) => {
+export const getUserProfile = async (req: Request, res: Response) => {
   try {
-    const user = await userModel.find();
-    res.status(200).json({ message: "All users", user });
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
+    }
+
+    const user = await userModel.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : undefined },
+        { googleId: userId },
+      ].filter(Boolean),
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      user,
+    });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: "Error fetching user", err });
   }
 };
 
@@ -126,14 +139,13 @@ export const register = async (req: Request, res: Response) => {
     const otp = generateOtp();
     console.log(otp);
 
-
-
     await otpModel.create({ name, password, email, otp });
 
     await sendOtp(email, otp);
 
-
-    res.status(200).json({ message: "plz verify the otp to continue", otp: true });
+    res
+      .status(200)
+      .json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
     console.error("Register Error", err);
     res.status(500).json({ message: "someting went wrong", success: false });
@@ -177,23 +189,20 @@ export const verifyOtp = async (req: Request, res: Response) => {
     console.log(createUser);
 
     console.log("after loging create logging");
-       const accessToken = signJwt({id:otpData._id,email:otpData.email})
-       const refreshToken = Jwt.sign(
-        {id:otpData._id,email:otpData.email},
-        process.env.REFRESH_SECRET!,
-        {expiresIn:"30d"}
-       )
+    const accessToken = signJwt({ id: otpData._id, email: otpData.email });
+    const refreshToken = Jwt.sign(
+      { id: otpData._id, email: otpData.email },
+      process.env.REFRESH_SECRET!,
+      { expiresIn: "30d" }
+    );
 
-       res.cookie("refreshToken",refreshToken,{
-        httpOnly:true,
-        secure:false,
-        sameSite: "strict",
-        maxAge:30*24*60*60*100
-       })
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 100,
+    });
     await otpModel.deleteOne({ email });
-  
-
-
 
     return res.status(200).json({
       success: true,
@@ -206,7 +215,6 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 // google authentication
-
 export const googleCallback = (req: Request, res: Response) => {
   const user = req.user as User;
 
@@ -214,7 +222,7 @@ export const googleCallback = (req: Request, res: Response) => {
     id: user.googleId,
     email: user.email,
   });
-  const frontendURL = "http://localhost:3000";
+  const frontendURL = `${process.env.CLIENT_URL}`;
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
