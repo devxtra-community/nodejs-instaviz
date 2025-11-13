@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { register,loginCheck,verifyOtp,getAllUser } from "../controller/auth/auth.ts";
-import { verifyToken } from "../middleware/verifytoken.ts";
+import { verifyToken } from "../middlewares/verifyToken.ts";
 import { testpro } from "../controller/auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 
