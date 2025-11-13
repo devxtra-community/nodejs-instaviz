@@ -61,3 +61,14 @@ app.listen(process.env.PORT, () => {
   connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
+
+app.get("/health", async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+
+  res.json({
+    status: "ok",
+    db: dbStatus,
+    uptime: process.uptime(),
+    time: new Date().toISOString()
+  });
+});
