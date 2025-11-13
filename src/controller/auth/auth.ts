@@ -72,10 +72,12 @@ export const loginCheck = async (req: Request, res: Response) => {
       accessToken,
       user: {
         id: user._id,
-        name: user.name,
         email: user.email,
       },
-    });
+      process.env.REFRESH_SECRET!,
+      { expiresIn: "30d" }
+    );
+      
   } catch (err) {
     console.log("catch in login worked");
 

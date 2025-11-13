@@ -4,13 +4,14 @@ import { verifyToken } from "../middleware/verifytoken.ts";
 import { testpro } from "../controller/auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { userImageUpdate } from "../controllers/UserController.ts";
+import { deviceLogger } from "../middleware/deviceLogger.ts";
 
 const userRouter = Router();
-userRouter.post('/login', loginCheck);
-userRouter.post("/register", register);
-userRouter.post("/verifyOtp", verifyOtp);
-userRouter.get("/test", verifyToken, testpro)
-userRouter.post("/newRefreshToken", refreshAccessToken)
+userRouter.post('/login',loginCheck , deviceLogger);
+userRouter.post("/register",register);
+userRouter.post("/verifyOtp",verifyOtp);
+userRouter.get("/test",verifyToken,testpro)
+userRouter.post("/newRefreshToken",refreshAccessToken)
 
 
 // dummy route dont take it serious

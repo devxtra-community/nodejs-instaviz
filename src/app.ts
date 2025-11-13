@@ -1,6 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv'
 dotenv.config()
+
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
 import mongoose from 'mongoose'
 import morgan from 'morgan';
 import cors from 'cors';
@@ -10,6 +13,9 @@ import googleRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
+import { raw } from 'body-parser';
+import { adminrouter } from './routes/adminroutes/userRouter.ts';
+import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 
 const app = express()
 app.use(express.json({ limit: "10mb" }));
@@ -42,9 +48,14 @@ app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", googleRouter)
 app.use("/payment", paymentRouter)
+app.use("/payment",paymentRouter)
+
+// admin routes
+app.use("/admin/dashboard",adminrouter)
+app.use('/admin/dashboard',insightsRouter)
 
 //routing
-// app.use
+// app.use                                                                        
 
 //listening 
 app.listen(process.env.PORT, () => {

@@ -3,7 +3,7 @@ import { Response,Request } from "express";
 import { emitWarning } from "process";
 
 export const signJwt = (payload: object) => {
-    return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "15m" });
+    return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "2m" });
 };
 
 export const refreshAccessToken = async(req:Request,res:Response)=>{
