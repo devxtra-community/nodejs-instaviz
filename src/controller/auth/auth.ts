@@ -61,8 +61,8 @@ export const loginCheck = async (req: Request, res: Response) => {
       
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
@@ -132,9 +132,6 @@ export const register = async (req: Request, res: Response) => {
 
     await sendOtp(email, otp);
 
-    res
-      .status(200)
-      .json({ message: "plz verify the otp to continue", otp: true });
 
     res.status(200).json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
