@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import { Response, Request } from "express";
+import { emitWarning } from "process";
 
 export const signJwt = (payload: object) => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "7d" });
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "15m" });
 };
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
@@ -17,11 +18,12 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       refreshToken,
       process.env.REFRESH_SECRET!
     ) as { id: string; email: string };
-    const newAccessToken = jwt.sign(
-      { id: correctCheck.id, email: correctCheck.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
-    );
+
+    const jwtPayload = { id: correctCheck.id, email: correctCheck.email };
+
+    const newAccessToken = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
+      expiresIn: "15m",
+    });
 
     return res.status(200).json({ success: true, newAccessToken });
   } catch (err) {}

@@ -3,11 +3,10 @@ import { Router } from "express";
 import { googleCallback } from "../auth/auth.ts";
 
 import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
-import { verifyToken } from "../middleware/verifytoken.ts";
 import { testpro } from "../auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
-import { deviceLogger } from "../middleware/deviceLogger.ts";
-
+import {deviceLogger} from '../utils/deviceLogger.ts'
+import { verifyToken } from "../middlewares/verifyToken.ts";
 
 
 const authRouter = Router();

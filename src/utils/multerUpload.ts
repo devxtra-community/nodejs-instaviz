@@ -15,7 +15,8 @@ const storage = multer.diskStorage({
   },
   filename: function (_req, file, cb) {
     const suffix = Date.now() + "_" + Math.round(Math.random() * 1e9);
-    cb(null, `${suffix}_${file.originalname}`);
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    cb(null, `${suffix}_${safeName}`);
   },
 });
 
@@ -26,15 +27,21 @@ function fileFiltercsv(
 ) {
   const ext = path.extname(file.originalname).toLowerCase();
   if (ext !== ".csv") {
-    return cb(new Error("only csv FileType allowed"));
+    return cb(new Error("Only CSV file type allowed"));
+  }
+  if (file.mimetype !== "text/csv" && file.mimetype !== "application/vnd.ms-excel") {
+    return cb(new Error("Invalid mimetype for CSV"));
   }
   cb(null, true);
 }
 
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
 const upload = multer({
   storage,
   fileFilter: fileFiltercsv,
-//   limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { fileSize: MAX_FILE_SIZE, files: 1 },
 });
 
 export default upload;

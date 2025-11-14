@@ -11,3 +11,4 @@ userRouter.get("/:userId", getUserProfile);
 userRouter.put("/upload", userImageUpdate);
 
 export default userRouter;
+
