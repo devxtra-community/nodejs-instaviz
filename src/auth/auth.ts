@@ -1,17 +1,14 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import otpModel from "../../model/otpModel.ts";
-import Joi, { number } from "../../../node_modules/joi/lib/index";
-import userModel from "../../model/user.ts";
-import { sendOtp } from "../../utils/sendEmail.ts";
-import { theValidation } from "../../services/validation.ts";
-import { generateOtp } from "../../utils/otpGenerate.ts";
+import otpModel from "../model/otpModel.ts";
+import userModel from "../model/user.ts";
+import { sendOtp } from "../utils/sendEmail.ts";
+import { theValidation } from "../services/validation.ts";
+import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
-import { loginSchema } from "../../services/validation.ts";
+import { loginSchema } from "../services/validation.ts";
 
-// google authentication
-import { signJwt } from "../../services/jwtServices.ts";
-import type { User } from "../../model/user.ts";
+import { signJwt } from "../services/jwtServices.ts";
 import mongoose from "mongoose";
 
 export const loginCheck = async (req: Request, res: Response) => {
@@ -72,6 +69,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       accessToken,
       user: {
         id: user._id,
+        name: user.name,
         email: user.email,
       },
     });
@@ -213,13 +211,15 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 // google authentication
 export const googleCallback = (req: Request, res: Response) => {
-  const user = req.user as User;
+  const user = req.user as any;
 
   const token = signJwt({
-    id: user.googleId,
+    id: user._id?.toString() || null,
+    googleId: user.googleId?.toString() || null,
     email: user.email,
   });
-  const frontendURL = `${process.env.CLIENT_URL}`;
+
+  const frontendURL = process.env.CLIENT_URL!;
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
@@ -230,3 +230,4 @@ export const testpro = (req: Request, res: Response) => {
     return res.json({ message: "error", error: err });
   }
 };
+
