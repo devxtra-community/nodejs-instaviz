@@ -234,18 +234,3 @@ export const testpro = (req: Request, res: Response) => {
   }
 };
 
-export const logoutUser = async (req: Request, res: Response) => {
-  const refreshToken = req.cookies.refreshToken;
-
-  if (!refreshToken) return res.status(200).json({ message: "Logged out" });
-
-  const data = await userModel.updateOne({ refreshToken }, { $set: { refreshToken: null } });
-  console.log("data",data)
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-  });
-
-  res.status(200).json({ message: "Logout successful" });
-};
