@@ -12,7 +12,7 @@ export class CustomError extends Error {
     statusCode?: number;
     errorData?: any;
   }) {
-    super(message || "Iternal Server error");
+    super(message || 'Iternal Server error');
     this.statusCode = statusCode || 500;
     this.errorData = errorData;
   }

@@ -1,4 +1,4 @@
-import type { Config } from "prettier";
+import type { Config } from 'prettier';
 
 const config: Config = {
   // Format options
@@ -7,37 +7,36 @@ const config: Config = {
   useTabs: false,
   semi: true,
   singleQuote: true,
-  trailingComma: "all",
+  trailingComma: 'all',
   bracketSpacing: true,
   bracketSameLine: false,
-  arrowParens: "avoid",
-  htmlWhitespaceSensitivity: "css",
-  endOfLine: "lf",
-  proseWrap: "always",
-  quoteProps: "as-needed",
-  embeddedLanguageFormatting: "auto",
+  arrowParens: 'avoid',
+  htmlWhitespaceSensitivity: 'css',
+  endOfLine: 'lf',
+  proseWrap: 'always',
+  quoteProps: 'as-needed',
+  embeddedLanguageFormatting: 'auto',
 
   // Overrides for specific file types
   overrides: [
     {
-      files: ["*.json", "*.json5", "*.yaml", "*.yml"],
+      files: ['*.json', '*.json5', '*.yaml', '*.yml'],
       options: {
         tabWidth: 2,
         singleQuote: false,
-        trailingComma: "none",
+        trailingComma: 'none',
       },
     },
     {
-      files: ["*.md", "*.mdx"],
+      files: ['*.md', '*.mdx'],
       options: {
-        printWidth: 80,
-        proseWrap: "preserve",
+        printWidth: 150,
+        proseWrap: 'preserve',
       },
     },
     {
-      files: ["*.ts", "*.tsx"],
-      options: {
-      },
+      files: ['*.ts', '*.tsx'],
+      options: {},
     },
   ],
 };

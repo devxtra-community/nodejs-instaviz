@@ -1,4 +1,4 @@
-export const generateAiPromt = (computedMetrics: any, sampleData: any) => {
+export const generateAiPromt = (computedMetrics: any, dataset: any) => {
   return `
 You are an expert AI data analyst for a web app called InstaviZ.
 
@@ -31,6 +31,6 @@ Your task:
 }
 5.give me some important filed in this data that i can show it to user (like if the data set based on sales give total sales)
 Dataset sample:
-${JSON.stringify(sampleData)}
+${JSON.stringify(dataset)}
 `;
 };

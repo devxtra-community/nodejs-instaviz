@@ -7,7 +7,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2 } from '../config/r2Client';
 import dataModel from '../model/dataModel';
 import { CustomError } from '../utils/CustomError';
-import { generateAiPromt } from '../utils/aiPromt';
+import { generateAiPromt } from '../utils/aiPrompt';
 
 // const apikey =
 let apiKeyIndex = 1;
@@ -24,14 +24,14 @@ const switchApi = () => {
   console.log('Api Key swithed', currentApi);
 };
 
-export const fileupload = async (req: Request, res: Response) => {
+export const fileParsing = async (req: Request, res: Response) => {
   try {
     console.time('checking');
     if (!req.file) {
       return res.status(404).json({ message: 'File Not Uploaded' });
     }
-
-    const filepath = req.file.path;
+    const file = req.file as Express.Multer.File;
+    const filepath = file.path;
     const results: any[] = [];
     let headers: string[] = [];
     let totalRows = 0;
@@ -63,7 +63,7 @@ export const fileupload = async (req: Request, res: Response) => {
 
       // Upload to Cloudflare R2
       const fileBuffer = fs.readFileSync(filepath);
-      const fileName = `${Date.now()}_${req.?file?.originalname};
+      const fileName = `${Date.now()}_${file.originalname}`;
 
       try {
         await r2.send(
@@ -82,8 +82,8 @@ export const fileupload = async (req: Request, res: Response) => {
       fs.unlink(filepath, () => {});
 
       // Public file URL
-      const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
-
+      const fileUrl = `${process.env.R2_PUBLIC_URL}${fileName}`;
+      console.log(fileUrl);
       // Compute metrics
       const totalColumns = headers.length;
       let missingValues = 0;
@@ -101,19 +101,23 @@ export const fileupload = async (req: Request, res: Response) => {
 
       // Save sample data in MongoDB
       const dataset = await dataModel.create({
-        data: results,
+        data: results.slice(0, 10),
         user_id: req.body.user_id || null,
         chat_id: null,
         chart_id: null,
         r2_url: fileUrl,
       });
-      const prompt = generateAiPromt(sampleData, computedMetrics);
+      const prompt = generateAiPromt(dataset, computedMetrics);
+      let parsed: any;
       try {
-        console.time('ai response');
+        console.log(currentApi)
         const result = await model.generateContent(prompt);
-        const responsetext = await result.response.text();
-        console.timeEnd('ai response');
-        console.log(responsetext);
+        let responseText = result.response
+          .text()
+          .trim()
+          .replace(/```json|```/g, '');
+        parsed = JSON.parse(responseText);
+        console.log(parsed);
       } catch (err: any) {
         const msg = String(err?.message || '');
         if (
@@ -128,9 +132,16 @@ export const fileupload = async (req: Request, res: Response) => {
           console.log(err);
         }
       }
+
+      res.status(200).json({
+        success: true,
+        message: 'Dataset processed successfully',
+        datasetId: dataset._id,
+        r2Url: fileUrl,
+        data: parsed,
+      });
     };
 
-    
     const stream = fs.createReadStream(filepath, { encoding: 'utf-8' }).pipe(csv());
     stream
       .on('headers', handleOnHeaders)
