@@ -1,10 +1,11 @@
 import passport from "passport";
 import { Router } from "express";
-import { googleCallback } from "../controller/auth/auth.ts";
+import { googleCallback, logoutUser } from "../controller/auth/auth.ts";
 
-const googleRouter = Router();
+const authRouter = Router();
 
-googleRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
-googleRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
+authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
+authRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
 
-export default googleRouter;
+authRouter.post('/logout',logoutUser)
+export default authRouter;

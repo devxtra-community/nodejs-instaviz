@@ -72,6 +72,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       accessToken,
       user: {
         id: user._id,
+        name: user.name,
         email: user.email,
       },
     });
@@ -186,23 +187,20 @@ export const verifyOtp = async (req: Request, res: Response) => {
     console.log(createUser);
 
     console.log("after loging create logging");
-       const accessToken = signJwt({id:otpData._id,email:otpData.email})
-       const refreshToken = Jwt.sign(
-        {id:otpData._id,email:otpData.email},
-        process.env.REFRESH_SECRET!,
-        {expiresIn:"30d"}
-       )
+    const accessToken = signJwt({ id: otpData._id, email: otpData.email });
+    const refreshToken = Jwt.sign(
+      { id: otpData._id, email: otpData.email },
+      process.env.REFRESH_SECRET!,
+      { expiresIn: "30d" }
+    );
 
-       res.cookie("refreshToken",refreshToken,{
-        httpOnly:true,
-        secure:false,
-        sameSite: "strict",
-        maxAge:30*24*60*60*100
-       })
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 100,
+    });
     await otpModel.deleteOne({ email });
-  
-
-
 
     return res.status(200).json({
       success: true,
@@ -214,16 +212,17 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
-
 // google authentication
 export const googleCallback = (req: Request, res: Response) => {
-  const user = req.user as User;
+  const user = req.user as any;
 
   const token = signJwt({
-    id: user.googleId,
+    id: user._id?.toString() || null,
+    googleId: user.googleId?.toString() || null,
     email: user.email,
   });
-  const frontendURL = `${process.env.CLIENT_URL}`;
+
+  const frontendURL = process.env.CLIENT_URL!;
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
@@ -233,4 +232,20 @@ export const testpro = (req: Request, res: Response) => {
   } catch (err) {
     return res.json({ message: "error", error: err });
   }
+};
+
+export const logoutUser = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) return res.status(200).json({ message: "Logged out" });
+
+  const data = await userModel.updateOne({ refreshToken }, { $set: { refreshToken: null } });
+  console.log("data",data)
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+  });
+
+  res.status(200).json({ message: "Logout successful" });
 };

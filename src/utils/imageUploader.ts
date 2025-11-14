@@ -3,7 +3,7 @@ import { supabase } from "../config/supabaseClient";
 const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg"];
 
 export const uploadimageToSupabase = async (userId: string, image: string) => {
-
+    
     console.log("api reached here")
     if (!image.startsWith("data:image/")) {
         throw new Error("Invalid image format. Must be base64 encoded image.");

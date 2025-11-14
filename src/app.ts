@@ -9,7 +9,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import passport from './config/passport.ts';
 import cookieParser from "cookie-parser";
-import googleRouter from './routes/authRoutes.ts';
+import authRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
@@ -46,7 +46,7 @@ app.use("/payment/webhook", express.raw({ type: "application/json" }));
 //middleware
 app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
-app.use("/auth", googleRouter)
+app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
 app.use("/payment",paymentRouter)
 
