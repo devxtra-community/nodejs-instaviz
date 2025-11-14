@@ -1,6 +1,8 @@
 import { Request,Response } from "express";
-import userModel from "../model/user";//called userdatabase
+import userModel from "../model/user";
 import guestModel from "../model/guest";
+import { cache } from "joi";
+import { log } from "console";
 
 
 //function for get allloged users count to admindashboard graph
@@ -154,3 +156,26 @@ export const GetSingleuser = async(req:Request,res:Response)=>{
   }
 
 }
+
+
+//single user token  for each users
+export const silngleUsertoken = async (req: Request, res: Response) => {
+  console.log("hii");
+
+  try {
+    const { id } = req.params;
+
+    const singleuserToken = await userModel.findById(id).select("token name email");
+    res.status(200).json({message:"singleuser token count fetched successfully",singletoken:singleuserToken?.token,success:true})
+
+  }
+
+   catch(err){
+    console.log(err,"data cant fetch ");
+    res.status(500).json({message:"count not fetched"})
+    
+   }
+
+    
+
+  }

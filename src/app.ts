@@ -5,7 +5,7 @@ dotenv.config()
 import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
 import mongoose from 'mongoose'
-import morgan from 'morgan';
+import morgan, { token } from 'morgan';
 import cors from 'cors';
 import passport from './config/passport.ts';
 import cookieParser from "cookie-parser";
@@ -16,6 +16,7 @@ import paymentRouter from './routes/paymentRoutes.js';
 import { raw } from 'body-parser';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
+import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
 
 const app = express()
 app.use(express.json())
@@ -53,9 +54,9 @@ app.use("/payment",paymentRouter)
 // admin routes
 app.use("/admin/dashboard",adminrouter)
 app.use('/admin/dashboard',insightsRouter)
+app.use('/admin/dashboard',tokenrouter)
 
-//routing
-// app.use                                                                        
+                                                                      
 
 //listening 
 app.listen(process.env.PORT, () => {

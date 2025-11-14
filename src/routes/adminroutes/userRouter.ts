@@ -7,6 +7,7 @@ import { getNewUsersPerMonth } from "../../admincontroller/usercontroller";
 import { getAllusers } from "../../admincontroller/usercontroller";
 import { alluserspage } from "../../admincontroller/usercontroller";
 import { GetSingleuser } from "../../admincontroller/usercontroller";
+import { silngleUsertoken } from "../../admincontroller/usercontroller";
 
 export const adminrouter = Router()
 
@@ -18,6 +19,8 @@ adminrouter.get("/newuserpermonth",getNewUsersPerMonth)
 
 adminrouter.get("/alluserspage",alluserspage)
 adminrouter.get("/singleuser/:id",GetSingleuser)
+adminrouter.get("/singltoken/:id",silngleUsertoken)
+
 
 
 

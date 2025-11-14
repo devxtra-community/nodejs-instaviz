@@ -43,7 +43,11 @@ const userSchema = new Schema(
     },
     token: {
       type: Number,
-      default: 3
+      default: 3,
+      createdAt:{
+      type: Date,
+      default: Date.now
+      }
     },
     place: {
       type: String
