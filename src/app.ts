@@ -14,8 +14,9 @@ import uploadRouter from './routes/uploadRouter.ts'
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 import { raw } from 'body-parser';
-import { adminrouter } from './routes/adminroutes/userRouter.ts';
+import { adminRouter } from './routes/adminroutes/userRouter.ts';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
+import { activityRouter } from './routes/adminroutes/activityRouter.ts';
 
 const app = express()
 app.use(express.json())
@@ -51,8 +52,9 @@ app.use("/payment", paymentRouter)
 app.use("/payment",paymentRouter)
 
 // admin routes
-app.use("/admin/dashboard",adminrouter)
-app.use('/admin/dashboard',insightsRouter)
+app.use("/admin",adminRouter)
+app.use('/admin',insightsRouter)
+app.use('/admin',activityRouter)
 
 //routing
 // app.use                                                                        
