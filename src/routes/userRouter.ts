@@ -3,7 +3,7 @@ import { register, loginCheck, verifyOtp, getUserProfile } from '../controller/a
 import { verifyToken } from '../middlewares/verifyToken.ts';
 import { testpro } from '../controller/auth/auth.ts';
 import { refreshAccessToken } from '../services/jwtServices.ts';
-import { userImageUpdate } from '../controllers/UserController.ts';
+import { userImageUpdate } from '../controllers/userController.ts';
 import { deviceLogger } from '../utils/deviceLogger.ts';
 
 const userRouter = Router();
