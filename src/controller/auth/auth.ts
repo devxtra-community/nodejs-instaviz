@@ -13,7 +13,6 @@ import { loginSchema } from "../../services/validation.ts";
 import { signJwt } from "../../services/jwtServices.ts";
 import type { User } from "../../model/user.ts";
 
-
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
   console.log(req.body);
@@ -40,6 +39,14 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This account was created using Google. Please login with Google.",
+      });
+    }
+
     const isPasswordCorrect = await bcrypt.compare(password, user.password!);
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -58,7 +65,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       process.env.REFRESH_SECRET!,
       { expiresIn: "30d" }
     );
-      
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -66,21 +73,16 @@ export const loginCheck = async (req: Request, res: Response) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-return res.status(200).json({
-  success: true,
-  message: "Login successful",
-  accessToken,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  },
-});
-
-
-    
-    
-  
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (err) {
     console.log("catch in login worked");
 
@@ -126,14 +128,13 @@ export const register = async (req: Request, res: Response) => {
     const otp = generateOtp();
     console.log(otp);
 
-
-
     await otpModel.create({ name, password, email, otp });
 
     await sendOtp(email, otp);
 
-
-    res.status(200).json({ message: "plz verify the otp to continue", otp: true });
+    res
+      .status(200)
+      .json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
     console.error("Register Error", err);
     res.status(500).json({ message: "someting went wrong", success: false });
@@ -177,31 +178,32 @@ export const verifyOtp = async (req: Request, res: Response) => {
     console.log(createUser);
 
     console.log("after loging create logging");
-       const accessToken = signJwt({id:otpData._id,email:otpData.email})
-       const refreshToken = Jwt.sign(
-        {id:otpData._id,email:otpData.email},
-        process.env.REFRESH_SECRET!,
-        {expiresIn:"30d"}
-       )
+    const accessToken = signJwt({
+      id: createUser._id,
+      email: createUser.email,
+    });
+    const refreshToken = Jwt.sign(
+      { id: otpData._id, email: otpData.email },
+      process.env.REFRESH_SECRET!,
+      { expiresIn: "30d" }
+    );
 
-       res.cookie("refreshToken",refreshToken,{
-        httpOnly:true,
-        secure:false,
-        sameSite: "strict",
-        maxAge:30*24*60*60*100
-       })
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 100,
+    });
     await otpModel.deleteOne({ email });
-  
-
-
 
     return res.status(200).json({
       success: true,
       message: "Registration completed successfully",
+      accessToken: accessToken,
     });
   } catch (err) {
     console.log("veryfyotp catch woerked", err);
-    res.status(500).json({ message: "Internal server errror" });
+    res.status(500).json({ message: "Internal server errror", error: err });
   }
 };
 
