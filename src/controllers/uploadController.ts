@@ -82,7 +82,7 @@ export const fileParsing = async (req: Request, res: Response) => {
       fs.unlink(filepath, () => {});
 
       // Public file URL
-      const fileUrl = `${process.env.R2_PUBLIC_URL}${fileName}`;
+      const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
       console.log(fileUrl);
       // Compute metrics
       const totalColumns = headers.length;
