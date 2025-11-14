@@ -4,6 +4,15 @@ import { googleCallback } from "../controller/auth/auth.ts";
 
 const googleRouter = Router();
 
+// Login
+// Signup
+// Refresh
+// GetAuthData
+// Logout
+// Google/<methods>
+
+// Properly use .env
+
 googleRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
 googleRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
 
