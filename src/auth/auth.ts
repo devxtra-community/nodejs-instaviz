@@ -1,17 +1,15 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import otpModel from "../../model/otpModel.ts";
-import Joi, { number } from "../../../node_modules/joi/lib/index";
-import userModel from "../../model/user.ts";
-import { sendOtp } from "../../utils/sendEmail.ts";
-import { theValidation } from "../../services/validation.ts";
-import { generateOtp } from "../../utils/otpGenerate.ts";
+import otpModel from "../model/otpModel.ts";
+import userModel from "../model/user.ts";
+import { sendOtp } from "../utils/sendEmail.ts";
+import { theValidation } from "../services/validation.ts";
+import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
-import { loginSchema } from "../../services/validation.ts";
+import { loginSchema } from "../services/validation.ts";
 
-// google authentication
-import { signJwt } from "../../services/jwtServices.ts";
-import type { User } from "../../model/user.ts";
+import { signJwt } from "../services/jwtServices.ts";
+import mongoose from "mongoose";
 
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
@@ -68,8 +66,8 @@ export const loginCheck = async (req: Request, res: Response) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      secure: false,
+      sameSite: "strict",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
@@ -96,12 +94,28 @@ export const loginCheck = async (req: Request, res: Response) => {
 
 // dummy bro
 
-export const getAllUser = async (req: Request, res: Response) => {
+export const getUserProfile = async (req: Request, res: Response) => {
   try {
-    const user = await userModel.find();
-    res.status(200).json({ message: "All users", user });
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
+    }
+
+    const user = await userModel.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : undefined },
+        { googleId: userId },
+      ].filter(Boolean),
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      user,
+    });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: "Error fetching user", err });
   }
 };
 
@@ -178,10 +192,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
     console.log(createUser);
 
     console.log("after loging create logging");
-    const accessToken = signJwt({
-      id: createUser._id,
-      email: createUser.email,
-    });
+    const accessToken = signJwt({ id: otpData._id, email: otpData.email });
     const refreshToken = Jwt.sign(
       { id: otpData._id, email: otpData.email },
       process.env.REFRESH_SECRET!,
@@ -208,15 +219,16 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 // google authentication
-
 export const googleCallback = (req: Request, res: Response) => {
-  const user = req.user as User;
+  const user = req.user as any;
 
   const token = signJwt({
-    id: user.googleId,
+    id: user._id?.toString() || null,
+    googleId: user.googleId?.toString() || null,
     email: user.email,
   });
-  const frontendURL = "http://localhost:3000";
+
+  const frontendURL = process.env.CLIENT_URL!;
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
@@ -227,3 +239,4 @@ export const testpro = (req: Request, res: Response) => {
     return res.json({ message: "error", error: err });
   }
 };
+
