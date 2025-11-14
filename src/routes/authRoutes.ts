@@ -1,9 +1,25 @@
 import passport from "passport";
 import { Router } from "express";
-import { googleCallback } from "../controller/auth/auth.ts";
+import { googleCallback } from "../auth/auth.ts";
+
+import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
+import { verifyToken } from "../middleware/verifytoken.ts";
+import { testpro } from "../auth/auth.ts";
+import { refreshAccessToken } from "../services/jwtServices.ts";
+import { deviceLogger } from "../middleware/deviceLogger.ts";
+
+
 
 const authRouter = Router();
 
+// login authentication
+authRouter.post('/login',loginCheck , deviceLogger);
+authRouter.post("/register",register);
+authRouter.post("/verifyOtp",verifyOtp);
+authRouter.get("/test",verifyToken,testpro)
+authRouter.post("/newRefreshToken",refreshAccessToken)
+
+// google authentication
 authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
 authRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
 

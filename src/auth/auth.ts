@@ -1,17 +1,14 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import otpModel from "../../model/otpModel.ts";
-import Joi, { number } from "../../../node_modules/joi/lib/index";
-import userModel from "../../model/user.ts";
-import { sendOtp } from "../../utils/sendEmail.ts";
-import { theValidation } from "../../services/validation.ts";
-import { generateOtp } from "../../utils/otpGenerate.ts";
+import otpModel from "../model/otpModel.ts";
+import userModel from "../model/user.ts";
+import { sendOtp } from "../utils/sendEmail.ts";
+import { theValidation } from "../services/validation.ts";
+import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
-import { loginSchema } from "../../services/validation.ts";
+import { loginSchema } from "../services/validation.ts";
 
-// google authentication
-import { signJwt } from "../../services/jwtServices.ts";
-import type { User } from "../../model/user.ts";
+import { signJwt } from "../services/jwtServices.ts";
 import mongoose from "mongoose";
 
 export const loginCheck = async (req: Request, res: Response) => {
