@@ -1,18 +1,20 @@
-import type { Request, Response } from "express";
-import bcrypt from "bcrypt";
-import otpModel from "../model/otpModel.ts";
-import userModel from "../model/user.ts";
-import { sendOtp } from "../utils/sendEmail.ts";
-import { theValidation } from "../services/validation.ts";
-import { generateOtp } from "../utils/otpGenerate.ts";
-import Jwt from "jsonwebtoken";
-import { loginSchema } from "../services/validation.ts";
+import type { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import otpModel from '../model/otpModel.ts';
+import userModel from '../model/user.ts';
+import { sendOtp } from '../utils/sendEmail.ts';
+import { theValidation } from '../services/validation.ts';
+import { generateOtp } from '../utils/otpGenerate.ts';
+import Jwt from 'jsonwebtoken';
+import { loginSchema } from '../services/validation.ts';
+import { signJwt } from '../services/jwtServices.ts';
+import mongoose from 'mongoose';
+import refreshModel from '../model/refreshtoken';
+import { hashToken } from '../utils/hashTokens.ts';
 
-import { signJwt } from "../services/jwtServices.ts";
-import mongoose from "mongoose";
 
 export const loginCheck = async (req: Request, res: Response) => {
-  console.log(" reached here login");
+  console.log(' reached here login');
   console.log(req.body);
 
   try {
@@ -20,12 +22,12 @@ export const loginCheck = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password are required",
+        message: 'Email and password are required',
       });
     }
     const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
-      const details = error.details.map((err) => err.message);
+      const details = error.details.map(err => err.message);
       return res.status(400).json({ success: false, message: details });
     }
 
@@ -33,7 +35,14 @@ export const loginCheck = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found. Please register first.",
+        message: 'User not found. Please register first.',
+      });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account was created using Google. Please login with Google.',
       });
     }
 
@@ -41,7 +50,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password",
+        message: 'Invalid email or password',
       });
     }
 
@@ -53,19 +62,30 @@ export const loginCheck = async (req: Request, res: Response) => {
         email: user.email,
       },
       process.env.REFRESH_SECRET!,
-      { expiresIn: "30d" }
+      { expiresIn: '30d' },
     );
 
-    res.cookie("refreshToken", refreshToken, {
+    const hashed = hashToken(refreshToken);
+    await refreshModel.findOneAndUpdate(
+      {userId: user._id,},
+      {
+        userId: user._id,
+        tokenhash: hashed,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      { upsert: true,},
+    );
+
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       success: true,
-      message: "Login successful",
+      message: 'Login successful',
       accessToken,
       user: {
         id: user._id,
@@ -74,12 +94,12 @@ export const loginCheck = async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
-    console.log("catch in login worked");
+    console.log('catch in login worked');
 
-    console.error("Login error:", err);
+    console.error('Login error:', err);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
     });
   }
 };
@@ -90,7 +110,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     if (!userId) {
-      return res.status(400).json({ message: "User ID required" });
+      return res.status(400).json({ message: 'User ID required' });
     }
 
     const user = await userModel.findOne({
@@ -100,14 +120,14 @@ export const getUserProfile = async (req: Request, res: Response) => {
       ].filter(Boolean),
     });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     return res.status(200).json({
-      message: "User fetched successfully",
+      message: 'User fetched successfully',
       user,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching user", err });
+    res.status(500).json({ message: 'Error fetching user', err });
   }
 };
 
@@ -118,17 +138,17 @@ export const register = async (req: Request, res: Response) => {
     const { error } = theValidation.validate(req.body, { abortEarly: false });
 
     if (error) {
-      const details = error.details.map((err) => err.message);
+      const details = error.details.map(err => err.message);
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: details,
       });
     }
     const existUser = await userModel.findOne({ email });
 
     if (existUser) {
-      return res.status(400).json({ message: "user already exists" });
+      return res.status(400).json({ message: 'user already exists' });
     }
 
     const otp = generateOtp();
@@ -138,74 +158,73 @@ export const register = async (req: Request, res: Response) => {
 
     await sendOtp(email, otp);
 
-    res
-      .status(200)
-      .json({ message: "plz verify the otp to continue", otp: true });
+    res.status(200).json({ message: 'plz verify the otp to continue', otp: true });
   } catch (err) {
-    console.error("Register Error", err);
-    res.status(500).json({ message: "someting went wrong", success: false });
+    console.error('Register Error', err);
+    res.status(500).json({ message: 'someting went wrong', success: false });
   }
 };
 
 export const verifyOtp = async (req: Request, res: Response) => {
-  console.log("reached here at verify otp");
+  console.log('reached here at verify otp');
   try {
     const { email } = req.query;
     const { otp } = req.body;
     console.log(`${email},${otp}`);
     const otpData = await otpModel.findOne({ email });
-    console.log("before logging otp data");
+    console.log('before logging otp data');
 
     console.log(otpData);
 
-    console.log("after loging otp data");
+    console.log('after loging otp data');
 
     if (!otpData) {
-      console.log("no otp data");
+      console.log('no otp data');
 
-      return res.status(400).json({ message: "otp not found" });
+      return res.status(400).json({ message: 'otp not found' });
     }
     if (otpData.otp.toString() !== otp.toString()) {
-      console.log("otp mismatch");
+      console.log('otp mismatch');
 
-      return res.status(400).json({ message: "Invalid otp" });
+      return res.status(400).json({ message: 'Invalid otp' });
     }
 
     const hashedPassword = await bcrypt.hash(otpData.password, 10);
-    console.log("after hashed pass");
+    console.log('after hashed pass');
 
     const createUser = await userModel.create({
       name: otpData.name,
       email: otpData.email,
       password: hashedPassword,
     });
-    console.log("after create user");
+    console.log('after create user');
 
     console.log(createUser);
 
-    console.log("after loging create logging");
+    console.log('after loging create logging');
     const accessToken = signJwt({ id: otpData._id, email: otpData.email });
     const refreshToken = Jwt.sign(
       { id: otpData._id, email: otpData.email },
       process.env.REFRESH_SECRET!,
-      { expiresIn: "30d" }
+      { expiresIn: '30d' },
     );
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 100,
     });
     await otpModel.deleteOne({ email });
 
     return res.status(200).json({
       success: true,
-      message: "Registration completed successfully",
+      message: 'Registration completed successfully',
+      accessToken: accessToken,
     });
   } catch (err) {
-    console.log("veryfyotp catch woerked", err);
-    res.status(500).json({ message: "Internal server errror" });
+    console.log('veryfyotp catch woerked', err);
+    res.status(500).json({ message: 'Internal server errror', error: err });
   }
 };
 
@@ -223,11 +242,33 @@ export const googleCallback = (req: Request, res: Response) => {
   res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
 
+export const logout = async(req:Request,res:Response)=>{
+  try{
+     const refreToken  = req.cookies.refreshToken;
+     if(!refreToken){
+      return res.status(200).json({success:true,message :"Logged out"})
+     }
+     const hashed = hashToken(refreToken);
+      await refreshModel.deleteOne({tokenhash:hashed})
+       res.clearCookie("refreshToken",{
+        httpOnly:true,
+        secure:false,
+        sameSite:"strict"
+       })
+       return res.status(200).json({sccess:true,message:"Logged out successfully"})
+
+
+  }catch(err){
+    console.log("error in logout");
+    return res.status(500).json({success:false,message:"Internal server Error"})
+    
+  }
+}
+
 export const testpro = (req: Request, res: Response) => {
   try {
-    return res.json({ message: "reached protecteed route" });
+    return res.json({ message: 'reached protecteed routes' });
   } catch (err) {
-    return res.json({ message: "error", error: err });
+    return res.json({ message: 'error', error: err });
   }
 };
-
