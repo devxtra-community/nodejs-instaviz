@@ -1,11 +1,10 @@
 import express from "express";
 import { deviceUsage } from "../../adminController/insightController/Device";
-import { verifyToken } from "../../middleware/verifytoken";
 import { featureStats } from "../../adminController/insightController/feature";
 import { downloadReport } from "../../adminController/insightController/downloadreport";
-import { featureUsage } from "../../middleware/featureLogger";
+import {featureUsage} from '../../utils/featureLogger'
 import { analyticsData } from "../../adminController/insightController/analytics";
-import { adminVerify } from "../../middleware/adminVerify";
+import { adminVerify } from "../../utils/adminVerify"
 
 export const insightsRouter = express.Router();
 
