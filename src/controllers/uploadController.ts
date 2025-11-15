@@ -2,12 +2,12 @@ import type { Request, Response } from 'express';
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import csv from 'csv-parser';
-import fetch from 'node-fetch';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2 } from '../config/r2Client';
 import dataModel from '../model/dataModel';
 import { CustomError } from '../utils/CustomError';
 import { generateAiPromt } from '../utils/aiPrompt';
+import { tokenCheck } from '../middlewares/tokenCheck';
 
 // const apikey =
 let apiKeyIndex = 1;
@@ -26,7 +26,7 @@ const switchApi = () => {
 
 export const fileParsing = async (req: Request, res: Response) => {
   try {
-    console.time('checking');
+    console.time('Parsing CSV');
     if (!req.file) {
       return res.status(404).json({ message: 'File Not Uploaded' });
     }
@@ -108,16 +108,18 @@ export const fileParsing = async (req: Request, res: Response) => {
         r2_url: fileUrl,
       });
       const prompt = generateAiPromt(dataset, computedMetrics);
-      let parsed: any;
+      let aiResponse: any;
       try {
-        console.log(currentApi)
+        console.log(currentApi);
+        console.time('ai response time:');
         const result = await model.generateContent(prompt);
         let responseText = result.response
           .text()
           .trim()
           .replace(/```json|```/g, '');
-        parsed = JSON.parse(responseText);
-        console.log(parsed);
+        aiResponse = JSON.parse(responseText);
+        console.log(aiResponse);
+        console.timeEnd('ai response time:');
       } catch (err: any) {
         const msg = String(err?.message || '');
         if (
@@ -138,7 +140,7 @@ export const fileParsing = async (req: Request, res: Response) => {
         message: 'Dataset processed successfully',
         datasetId: dataset._id,
         r2Url: fileUrl,
-        data: parsed,
+        data: aiResponse,
       });
     };
 

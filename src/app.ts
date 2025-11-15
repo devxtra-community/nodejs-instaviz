@@ -61,7 +61,7 @@ app.use(fileSizeCheck);
 //listening
 // TODO: use .env for urls
 app.listen(process.env.PORT, () => {
-  connection();
+  connection()
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
 app.get("/health", async (req, res) => {

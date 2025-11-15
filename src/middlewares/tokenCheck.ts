@@ -1,14 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
 import dataModel from '../model/dataModel';
-import { verifyToken } from './verifyToken';
-export const tokenCheck = async (error: any, req: Request, res: Response, next: NextFunction) => {
+
+export const tokenCheck = (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log('api in middleware');
+    
     const userIp = req.ip;
     console.log(userIp);
-    // next();
-    return;
+
+    console.log(req.user)
+    next();
   } catch (err) {
-    console.log(err);
+    res.status(403).json({ message: 'Invalid or expired token' });
+    return;
   }
 };

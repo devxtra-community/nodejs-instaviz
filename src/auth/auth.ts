@@ -14,7 +14,6 @@ import mongoose from "mongoose";
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(" reached here login");
   console.log(req.body);
-
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -50,7 +49,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     const refreshToken = Jwt.sign(
       {
         id: user._id,
-        email: user.email,
+        email: user.email
       },
       process.env.REFRESH_SECRET!,
       { expiresIn: "30d" }
