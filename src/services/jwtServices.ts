@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Response, Request } from "express";
-import { emitWarning } from "process";
+import { hashToken } from "../utils/hashTokens";
+import refreshModel from "../model/refreshtoken";
 
 export const signJwt = (payload: object) => {
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "15m" });
@@ -18,6 +19,12 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       refreshToken,
       process.env.REFRESH_SECRET!
     ) as { id: string; email: string };
+    const hashedToken = hashToken(refreshToken);
+    const savedToken = await refreshModel.findOne({tokenhash:hashedToken})
+    if(!savedToken){
+      return res.status(401).json({success:false,message:"invalid refreshtoken"})
+    }
+
 
     const jwtPayload = { id: correctCheck.id, email: correctCheck.email };
 
