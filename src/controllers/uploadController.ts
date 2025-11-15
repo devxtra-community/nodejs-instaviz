@@ -71,25 +71,26 @@ export const fileParsing = async (req: Request, res: Response) => {
             Bucket: process.env.R2_BUCKET_NAME!,
             Key: fileName,
             Body: fileBuffer,
-            ContentType: 'text/csv',
-          }),
+            ContentType: "text/csv",
+          })
         );
       } catch (err) {
-        console.error('R2 upload error:', err);
-        return res.status(500).json({ message: 'R2 upload failed', success: false });
+        console.error("R2 upload error:", err);
+        return res.status(500).json({ message: "R2 upload failed", success: false });
       }
 
-      fs.unlink(filepath, () => {});
+      fs.unlink(filepath, () => { });
 
       // Public file URL
       const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
       console.log(fileUrl);
+
       // Compute metrics
       const totalColumns = headers.length;
       let missingValues = 0;
       for (const row of results) {
         for (const val of Object.values(row)) {
-          if (val === '' || val === null || val === undefined) missingValues++;
+          if (val === "" || val === null || val === undefined) missingValues++;
         }
       }
 
@@ -99,7 +100,7 @@ export const fileParsing = async (req: Request, res: Response) => {
         missing_values: missingValues,
       };
 
-      // Save sample data in MongoDB
+      // Save sample data in MongoDB (your own DB)
       const dataset = await dataModel.create({
         data: results.slice(0, 10),
         user_id: req.body.user_id || null,
@@ -107,26 +108,26 @@ export const fileParsing = async (req: Request, res: Response) => {
         chart_id: null,
         r2_url: fileUrl,
       });
-      const prompt = generateAiPromt(dataset, computedMetrics);
+
+
+      // Gemini + MCP-aware prompt
+      const prompt = generateAiPromt(computedMetrics, dataset);
       let parsed: any;
+
       try {
-        console.log(currentApi)
+        console.log(currentApi);
         const result = await model.generateContent(prompt);
-        let responseText = result.response
-          .text()
-          .trim()
-          .replace(/```json|```/g, '');
+        let responseText = result.response.text().trim().replace(/```json|```/g, "");
         parsed = JSON.parse(responseText);
-        console.log(parsed);
       } catch (err: any) {
-        const msg = String(err?.message || '');
+        const msg = String(err?.message || "");
         if (
           err.status == 503 ||
-          msg.includes('quota') ||
-          msg.includes('exceeded') ||
-          msg.includes('429')
+          msg.includes("quota") ||
+          msg.includes("exceeded") ||
+          msg.includes("429")
         ) {
-          console.log('Limit Reached For This Api Key');
+          console.log("Limit Reached For This Api Key");
           switchApi();
         } else {
           console.log(err);
@@ -135,12 +136,13 @@ export const fileParsing = async (req: Request, res: Response) => {
 
       res.status(200).json({
         success: true,
-        message: 'Dataset processed successfully',
+        message: "Dataset processed successfully",
         datasetId: dataset._id,
         r2Url: fileUrl,
         data: parsed,
       });
     };
+
 
     const stream = fs.createReadStream(filepath, { encoding: 'utf-8' }).pipe(csv());
     stream
