@@ -17,6 +17,7 @@ import { raw } from 'body-parser';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
+import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
 
 const app = express()
 app.use(express.json())
@@ -51,10 +52,12 @@ app.use("/auth", googleRouter)
 app.use("/payment", paymentRouter)
 app.use("/payment",paymentRouter)
 
+
 // admin routes
 app.use("/admin/dashboard",adminrouter)
 app.use('/admin/dashboard',insightsRouter)
 app.use('/admin/dashboard',tokenrouter)
+app.use("/admin/dashboard/plans",plansRouter)
 
                                                                       
 
