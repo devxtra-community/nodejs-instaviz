@@ -1,19 +1,26 @@
 import passport from "passport";
 import { Router } from "express";
-import { googleCallback } from "../controller/auth/auth.ts";
+import { googleCallback, logout } from "../auth/auth.ts";
 
-const googleRouter = Router();
+import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
+import { testpro } from "../auth/auth.ts";
+import { refreshAccessToken } from "../services/jwtServices.ts";
+import {deviceLogger} from '../utils/deviceLogger.ts'
+import { verifyToken } from "../middlewares/verifyToken.ts";
 
-// Login
-// Signup
-// Refresh
-// GetAuthData
-// Logout
-// Google/<methods>
 
-// Properly use .env
+const authRouter = Router();
 
-googleRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
-googleRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
+// login authentication
+authRouter.post('/login',loginCheck , deviceLogger);
+authRouter.post("/register",register);
+authRouter.post("/verifyOtp",verifyOtp);
+authRouter.get("/test",verifyToken,testpro)
+authRouter.post("/newRefreshToken",refreshAccessToken)
+authRouter.post("/logout",logout)
 
-export default googleRouter;
+// google authentication
+authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
+authRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
+
+export default authRouter;
