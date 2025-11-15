@@ -2,8 +2,9 @@ import { Router } from "express";
 import { uploadStats } from "../../adminController/activityController/uploadStats";
 import { uploadSuccess } from "../../adminController/activityController/uploadSuccess";
 import { peakHours } from "../../adminController/activityController/peakHour";
+import { adminVerify } from "../../middleware/adminVerify";
 
 export const activityRouter = Router()
-activityRouter.get('/uploadstats' , uploadStats)
-activityRouter.get('/uploadsuccess' , uploadSuccess)
-activityRouter.get('/peakhours',peakHours)
+activityRouter.get('/uploadstats' , adminVerify , uploadStats)
+activityRouter.get('/uploadsuccess' , adminVerify , uploadSuccess)
+activityRouter.get('/peakhours', adminVerify , peakHours)
