@@ -1,9 +1,11 @@
+dotenv.config()
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
+import mongoose from 'mongoose'
+import morgan, { token } from 'morgan';
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
-import multer from 'multer';
-import mongoose from 'mongoose';
-import morgan from 'morgan';
 import cors from 'cors';
 import passport from './config/passport.ts';
 import cookieParser from "cookie-parser";
@@ -13,6 +15,10 @@ import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 import { raw } from 'body-parser';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
+import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
+import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
+
+
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import { activityRouter } from './routes/adminroutes/activityRouter.ts';
 import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
@@ -50,7 +56,14 @@ app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
 app.use("/payment",paymentRouter)
 
+
 // admin routes
+app.use("/admin/dashboard",adminrouter)
+app.use('/admin/dashboard',insightsRouter)
+app.use('/admin/dashboard',tokenrouter)
+app.use("/admin/dashboard/plans",plansRouter)
+
+                                                                      
 app.use('/admin',adminAuthRouter)
 app.use('/admin',insightsRouter)
 app.use('/admin',activityRouter)
