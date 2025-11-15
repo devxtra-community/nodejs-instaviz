@@ -10,21 +10,21 @@ import { GetSingleuser } from "../../adminController/userController"
 import { singleUsertoken } from "../../adminController/userController";
 import { addGustuser } from "../../adminController/userController";
 
-export const adminrouter = Router()
+export  const adminUserRouter = Router()
 
 
-adminrouter.get("/loggedusers",loggedusers)
-adminrouter.get("/gustusers",fetchAllgustusers)
-adminrouter.get("/getallusers",getAllusers)
-adminrouter.get("/newuserpermonth",getNewUsersPerMonth)
+adminUserRouter.get("/loggedusers",loggedusers)
+adminUserRouter.get("/gustusers",fetchAllgustusers)
+adminUserRouter.get("/getallusers",getAllusers)
+adminUserRouter.get("/newuserpermonth",getNewUsersPerMonth)
 
-adminrouter.get("/alluserspage",alluserspage)
-adminrouter.get("/singleuser/:id",GetSingleuser)
-adminrouter.get("/singltoken/:id",singleUsertoken)
-
-
+adminUserRouter.get("/alluserspage",alluserspage)
+adminUserRouter.get("/singleuser/:id",GetSingleuser)
+adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
 
 
-adminrouter.post("/addgustuser",addGustuser)
+
+
+adminUserRouter.post("/addgustuser",addGustuser)
 

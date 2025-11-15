@@ -22,6 +22,8 @@ import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import { activityRouter } from './routes/adminroutes/activityRouter.ts';
 import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
+import {adminUserRouter} from "./routes/adminroutes/userRouter.ts"
+
 
 const app = express();
 app.use(express.json({limit:"50mb"}));
@@ -56,17 +58,16 @@ app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
 app.use("/payment",paymentRouter)
 
-
-// admin routes
-app.use("/admin/dashboard",adminrouter)
-app.use('/admin/dashboard',insightsRouter)
-app.use('/admin/dashboard',tokenrouter)
-app.use("/admin/dashboard/plans",plansRouter)
-
-                                                                      
+//admin routes
 app.use('/admin',adminAuthRouter)
 app.use('/admin',insightsRouter)
 app.use('/admin',activityRouter)
+
+
+app.use('/admin',adminUserRouter)
+app.use('/admin',insightsRouter)
+app.use('/admin',tokenrouter)
+app.use("/admin",plansRouter)
 
 //file upload check
 app.use(fileSizeCheck);
