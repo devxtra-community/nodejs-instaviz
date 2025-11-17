@@ -6,9 +6,9 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 import cors from 'cors';
 import passport from './config/passport.ts';
-import cookieParser from "cookie-parser";
+import cookieParser from 'cookie-parser';
 import authRouter from './routes/authRoutes.ts';
-import uploadRouter from './routes/uploadRouter.ts'
+import uploadRouter from './routes/uploadRouter.ts';
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
@@ -42,15 +42,15 @@ app.use(
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
 //middleware
-app.use("/upload", uploadRouter)
-app.use("/user", userRouter)
-app.use("/auth", authRouter)
-app.use("/payment", paymentRouter)
-app.use("/payment",paymentRouter)
+app.use('/upload', uploadRouter);
+app.use('/user', userRouter);
+app.use('/auth', authRouter);
+app.use('/payment', paymentRouter);
+app.use('/payment', paymentRouter);
 
 // admin routes
-app.use("/admin/dashboard",adminrouter)
-app.use('/admin/dashboard',insightsRouter)
+app.use('/admin/dashboard', adminrouter);
+app.use('/admin/dashboard', insightsRouter);
 
 //file upload check
 app.use(fileSizeCheck);
@@ -61,16 +61,16 @@ app.use(fileSizeCheck);
 //listening
 // TODO: use .env for urls
 app.listen(process.env.PORT, () => {
-  connection()
+  connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
-app.get("/health", async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+app.get('/health', async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
 
   res.json({
-    status: "ok",
+    status: 'ok',
     db: dbStatus,
     uptime: process.uptime(),
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
   });
 });

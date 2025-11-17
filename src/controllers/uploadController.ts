@@ -1,18 +1,28 @@
+// src/controllers/uploadController.ts
 import type { Request, Response } from 'express';
 import fs from 'fs';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import csv from 'csv-parser';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2 } from '../config/r2Client';
 import dataModel from '../model/dataModel';
 import { CustomError } from '../utils/CustomError';
 import { generateAiPromt } from '../utils/aiPrompt';
-import { tokenCheck } from '../middlewares/tokenCheck';
 
-// const apikey =
-let apiKeyIndex = 1;
-const apiKeys = process.env.GEMINI_API_KEY!.split(',').map(k => k.trim());
+interface UserPayload {
+  userId: string;
+  isGuest?: boolean;
+}
+
+type AuthedRequest = Request & {
+  user?: UserPayload;
+};
+
+//  Gemini setup 
+let apiKeyIndex = 0;
+const apiKeys = process.env.GEMINI_API_KEY!.split(',').map((k) => k.trim());
 let currentApi = apiKeys[apiKeyIndex];
+
 let genAI = new GoogleGenerativeAI(currentApi);
 let model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
@@ -21,25 +31,28 @@ const switchApi = () => {
   currentApi = apiKeys[apiKeyIndex];
   genAI = new GoogleGenerativeAI(currentApi);
   model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  console.log('Api Key swithed', currentApi);
+  console.log('API key switched to', currentApi);
 };
 
+//  Controller 
 export const fileParsing = async (req: Request, res: Response) => {
   try {
+    console.log("entering to upload controller")
     console.time('Parsing CSV');
     if (!req.file) {
       return res.status(404).json({ message: 'File Not Uploaded' });
     }
+
     const file = req.file as Express.Multer.File;
     const filepath = file.path;
+
     const results: any[] = [];
     let headers: string[] = [];
     let totalRows = 0;
     let responded = false;
+
     const handleOnHeaders = (hdrs: string[]) => {
       headers = hdrs;
-      // TODO: Check and remove
-      // console.log("Header evert called : ", headerOnCalledCount++, hdrs);
     };
 
     const handleOnData = (data: any) => {
@@ -49,6 +62,7 @@ export const fileParsing = async (req: Request, res: Response) => {
 
     const handleOnError = (err: any) => {
       console.log('error while parsing csv:', err);
+      responded = true;
       return res.status(500).json({
         message: 'error parsing csv',
         success: false,
@@ -61,7 +75,7 @@ export const fileParsing = async (req: Request, res: Response) => {
       responded = true;
       console.timeEnd('Parsing CSV');
 
-      // Upload to Cloudflare R2
+      //  Uploading to Cloudflare R2 
       const fileBuffer = fs.readFileSync(filepath);
       const fileName = `${Date.now()}_${file.originalname}`;
 
@@ -76,20 +90,26 @@ export const fileParsing = async (req: Request, res: Response) => {
         );
       } catch (err) {
         console.error('R2 upload error:', err);
-        return res.status(500).json({ message: 'R2 upload failed', success: false });
+        return res.status(500).json({
+          message: 'R2 upload failed',
+          success: false,
+        });
       }
 
-      fs.unlink(filepath, () => {});
+      fs.unlink(filepath, () => { });
 
-      // Public file URL
       const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
-      console.log(fileUrl);
-      // Compute metrics
+      console.log('Uploaded file URL:', fileUrl);
+
+      //  Compute basic metrics 
       const totalColumns = headers.length;
       let missingValues = 0;
+
       for (const row of results) {
         for (const val of Object.values(row)) {
-          if (val === '' || val === null || val === undefined) missingValues++;
+          if (val === '' || val === null || val === undefined) {
+            missingValues++;
+          }
         }
       }
 
@@ -99,43 +119,57 @@ export const fileParsing = async (req: Request, res: Response) => {
         missing_values: missingValues,
       };
 
-      // Save sample data in MongoDB
+      //  Get user id from middleware 
+      const authedReq = req as AuthedRequest;
+      const userId = authedReq.user?.userId;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not identified',
+        });
+      }
+
       const dataset = await dataModel.create({
         data: results.slice(0, 10),
-        user_id: req.body.user_id || null,
+        user_id: userId as any,
         chat_id: null,
         chart_id: null,
         r2_url: fileUrl,
       });
+
       const prompt = generateAiPromt(dataset, computedMetrics);
       let aiResponse: any;
+
       try {
-        console.log(currentApi);
-        console.time('ai response time:');
+        console.log('Using Gemini API key:', currentApi);
+        console.time('AI response time:');
         const result = await model.generateContent(prompt);
+
         let responseText = result.response
           .text()
           .trim()
           .replace(/```json|```/g, '');
+
         aiResponse = JSON.parse(responseText);
-        console.log(aiResponse);
-        console.timeEnd('ai response time:');
+        console.log('AI response:', aiResponse);
+        console.timeEnd('AI response time:');
       } catch (err: any) {
         const msg = String(err?.message || '');
         if (
-          err.status == 503 ||
+          err.status === 503 ||
           msg.includes('quota') ||
           msg.includes('exceeded') ||
           msg.includes('429')
         ) {
-          console.log('Limit Reached For This Api Key');
+          console.log('Limit reached for this API key, switching...');
           switchApi();
         } else {
-          console.log(err);
+          console.log('Error from Gemini:', err);
         }
       }
-
-      res.status(200).json({
+      // const tokenReducing = await userModel
+      return res.status(200).json({
         success: true,
         message: 'Dataset processed successfully',
         datasetId: dataset._id,
@@ -144,13 +178,15 @@ export const fileParsing = async (req: Request, res: Response) => {
       });
     };
 
-    const stream = fs.createReadStream(filepath, { encoding: 'utf-8' }).pipe(csv());
+    const stream = fs
+      .createReadStream(filepath, { encoding: 'utf-8' })
+      .pipe(csv());
+
     stream
       .on('headers', handleOnHeaders)
       .on('data', handleOnData)
       .on('error', handleOnError)
       .on('end', handleOnEnd);
-    //..
   } catch (err) {
     console.log(err);
     const error = new CustomError({ errorData: String(err), statusCode: 404 });
