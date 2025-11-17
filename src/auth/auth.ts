@@ -66,6 +66,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     );
 
     const hashed = hashToken(refreshToken);
+    
     await refreshModel.findOneAndUpdate(
       {userId: user._id,},
       {
