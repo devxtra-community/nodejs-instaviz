@@ -51,16 +51,16 @@ export const changePassword = async (req: Request, res: Response) => {
     console.log(req.body);
 
     if (!userId || !oldPassword || !newPassword) {
-      return res.status(400).json({ message: 'All fields required..' });
+      return res.status(403).json({ message: 'All fields required..' });
     }
     const user = await userModel.findOne({ _id: userId });
-
+    console.log(user)
     if (!user) {
-      return res.status(404).json({ message: 'User is not found..' });
+      return res.status(400).json({ message: 'User is not found..' });
     }
 
     if (user.googleId) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: 'This account uses Google Login. Password cannot be changed.',
       });
     }
@@ -68,7 +68,7 @@ export const changePassword = async (req: Request, res: Response) => {
     const isCorrect = await bcrypt.compare(oldPassword, user.password!);
 
     if (!isCorrect) {
-      return res.status(401).json({ message: 'Password is not matching.!' });
+      return res.status(400).json({ message: 'Password is not matching.!' });
     }
 
     const hashed = await bcrypt.hash(newPassword, 10);
