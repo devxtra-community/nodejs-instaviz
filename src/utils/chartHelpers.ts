@@ -17,12 +17,9 @@ export function generateChartData(
   const finalCharts: FinalChart[] = [];
 
   for (const chart of aiCharts) {
-    // ======== FORCE SUPPORTED CHART TYPES ONLY ========
     if (chart.type !== "bar" && chart.type !== "pie") continue;
 
-    // =======================
     // BAR CHART
-    // =======================
     if (chart.type === "bar") {
       const xCol = chart.x;
       let yCol = chart.y;
@@ -49,9 +46,7 @@ export function generateChartData(
       });
     }
 
-    // =======================
     // PIE CHART
-    // =======================
     if (chart.type === "pie") {
       const xCol = chart.label; // AI uses "label" but frontend uses "x"
 
