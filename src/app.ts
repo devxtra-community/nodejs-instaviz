@@ -6,9 +6,10 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 import cors from 'cors';
 import passport from './config/passport.ts';
-import cookieParser from "cookie-parser";
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 import authRouter from './routes/authRoutes.ts';
-import uploadRouter from './routes/uploadRouter.ts'
+import uploadRouter from './routes/uploadRouter.ts';
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
@@ -16,11 +17,18 @@ import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 
 const app = express();
-app.use(express.json({limit:"50mb"}));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use(morgan('dev')); //TODO: WHY ???. dev
+
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 //database connection
 const connection = async () => {
@@ -39,18 +47,21 @@ app.use(
   }),
 );
 
+app.use(limiter);
+
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
 //middleware
-app.use("/upload", uploadRouter)
-app.use("/user", userRouter)
-app.use("/auth", authRouter)
-app.use("/payment", paymentRouter)
-app.use("/payment",paymentRouter)
+app.use('/upload', uploadRouter);
+app.use('/user', userRouter);
+app.use('/auth', authRouter);
+app.use('/payment', paymentRouter);
+
+app.use('/payment', paymentRouter);
 
 // admin routes
-app.use("/admin/dashboard",adminrouter)
-app.use('/admin/dashboard',insightsRouter)
+app.use('/admin/dashboard', adminrouter);
+app.use('/admin/dashboard', insightsRouter);
 
 //file upload check
 app.use(fileSizeCheck);
@@ -64,13 +75,13 @@ app.listen(process.env.PORT, () => {
   connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
-app.get("/health", async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+app.get('/health', async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
 
   res.json({
-    status: "ok",
+    status: 'ok',
     db: dbStatus,
     uptime: process.uptime(),
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
   });
 });
