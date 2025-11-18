@@ -1,159 +1,173 @@
-import type { Request, Response } from 'express';
-import fs from 'fs';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import csv from 'csv-parser';
-import fetch from 'node-fetch';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2 } from '../config/r2Client';
-import dataModel from '../model/dataModel';
-import { CustomError } from '../utils/CustomError';
-import { generateAiPromt } from '../utils/aiPrompt';
+// controllers/fileParsing.ts
+import type { Request, Response } from "express";
+import fs from "fs";
+import csv from "csv-parser";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { r2 } from "../config/r2Client";
+import dataModel from "../model/dataModel";
+import {
+  initStreamingAgg,
+  updateStreamingAgg,
+  finalizeStreamingAgg,
+} from "../utils/streamAggregations";
+import { generateAiPromt } from "../utils/aiPrompt";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateChartData } from "../utils/chartHelpers";
 
-// const apikey =
-let apiKeyIndex = 1;
-const apiKeys = process.env.GEMINI_API_KEY!.split(',').map(k => k.trim());
+export const fileParsing = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "File not uploaded" });
+
+    const file = req.file;
+    const filepath = file.path;
+
+    const streamAgg = initStreamingAgg();
+    const sampleRows: any[] = [];
+    let headers: string[] = [];
+
+    const readStream = fs.createReadStream(filepath).pipe(csv());
+
+    readStream.on("headers", (hdr) => (headers = hdr));
+
+    readStream.on("data", (row) => {
+      if (sampleRows.length < 10) sampleRows.push(row);
+      updateStreamingAgg(streamAgg, row);
+    });
+
+    readStream.on("end", async () => {
+      const aggregations = finalizeStreamingAgg(streamAgg);
+
+      const computedMetrics = {
+        total_rows: aggregations.meta.total_rows,
+        total_columns: aggregations.meta.total_columns,
+        missing_values: calculateTotalMissing(aggregations),
+      };
+
+      // Upload CSV
+      const fileBuffer = fs.readFileSync(filepath);
+      const fileName = `${Date.now()}_${file.originalname}`;
+      await r2.send(
+        new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME!,
+          Key: fileName,
+          Body: fileBuffer,
+          ContentType: "text/csv",
+        })
+      );
+
+      const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
+      fs.unlinkSync(filepath);
+
+      // Save sample rows only in DB
+      const dataset = await dataModel.create({
+        user_id: req.body.user_id || null,
+        r2_url: fileUrl,
+        data: sampleRows,
+      });
+
+      // AI Chart Selection
+      const prompt = generateAiPromt(computedMetrics, aggregations, sampleRows);
+      const aiResult = await runAi(prompt);
+
+      //  **Generate REAL chart data**
+      const finalCharts = generateChartData(aiResult?.charts || [], aggregations);
+
+      // Return response
+      return res.json({
+        success: true,
+        datasetId: dataset._id,
+        r2Url: fileUrl,
+        data: {
+          metrics: {
+            ...computedMetrics,
+            charts_generated: finalCharts.length,
+          },
+          charts: finalCharts,
+          summary: aiResult?.insights || [],
+          best_columns: aiResult?.best_columns || {},
+          key_fields: aiResult?.key_fields || [],
+        },
+        aggregations, // optional
+      });
+    });
+
+    readStream.on("error", (err) => {
+      return res.status(500).json({ success: false, message: "CSV parse error", error: err });
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Server error", error: err });
+  }
+};
+
+// Count missing data
+function calculateTotalMissing(aggregations: any): number {
+  let total = 0;
+  for (const col in aggregations.numeric) total += aggregations.numeric[col].missing;
+  for (const col in aggregations.categorical) total += aggregations.categorical[col].missing;
+  return total;
+}
+
+// GLOBAL API KEY ROTATION (your requested style)
+let apiKeyIndex = 0;
+const apiKeys = process.env.GEMINI_API_KEY!.split(",").map((k) => k.trim());
+
 let currentApi = apiKeys[apiKeyIndex];
 let genAI = new GoogleGenerativeAI(currentApi);
-let model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+let model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 const switchApi = () => {
   apiKeyIndex = (apiKeyIndex + 1) % apiKeys.length;
   currentApi = apiKeys[apiKeyIndex];
+
   genAI = new GoogleGenerativeAI(currentApi);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  console.log('Api Key swithed', currentApi);
+  model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+  console.log(" API Key switched to:", currentApi);
 };
 
-export const fileParsing = async (req: Request, res: Response) => {
-  try {
-    console.time('checking');
-    if (!req.file) {
-      return res.status(404).json({ message: 'File Not Uploaded' });
+// RUN AI WITH SINGLE-KEY + ROTATION ON FAILURE
+async function runAi(prompt: string) {
+  let attempts = 0;
+
+  while (attempts < apiKeys.length) {
+    try {
+      console.log(` Using Gemini API key #${apiKeyIndex + 1}`);
+
+      const response = await model.generateContent(prompt);
+
+      let raw = response.response.text().replace(/```json|```/g, "").trim();
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end === -1) {
+        throw new Error("AI returned no JSON block");
+      }
+
+      return JSON.parse(raw.substring(start, end + 1));
+    } catch (err: any) {
+      const msg = String(err?.message || "");
+
+      console.error(` Gemini Error (key ${apiKeyIndex + 1}):`, msg);
+
+      // QUOTA / LIMIT ERRORS → ROTATE
+      if (
+        err.status === 503 ||
+        msg.includes("quota") ||
+        msg.includes("429") ||
+        msg.includes("exceeded")
+      ) {
+        console.log(" Limit reached. Switching API key...");
+        switchApi();
+        attempts++;
+        continue; // try with next key
+      }
+
+      // OTHER ERRORS → DO NOT ROTATE, JUST RETURN
+      console.error(" Non-quota error. Stopping.");
+      return null;
     }
-    const file = req.file as Express.Multer.File;
-    const filepath = file.path;
-    const results: any[] = [];
-    let headers: string[] = [];
-    let totalRows = 0;
-    let responded = false;
-    const handleOnHeaders = (hdrs: string[]) => {
-      headers = hdrs;
-      // TODO: Check and remove
-      // console.log("Header evert called : ", headerOnCalledCount++, hdrs);
-    };
-
-    const handleOnData = (data: any) => {
-      totalRows++;
-      results.push(data);
-    };
-
-    const handleOnError = (err: any) => {
-      console.log('error while parsing csv:', err);
-      return res.status(500).json({
-        message: 'error parsing csv',
-        success: false,
-        error: String(err),
-      });
-    };
-
-    const handleOnEnd = async () => {
-      if (responded) return;
-      responded = true;
-      console.timeEnd('Parsing CSV');
-
-      // Upload to Cloudflare R2
-      const fileBuffer = fs.readFileSync(filepath);
-      const fileName = `${Date.now()}_${file.originalname}`;
-
-      try {
-        await r2.send(
-          new PutObjectCommand({
-            Bucket: process.env.R2_BUCKET_NAME!,
-            Key: fileName,
-            Body: fileBuffer,
-            ContentType: "text/csv",
-          })
-        );
-      } catch (err) {
-        console.error("R2 upload error:", err);
-        return res.status(500).json({ message: "R2 upload failed", success: false });
-      }
-
-      fs.unlink(filepath, () => { });
-
-      // Public file URL
-      const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
-      console.log(fileUrl);
-
-      // Compute metrics
-      const totalColumns = headers.length;
-      let missingValues = 0;
-      for (const row of results) {
-        for (const val of Object.values(row)) {
-          if (val === "" || val === null || val === undefined) missingValues++;
-        }
-      }
-
-      const computedMetrics = {
-        total_rows: totalRows,
-        total_columns: totalColumns,
-        missing_values: missingValues,
-      };
-
-      // Save sample data in MongoDB (your own DB)
-      const dataset = await dataModel.create({
-        data: results.slice(0, 10),
-        user_id: req.body.user_id || null,
-        chat_id: null,
-        chart_id: null,
-        r2_url: fileUrl,
-      });
-
-
-      // Gemini + MCP-aware prompt
-      const prompt = generateAiPromt(computedMetrics, dataset);
-      let parsed: any;
-
-      try {
-        console.log(currentApi);
-        const result = await model.generateContent(prompt);
-        let responseText = result.response.text().trim().replace(/```json|```/g, "");
-        parsed = JSON.parse(responseText);
-      } catch (err: any) {
-        const msg = String(err?.message || "");
-        if (
-          err.status == 503 ||
-          msg.includes("quota") ||
-          msg.includes("exceeded") ||
-          msg.includes("429")
-        ) {
-          console.log("Limit Reached For This Api Key");
-          switchApi();
-        } else {
-          console.log(err);
-        }
-      }
-
-      res.status(200).json({
-        success: true,
-        message: "Dataset processed successfully",
-        datasetId: dataset._id,
-        r2Url: fileUrl,
-        data: parsed,
-      });
-    };
-
-
-    const stream = fs.createReadStream(filepath, { encoding: 'utf-8' }).pipe(csv());
-    stream
-      .on('headers', handleOnHeaders)
-      .on('data', handleOnData)
-      .on('error', handleOnError)
-      .on('end', handleOnEnd);
-    //..
-  } catch (err) {
-    console.log(err);
-    const error = new CustomError({ errorData: String(err), statusCode: 404 });
-    return res.status(error.statusCode).json(error);
   }
-};
+
+  console.error(" All API keys exhausted.");
+  return null;
+}
+
