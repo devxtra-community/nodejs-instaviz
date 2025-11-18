@@ -1,32 +1,32 @@
-import express, { NextFunction, Request, Response } from 'express';
-import dotenv from 'dotenv';
+import express, { NextFunction, Request, Response } from "express";
+import dotenv from "dotenv";
 dotenv.config();
-import multer from 'multer';
-import mongoose from 'mongoose';
-import morgan from 'morgan';
-import cors from 'cors';
-import passport from './config/passport.ts';
-import cookieParser from 'cookie-parser';
-import authRouter from './routes/authRoutes.ts';
-import uploadRouter from './routes/uploadRouter.ts';
-import userRouter from './routes/userRouter.ts';
-import paymentRouter from './routes/paymentRoutes.js';
-import { adminrouter } from './routes/adminroutes/userRouter.ts';
-import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
-import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
+import multer from "multer";
+import mongoose from "mongoose";
+import morgan from "morgan";
+import cors from "cors";
+import passport from "./config/passport.ts";
+import cookieParser from "cookie-parser";
+import authRouter from "./routes/authRoutes.ts";
+import uploadRouter from "./routes/uploadRouter.ts";
+import userRouter from "./routes/userRouter.ts";
+import paymentRouter from "./routes/paymentRoutes.js";
+import { adminrouter } from "./routes/adminroutes/userRouter.ts";
+import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
+import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
-app.use(morgan('dev')); //TODO: WHY ???. dev
+app.use(morgan("dev"));
 
 //database connection
 const connection = async () => {
   try {
     await mongoose.connect(process.env.mongo_uri!);
-    console.log('Mongoose connected');
+    console.log("Mongoose connected");
   } catch (err) {
     console.log(err);
   }
@@ -39,18 +39,18 @@ app.use(
   }),
 );
 
-app.use('/payment/webhook', express.raw({ type: 'application/json' }));
+app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
-app.use('/upload', uploadRouter);
-app.use('/user', userRouter);
-app.use('/auth', authRouter);
-app.use('/payment', paymentRouter);
-app.use('/payment', paymentRouter);
+app.use("/upload", uploadRouter);
+app.use("/user", userRouter);
+app.use("/auth", authRouter);
+app.use("/payment", paymentRouter);
+app.use("/payment", paymentRouter);
 
 // admin routes
-app.use('/admin/dashboard', adminrouter);
-app.use('/admin/dashboard', insightsRouter);
+app.use("/admin/dashboard", adminrouter);
+app.use("/admin/dashboard", insightsRouter);
 
 //file upload check
 app.use(fileSizeCheck);
@@ -64,11 +64,11 @@ app.listen(process.env.PORT, () => {
   connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
-app.get('/health', async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+app.get("/health", async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
 
   res.json({
-    status: 'ok',
+    status: "ok",
     db: dbStatus,
     uptime: process.uptime(),
     time: new Date().toISOString(),

@@ -24,14 +24,14 @@ const apiKeys = process.env.GEMINI_API_KEY!.split(',').map((k) => k.trim());
 let currentApi = apiKeys[apiKeyIndex];
 
 let genAI = new GoogleGenerativeAI(currentApi);
-let model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+let model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
 const switchApi = () => {
   apiKeyIndex = (apiKeyIndex + 1) % apiKeys.length;
   currentApi = apiKeys[apiKeyIndex];
   genAI = new GoogleGenerativeAI(currentApi);
   model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  console.log('API key switched to', currentApi);
+  console.log('API key switched to', currentApi)
 };
 
 //  Controller 
