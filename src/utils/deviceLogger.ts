@@ -12,7 +12,8 @@ export const deviceLogger = async (req : Request , res : Response , next : NextF
         userAgent : req.headers['user-agent'] || 'unknown', // browser + os info
         ipAddress : req.ip || // request IP
         (req.headers['x-forwarded-for'] as string) || // For proxy / production servers
-        req.socket.remoteAddress // fallback method to get IP Address
+        req.socket.remoteAddress, // fallback method to get IP Address
+        action: req.route.path //  saves "/fileupload" or "/login"
     })
 
     next()

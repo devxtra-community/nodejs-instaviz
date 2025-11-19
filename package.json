@@ -1,7 +1,7 @@
 {
   "name": "config2",
   "version": "1.0.0",
-  "description": "",
+  "description": "��#\u0000 \u0000n\u0000o\u0000d\u0000e\u0000j\u0000s\u0000-\u0000i\u0000n\u0000s\u0000t\u0000a\u0000v\u0000i\u0000z\u0000\r\u0000 \u0000",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -32,7 +32,7 @@
     "express-rate-limit": "^8.2.1",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1",
+    "mongoose": "^8.19.4",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
@@ -49,9 +49,18 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.0",
     "@types/nodemailer": "^7.0.3",
+    "eslint": "^9.39.1",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devxtra-community/nodejs-instaviz.git"
+  },
+  "bugs": {
+    "url": "https://github.com/devxtra-community/nodejs-instaviz/issues"
+  },
+  "homepage": "https://github.com/devxtra-community/nodejs-instaviz#readme"
 }

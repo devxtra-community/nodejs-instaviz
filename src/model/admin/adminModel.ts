@@ -2,7 +2,9 @@ import mongoose, { Schema } from "mongoose";
 
 interface Admin {
     email: string,
-    password: string
+    password: string,
+    role : string,
+    refreshToken?: string; 
 };
 
 const adminSchema = new Schema<Admin>({
@@ -13,6 +15,10 @@ const adminSchema = new Schema<Admin>({
     password: {
         type: String, required: true
     },
+    role :{
+        type : String , default : "admin"
+    },
+     refreshToken: { type: String, default: null }
 
 });
 

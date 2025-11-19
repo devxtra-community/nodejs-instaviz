@@ -4,7 +4,7 @@ import { hashToken } from "../utils/hashTokens";
 import refreshModel from "../model/refreshtoken";
 
 export const signJwt = (payload: object) => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1m" });
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "10s" });
 };
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
@@ -24,7 +24,6 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     if(!savedToken){
       return res.status(401).json({success:false,message:"invalid refreshtoken"})
     }
-
 
     const jwtPayload = { id: correctCheck.id, email: correctCheck.email };
 

@@ -1,25 +1,31 @@
 import { Router } from "express";
 
-import { addGustuser } from "../../admincontroller/userController";
-import { loggedusers } from "../../admincontroller/userController";
-import { fetchAllgustusers } from "../../admincontroller/userController";
-import { getNewUsersPerMonth } from "../../admincontroller/userController";
-import { getAllusers } from "../../admincontroller/userController";
+import { verifyAdmin } from "../../middlewares/verifyAdmin";
 
-export const adminrouter = Router()
+import { loggedusers } from "../../adminController/userController"
+import { fetchAllgustusers } from "../../adminController/userController"
+import { getNewUsersPerMonth } from "../../adminController/userController"
+import { getAllusers } from "../../adminController/userController"
+import { alluserspage } from "../../adminController/userController"
+import { GetSingleuser } from "../../adminController/userController"
+import { singleUsertoken } from "../../adminController/userController";
+import { addGustuser } from "../../adminController/userController";
 
-
-adminrouter.get("/loggedusers",loggedusers)
-adminrouter.get("/gustusers",fetchAllgustusers)
-adminrouter.get("/getallusers",getAllusers)
-adminrouter.get("/newuserpermonth",getNewUsersPerMonth)
-
+export  const adminUserRouter = Router()
 
 
+adminUserRouter.get("/loggedusers",verifyAdmin,loggedusers)
+adminUserRouter.get("/gustusers",fetchAllgustusers)
+adminUserRouter.get("/getallusers",getAllusers)
+adminUserRouter.get("/newuserpermonth",getNewUsersPerMonth)
+
+adminUserRouter.get("/alluserspage",alluserspage)
+adminUserRouter.get("/singleuser/:id",GetSingleuser)
+adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
 
 
 
 
-adminrouter.post("/addgustuser",addGustuser)
+adminUserRouter.post("/addgustuser",addGustuser)
 

@@ -286,11 +286,11 @@ export const googleCallback = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    const refreToken = req.cookies.refreshToken;
-    if (!refreToken) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
       return res.status(200).json({ success: true, message: 'Logged out' });
     }
-    const hashed = hashToken(refreToken);
+    const hashed = hashToken(refreshToken);
     await refreshModel.deleteOne({ tokenhash: hashed });
     res.clearCookie('refreshToken', {
       httpOnly: true,
