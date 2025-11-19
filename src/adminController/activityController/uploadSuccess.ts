@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { UploadLog } from "../../model/admin/activity/upload";
+import { Request, Response } from 'express';
+import { UploadLog } from '../../model/admin/activity/upload';
 
 export const uploadSuccess = async (req: Request, res: Response) => {
   try {
@@ -10,13 +10,13 @@ export const uploadSuccess = async (req: Request, res: Response) => {
     }
 
     const total = logs.length;
-    const success = logs.filter(l => l.status === "success").length;
+    const success = logs.filter(l => l.status === 'success').length;
 
     const successRate = Math.round((success / total) * 100);
-    
+
     return res.json({ successRate });
   } catch (err) {
-    console.log("Upload rate error:", err);
+    console.log('Upload rate error:', err);
     return res.status(500).json({ successRate: 0 });
   }
 };
