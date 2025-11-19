@@ -5,7 +5,7 @@ import { updateplan } from "../../adminController/plansController";
 import { deleteplan } from "../../adminController/plansController";
 export const plansRouter = Router()
 
-plansRouter.post("/addplans",addplan)
-plansRouter.get("/showplans",showplan)
-plansRouter.put("/updateplans/:id",updateplan)
-plansRouter.delete("/deleteplans/:id",deleteplan)
+plansRouter.post("/plans",addplan)
+plansRouter.get("/plans",showplan)
+plansRouter.put("/plans/:id",updateplan)
+plansRouter.delete("/plans/:id",deleteplan)

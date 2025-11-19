@@ -1,9 +1,11 @@
-import { Request,Response } from "express";
+import { Request,Response,NextFunction } from "express";
 import userModel from "../model/user";
 import guestModel from "../model/guest";
-import { cache } from "joi";
+import { any, cache } from "joi";
 import { log } from "console";
-
+import { Type } from "@aws-sdk/client-s3";
+import { performance } from "perf_hooks";
+import { start } from "repl";
 
 //function for get allloged users count to admindashboard graph
 export const loggedusers = async(req:Request,res:Response)=>{
@@ -19,11 +21,19 @@ catch{
     res.status(500).json({message:"user not found"})
 }}
 
-
-
-
-
-
+export const updateUserstatus  =  async(req:Request,res:Response)=>{
+  try{
+  const {id}  = req.params
+  const {status} = req.body
+  const usestatus  = await userModel.findByIdAndUpdate (id,{
+    status:req.body.status
+  },{new:true})
+  res.status(200).json({message:"userstatus updated",success:true})
+}
+catch(err){
+res.status(500).json({message:"user status cant update",success:false})
+}
+}
 
 //function for get new logged users count per month
 export const getNewUsersPerMonth = async (req: Request, res: Response) => {
@@ -55,16 +65,6 @@ export const getNewUsersPerMonth = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
-//function for  get aravarage time to all users
-
-
-
-
-
-
 //function for add guestusers
 export const addGustuser = async(req:Request,res:Response)=>{
       try {
@@ -81,7 +81,6 @@ res.status(500).json({message:"guest user not added some error"})
 }
 }
 
-
 //function for get full gustusers count
 export const fetchAllgustusers = async(req:Request,res:Response)=>{
   try{
@@ -93,8 +92,6 @@ export const fetchAllgustusers = async(req:Request,res:Response)=>{
 
   }
 }
-
-
 
 //function for get all users count
 export const getAllusers = async (req: Request, res: Response) => {
@@ -115,9 +112,6 @@ export const getAllusers = async (req: Request, res: Response) => {
     res.status(500).json({ message: "failed to fetch all users", error: err });
   }
 };
-
-
-
 
 //get allusers to a single page
 
@@ -176,6 +170,7 @@ export const singleUsertoken = async (req: Request, res: Response) => {
     
    }
 
-    
+  }   
 
-  }
+  
+

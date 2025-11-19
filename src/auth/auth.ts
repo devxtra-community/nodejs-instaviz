@@ -11,6 +11,8 @@ import { signJwt } from '../services/jwtServices.ts';
 import mongoose from 'mongoose';
 import refreshModel from '../model/refreshtoken';
 import { hashToken } from '../utils/hashTokens.ts';
+import activeModel from '../model/activeModel.ts';
+
 
 
 export const loginCheck = async (req: Request, res: Response) => {
@@ -83,10 +85,18 @@ export const loginCheck = async (req: Request, res: Response) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
+    // ⭐⭐⭐ ADD SESSION HERE (ONLY THIS NEW CODE) ⭐⭐⭐
+    const session = await activeModel.create({
+      userId: user._id,
+      startTime: new Date(),
+    });
+    // ⭐⭐⭐ END OF ADDED SESSION CODE ⭐⭐⭐
+
     return res.status(200).json({
       success: true,
       message: 'Login successful',
       accessToken,
+      sessionId: session._id,   // ⭐ Added to response
       user: {
         id: user._id,
         name: user.name,
@@ -103,9 +113,6 @@ export const loginCheck = async (req: Request, res: Response) => {
     });
   }
 };
-
-// dummy bro
-
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;

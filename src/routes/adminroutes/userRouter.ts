@@ -9,6 +9,7 @@ import { alluserspage } from "../../adminController/userController"
 import { GetSingleuser } from "../../adminController/userController"
 import { singleUsertoken } from "../../adminController/userController";
 import { addGustuser } from "../../adminController/userController";
+import { updateUserstatus } from "../../adminController/userController";
 
 export  const adminUserRouter = Router()
 
@@ -27,4 +28,5 @@ adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
 
 adminUserRouter.post("/addgustuser",addGustuser)
+adminUserRouter.put("/status/:id",updateUserstatus)
 

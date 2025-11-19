@@ -18,6 +18,14 @@ import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
 import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
 
+import sessionRoutes from "./routes/sessionRoutes.ts";
+
+
+
+
+
+
+
 
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import { activityRouter } from './routes/adminroutes/activityRouter.ts';
@@ -51,7 +59,11 @@ app.use(
 
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
-//middleware
+
+app.use("/session", sessionRoutes);
+
+//middleware user routs
+
 app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
