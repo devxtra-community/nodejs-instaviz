@@ -7,13 +7,16 @@ import { theValidation } from '../services/validation.ts';
 import { generateOtp } from '../utils/otpGenerate.ts';
 import Jwt from 'jsonwebtoken';
 import { loginSchema } from '../services/validation.ts';
-
 import { signJwt } from '../services/jwtServices.ts';
 import mongoose from 'mongoose';
+import refreshModel from '../model/refreshtoken';
+import { hashToken } from '../utils/hashTokens.ts';
+
 
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(' reached here login');
   console.log(req.body);
+
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -36,6 +39,13 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account was created using Google. Please login with Google.',
+      });
+    }
+
     const isPasswordCorrect = await bcrypt.compare(password, user.password!);
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -53,6 +63,17 @@ export const loginCheck = async (req: Request, res: Response) => {
       },
       process.env.REFRESH_SECRET!,
       { expiresIn: '30d' },
+    );
+
+    const hashed = hashToken(refreshToken);
+    await refreshModel.findOneAndUpdate(
+      {userId: user._id,},
+      {
+        userId: user._id,
+        tokenhash: hashed,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      { upsert: true,},
     );
 
     res.cookie('refreshToken', refreshToken, {
@@ -199,40 +220,56 @@ export const verifyOtp = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: 'Registration completed successfully',
+      accessToken: accessToken,
     });
   } catch (err) {
     console.log('veryfyotp catch woerked', err);
-    res.status(500).json({ message: 'Internal server errror' });
+    res.status(500).json({ message: 'Internal server errror', error: err });
   }
 };
 
 // google authentication
-export const googleCallback = async (req: Request, res: Response) => {
-  try {
-    const user = req.user as any;
+export const googleCallback = (req: Request, res: Response) => {
+  const user = req.user as any;
 
-    const token = signJwt({
-      id: user._id?.toString() || null,
-      googleId: user.googleId?.toString() || null,
-      email: user.email,
-    });
-    res.cookie('userId', user._id, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-    const frontendURL = process.env.CLIENT_URL!;
-    res.redirect(`${frontendURL}/auth/callback?token=${token}`);
-  } catch (err) {
-    console.log(err);
-  }
+  const token = signJwt({
+    id: user._id?.toString() || null,
+    googleId: user.googleId?.toString() || null,
+    email: user.email,
+  });
+
+  const frontendURL = process.env.CLIENT_URL!;
+  res.redirect(`${frontendURL}/auth/callback?token=${token}`);
 };
+
+export const logout = async(req:Request,res:Response)=>{
+  try{
+     const refreToken  = req.cookies.refreshToken;
+     if(!refreToken){
+      return res.status(200).json({success:true,message :"Logged out"})
+     }
+     const hashed = hashToken(refreToken);
+      await refreshModel.deleteOne({tokenhash:hashed})
+       res.clearCookie("refreshToken",{
+        httpOnly:true,
+        secure:false,
+        sameSite:"strict"
+       })
+       return res.status(200).json({sccess:true,message:"Logged out successfully"})
+
+
+  }catch(err){
+    console.log("error in logout");
+    return res.status(500).json({success:false,message:"Internal server Error"})
+    
+  }
+}
 
 export const testpro = (req: Request, res: Response) => {
   try {
-    return res.json({ message: 'reached protecteed route' });
+    return res.json({ message: 'reached protecteed routes' });
   } catch (err) {
     return res.json({ message: 'error', error: err });
   }
 };
+
