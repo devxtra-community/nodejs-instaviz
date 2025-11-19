@@ -5,4 +5,4 @@ import { verifyAdmin } from '../../middlewares/verifyAdmin';
 export const tokenrouter = Router();
 
 tokenrouter.get('/alltokens', verifyAdmin, getAlltokencont);
-tokenrouter.get('/alltokenusage', getAlltokenusage);
+tokenrouter.get('/alltokenusage',verifyAdmin, getAlltokenusage);

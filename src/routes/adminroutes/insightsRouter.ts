@@ -1,18 +1,17 @@
-import express from "express";
-import { deviceUsage } from "../../adminController/insightController/Device";
-import { featureStats } from "../../adminController/insightController/feature";
-import { downloadReport } from "../../adminController/insightController/downloadreport";
-import {featureUsage} from '../../utils/featureLogger'
-import { analyticsData } from "../../adminController/insightController/analytics";
-import { adminVerify } from "../../utils/adminVerify"
+import express from 'express';
+import { deviceUsage } from '../../adminController/insightController/Device';
+import { featureStats } from '../../adminController/insightController/feature';
+import { downloadReport } from '../../adminController/insightController/downloadreport';
+import { featureUsage } from '../../utils/featureLogger';
+import { analyticsData } from '../../adminController/insightController/analytics';
+import { verifyAdmin } from '../../middlewares/verifyAdmin';
 
 export const insightsRouter = express.Router();
 
+insightsRouter.get('/device', verifyAdmin, deviceUsage);
 
-insightsRouter.get("/device", adminVerify , deviceUsage);
+insightsRouter.get('/downloads', verifyAdmin, featureUsage('download_report'), downloadReport);
 
-insightsRouter.get("/downloads",adminVerify , featureUsage("download_report"),downloadReport);
+insightsRouter.get('/analytics', verifyAdmin, featureUsage('user_analytics'), analyticsData);
 
-insightsRouter.get("/analytics",adminVerify,featureUsage("user_analytics"),analyticsData)
-
-insightsRouter.get( "/featurestats",adminVerify,featureStats);
+insightsRouter.get('/featurestats', verifyAdmin, featureStats);

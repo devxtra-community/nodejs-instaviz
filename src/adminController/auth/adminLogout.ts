@@ -13,10 +13,8 @@ export const adminLogout = async (req: Request, res: Response) => {
 
     const hashed = hashToken(refreshToken);
 
-    // Remove hashed refresh token from DB
     await refreshModel.deleteOne({ tokenhash: hashed });
 
-    // Remove refreshToken cookie
     res.clearCookie('adminRefreshToken', {
       httpOnly: true,
       secure: false,

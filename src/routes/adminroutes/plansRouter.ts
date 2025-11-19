@@ -1,11 +1,12 @@
-import { Router } from "express";
-import { addplan } from "../../adminController/plansController";
-import { showplan } from "../../adminController/plansController";
-import { updateplan } from "../../adminController/plansController";
-import { deleteplan } from "../../adminController/plansController";
-export const plansRouter = Router()
+import { Router } from 'express';
+import { addplan } from '../../adminController/plansController';
+import { showplan } from '../../adminController/plansController';
+import { updateplan } from '../../adminController/plansController';
+import { deleteplan } from '../../adminController/plansController';
+import { verifyAdmin } from '../../middlewares/verifyAdmin';
+export const plansRouter = Router();
 
-plansRouter.post("/addplans",addplan)
-plansRouter.get("/showplans",showplan)
-plansRouter.put("/updateplans/:id",updateplan)
-plansRouter.delete("/deleteplans/:id",deleteplan)
+plansRouter.post('/addplans', verifyAdmin, addplan);
+plansRouter.get('/showplans', verifyAdmin, showplan);
+plansRouter.put('/updateplans/:id', verifyAdmin, updateplan);
+plansRouter.delete('/deleteplans/:id', verifyAdmin, deleteplan);

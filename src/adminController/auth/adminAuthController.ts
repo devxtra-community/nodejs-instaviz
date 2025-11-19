@@ -10,12 +10,9 @@ export const refreshAdminAccessToken = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'No admin refresh token' });
     }
 
-    let decoded: { id: string; email: string };
+    let decoded: any;
     try {
-      decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET!) as {
-        id: string;
-        email: string;
-      };
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET!);
     } catch (err) {
       return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
     }
@@ -28,10 +25,19 @@ export const refreshAdminAccessToken = async (req: Request, res: Response) => {
         .json({ success: false, message: 'Refresh token not found or revoked' });
     }
 
+    if (saved.expiresAt < new Date()) {
+      await saved.deleteOne();
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token expired',
+      });
+    }
+
     const newAccessToken = jwt.sign(
       {
         id: decoded.id,
         email: decoded.email,
+        role:"admin"
       },
       process.env.JWT_SECRET!,
       { expiresIn: '10s' },
@@ -41,6 +47,7 @@ export const refreshAdminAccessToken = async (req: Request, res: Response) => {
       success: true,
       newAccessToken,
     });
+    
   } catch (err) {
     console.log('Admin refresh failed:', err);
     return res.status(500).json({ success: false, message: 'Server error' });

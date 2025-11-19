@@ -18,23 +18,27 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials', success: false });
+      return res.status(401).json({ message: 'Invalid credentials', success: false });
     }
 
     const accessToken = signJwt({
       id: admin._id,
       email: admin.email,
+      role: admin.role,
     });
 
     const refreshToken = jwt.sign(
       {
         id: admin._id,
         email: admin.email,
+        role: admin.role,
       },
       process.env.REFRESH_SECRET!,
       { expiresIn: '30d' },
     );
+
     const hashed = hashToken(refreshToken);
+
     await refreshModel.findOneAndUpdate(
       { userId: admin._id },
       {
@@ -59,8 +63,11 @@ export const adminLogin = async (req: Request, res: Response) => {
       admin: {
         id: admin._id,
         email: admin.email,
+        role: admin.role,
       },
     });
+
+    
   } catch (err) {
     console.error('Admin Login Error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
