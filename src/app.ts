@@ -1,7 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
-import multer from 'multer';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import cors from 'cors';
@@ -14,9 +13,11 @@ import paymentRouter from './routes/paymentRoutes.js';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
+import mcpClient from './services/mcpClient.ts';
+import chatRouter from "./routes/chatRouter.ts"
 
 const app = express();
-app.use(express.json());
+app.use(express.json({limit:"50mb"}));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
@@ -46,8 +47,7 @@ app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
-app.use("/payment",paymentRouter)
-
+app.use("/chat",chatRouter)
 // admin routes
 app.use("/admin/dashboard",adminrouter)
 app.use('/admin/dashboard',insightsRouter)
@@ -60,8 +60,9 @@ app.use(fileSizeCheck);
 
 //listening
 // TODO: use .env for urls
-app.listen(process.env.PORT, () => {
-  connection();
+app.listen(process.env.PORT, async() => {
+  await connection();
+  await mcpClient.connect();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
 app.get("/health", async (req, res) => {
@@ -74,3 +75,4 @@ app.get("/health", async (req, res) => {
     time: new Date().toISOString()
   });
 });
+

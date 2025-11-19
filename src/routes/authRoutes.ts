@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Router } from "express";
-import { googleCallback } from "../auth/auth.ts";
+import { googleCallback, logout } from "../auth/auth.ts";
 
 import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
 import { testpro } from "../auth/auth.ts";
@@ -17,6 +17,7 @@ authRouter.post("/register",register);
 authRouter.post("/verifyOtp",verifyOtp);
 authRouter.get("/test",verifyToken,testpro)
 authRouter.post("/newRefreshToken",refreshAccessToken)
+authRouter.post("/logout",logout)
 
 // google authentication
 authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
