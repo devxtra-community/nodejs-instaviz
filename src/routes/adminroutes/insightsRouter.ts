@@ -1,5 +1,5 @@
 import express from "express";
-import { deviceUsage } from "../../adminController/insightController/Device";
+import { deviceUsage } from "../../adminController/insightController/device";
 import { featureStats } from "../../adminController/insightController/feature";
 import { downloadReport } from "../../adminController/insightController/downloadreport";
 import {featureUsage} from '../../utils/featureLogger'

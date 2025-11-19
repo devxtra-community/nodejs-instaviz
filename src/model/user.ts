@@ -27,60 +27,50 @@ const userSchema = new Schema(
       unique: true,
       sparse: true
     },
-    name: {
-      type: String
-    },
-    picture: {
-      type: String
-    },
+    name: String,
+    picture: String,
     email: {
       type: String,
-      required: true
+      required: true,
     },
-    password: {
-      type: String,
-      required: false
-    },
+    password: String,
+
     token: {
       type: Number,
       default: 3,
-      createdAt:{
-      type: Date,
-      default: Date.now
-      }
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
-    place: {
-      type: String
-    },
-    phone: {
-      type: Number
-    },
+
+    place: String,
+    phone: Number,
+
     status: {
       type: String,
       enum: Object.values(Status),
-      default: Status.Active
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false
+      default: Status.Active,
     },
 
-   
-    lastActiveAt: {
-      type: Date
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
-    dailyActiveTime: {
-      type: Number,
-      default: 0 
+
+    device: {
+      type: String,
+      enum: ["desktop", "mobile"],
+      default: "desktop",
     },
-    averageActiveTime: {
-      type: Number,
-      default: 0 
-    },
+
+    lastActiveAt: Date,
+    dailyActiveTime: { type: Number, default: 0 },
+    averageActiveTime: { type: Number, default: 0 },
 
     createdAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     }
   },
   { timestamps: true }

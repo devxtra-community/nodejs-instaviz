@@ -1,32 +1,32 @@
-dotenv.config()
+dotenv.config();
 import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 import morgan, { token } from 'morgan';
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
 import cors from 'cors';
 import passport from './config/passport.ts';
-import cookieParser from "cookie-parser";
+import cookieParser from 'cookie-parser';
 import authRouter from './routes/authRoutes.ts';
-import uploadRouter from './routes/uploadRouter.ts'
+import uploadRouter from './routes/uploadRouter.ts';
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
 import { raw } from 'body-parser';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
-import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
-import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
-
+import { tokenrouter } from './routes/adminroutes/tokenRouter.ts';
+import { plansRouter } from './routes/adminroutes/plansRouter.ts';
+import {dashboardRouter} from './routes/adminroutes/dashboardRouter.ts'
 
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import { activityRouter } from './routes/adminroutes/activityRouter.ts';
 import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
-import {adminUserRouter} from "./routes/adminroutes/userRouter.ts"
-
+import { adminUserRouter } from './routes/adminroutes/userRouter.ts';
+import { adminVerify } from './utils/adminVerify.ts';
 
 const app = express();
-app.use(express.json({limit:"50mb"}));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
@@ -52,22 +52,22 @@ app.use(
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
 //middleware
-app.use("/upload", uploadRouter)
-app.use("/user", userRouter)
-app.use("/auth", authRouter)
-app.use("/payment", paymentRouter)
-app.use("/payment",paymentRouter)
+app.use('/upload', uploadRouter);
+app.use('/user', userRouter);
+app.use('/auth', authRouter);
+app.use('/payment', paymentRouter);
+app.use('/payment', paymentRouter);
 
 //admin routes
-app.use('/admin',adminAuthRouter)
-app.use('/admin',insightsRouter)
-app.use('/admin',activityRouter)
+app.use('/admin', adminAuthRouter);
 
-
-app.use('/admin',adminUserRouter)
-app.use('/admin',insightsRouter)
-app.use('/admin',tokenrouter)
-app.use("/admin",plansRouter)
+app.use('/admin', adminVerify);
+app.use('/admin', dashboardRouter);
+app.use('/admin', adminUserRouter);
+app.use('/admin', activityRouter);
+app.use('/admin', tokenrouter);
+app.use('/admin', insightsRouter);
+app.use('/admin', plansRouter);
 
 //file upload check
 app.use(fileSizeCheck);
@@ -81,13 +81,13 @@ app.listen(process.env.PORT, () => {
   connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
-app.get("/health", async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+app.get('/health', async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
 
   res.json({
-    status: "ok",
+    status: 'ok',
     db: dbStatus,
     uptime: process.uptime(),
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
   });
 });
