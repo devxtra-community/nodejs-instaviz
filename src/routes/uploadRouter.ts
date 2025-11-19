@@ -7,6 +7,6 @@ import { verifyToken } from '../middlewares/verifyToken.ts';
 
 const uploadRouter = Router()
 // uploadRouter.use('/fileupload',tokenCheck)
-uploadRouter.post("/fileupload", upload.single('file'), fileParsing);
+uploadRouter.post("/fileupload", upload.single('file'),verifyToken, fileParsing);
 
 export default uploadRouter;
