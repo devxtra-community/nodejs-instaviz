@@ -17,8 +17,8 @@ IMPORTANT RULES — READ CAREFULLY
       - Do NOT output line charts or any other chart types.
 
    - decide chart types and titles
-   - produce 3 short insights (one-line each)
-   - identify key fields (2-4)
+   - produce 3 valuable insights must be useful and clear to the person who uploaded 
+   - identify key fields
 4) Return ONLY valid JSON (no markdown, no backticks).
 
 INPUT:

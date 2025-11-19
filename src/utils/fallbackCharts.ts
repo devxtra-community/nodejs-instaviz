@@ -39,7 +39,7 @@ export function generateChartsFromData(rows: any[]) {
 
     const unique = new Set(nonNull);
 
-    const numericValues = nonNull                                                                                                                                                                                                    
+    const numericValues = nonNull
       .map((v) => Number(String(v).replace(/,/g, "")))
       .filter((v) => !isNaN(v));
 
@@ -55,7 +55,7 @@ export function generateChartsFromData(rows: any[]) {
     else if (isNumeric) type = "numeric";
     else if (unique.size <= nonNull.length * 0.5) type = "categorical";
 
-    // Variance
+    // Variance for numeric
     let variance = 0;
     if (numericValues.length > 0) {
       const mean =
@@ -80,75 +80,78 @@ export function generateChartsFromData(rows: any[]) {
     };
   });
 
-  // ----------- SCORING LOGIC -----------
+  //  BAR CHART COLUMN SELECTION
+  const numericScores = analyses
+    .map((c) => {
+      let score = 0;
+      if (c.type === "numeric") score += 100;
+      if (c.variance > 0) score += 40;
 
-  const scoreColumn = (c: ColumnAnalysis, mode: "cat" | "num" | "pie") => {
-    let score = 0;
+      const keywords = ["value", "amount", "price", "total", "count", "score"];
+      if (keywords.some((k) => c.name.toLowerCase().includes(k))) score += 40;
 
-    if (mode === "cat") {
+      if (c.name.toLowerCase().includes("id")) score -= 100;
+      if (c.name.toLowerCase().includes("reference")) score -= 70;
+
+      return { col: c.name, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const bestNumeric = numericScores[0]?.col;
+
+  const categoryScores = analyses
+    .map((c) => {
+      let score = 0;
       if (c.type === "categorical") score += 100;
-      if (c.uniqueCount >= 3 && c.uniqueCount <= 80) score += 60;
-      if (c.avgLength < 40) score += 20;
+      if (c.uniqueCount >= 2 && c.uniqueCount <= 50) score += 50;
 
       const keywords = [
         "category",
         "type",
         "status",
-        "name",
         "region",
-        "title",
+        "gender",
+        "level",
+        "group",
       ];
       if (keywords.some((k) => c.name.toLowerCase().includes(k))) score += 40;
-    }
 
-    if (mode === "num") {
-      if (c.type === "numeric") score += 100;
-      if (c.variance > 0) score += 40;
+      if (c.name.toLowerCase().includes("id")) score -= 100;
+      if (c.name.toLowerCase().includes("reference")) score -= 70;
 
-      const numericKeywords = [
-        "value",
-        "amount",
-        "price",
-        "total",
-        "count",
-        "score",
-      ];
-      if (numericKeywords.some((k) => c.name.toLowerCase().includes(k)))
-        score += 40;
+      return { col: c.name, score };
+    })
+    .sort((a, b) => b.score - a.score);
 
-      // penalize IDs
-      if (c.name.toLowerCase().includes("id")) score -= 80;
-    }
+  const bestCategory = categoryScores[0]?.col;
 
-    if (mode === "pie") {
-      if (c.type === "categorical") score += 100;
-      if (c.uniqueCount >= 3 && c.uniqueCount <= 20) score += 60;
-      if (c.uniqueCount > 20 && c.uniqueCount <= 50) score += 20;
+  // STRICT, MEANINGFUL PIE CHART COLUMN SELECTION
 
-      if (c.avgLength < 20) score += 20;
+  const pieCandidates = analyses.filter((c) => {
+    return (
+      c.type === "categorical" &&
+      c.uniqueCount >= 3 &&
+      c.uniqueCount <= 20 &&    // LIMIT unique count
+      c.avgLength <= 25 &&      // avoid huge text columns
+      !c.name.toLowerCase().includes("id") &&
+      !c.name.toLowerCase().includes("ref") &&
+      !c.name.toLowerCase().includes("reference") &&
+      !c.name.toLowerCase().includes("series") &&
+      !c.name.toLowerCase().includes("code")
+    );
+  });
 
-      const keywords = ["status", "type", "category", "level"];
-      if (keywords.some((k) => c.name.toLowerCase().includes(k))) score += 40;
-    }
+  const keywordPriority = ["status", "type", "category", "region", "gender", "group", "level"];
+  pieCandidates.sort((a, b) => {
+    const aScore = keywordPriority.some((k) => a.name.toLowerCase().includes(k)) ? 1 : 0;
+    const bScore = keywordPriority.some((k) => b.name.toLowerCase().includes(k)) ? 1 : 0;
+    return bScore - aScore;
+  });
 
-    return Math.max(score, 0);
-  };
+  const bestPieCategory = pieCandidates.length > 0 ? pieCandidates[0].name : null;
 
-  // Select best category column
-  const bestCategory = analyses
-    .map((c) => ({ col: c.name, score: scoreColumn(c, "cat") }))
-    .sort((a, b) => b.score - a.score)[0]?.col;
+  //BAR CHART GENERATION
 
-  const bestNumeric = analyses
-    .map((c) => ({ col: c.name, score: scoreColumn(c, "num") }))
-    .sort((a, b) => b.score - a.score)[0]?.col;
-
-  const bestPieCategory = analyses
-    .filter((c) => c.name !== bestCategory)
-    .map((c) => ({ col: c.name, score: scoreColumn(c, "pie") }))
-    .sort((a, b) => b.score - a.score)[0]?.col;
-
-  // -------- BAR CHART --------
   const barMap = new Map<string, number>();
 
   rows.forEach((r) => {
@@ -164,7 +167,20 @@ export function generateChartsFromData(rows: any[]) {
     .sort((a, b) => b.yValue - a.yValue)
     .slice(0, 15);
 
-  // -------- PIE CHART --------
+  // PIE CHART GENERATION (only if valid)
+
+  if (!bestPieCategory) {
+    return {
+      barData,
+      pieData: [],
+      columns: {
+        barChartCategory: bestCategory,
+        barChartNumeric: bestNumeric,
+        pieChartCategory: null,
+      },
+    };
+  }
+
   const pieMap = new Map<string, number>();
 
   rows.forEach((r) => {

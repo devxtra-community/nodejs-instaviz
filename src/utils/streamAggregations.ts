@@ -41,7 +41,7 @@ export const initStreamingAgg = (): StreamingAggState => {
     numericCols: new Set(),
     categoricalCols: new Set(),
     detectionSamples: 0,
-    columnDetectionLimit: 500, // auto-detect numeric vs categorical using first 500 rows
+    columnDetectionLimit: 500, // auto-detect numeric vs categorical using first 500 rows 
     numeric: {},
     categorical: {},
   };

@@ -13,9 +13,7 @@ import {
 import { generateAiPromt } from "../utils/aiPrompt";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { generateChartData } from "../utils/chartHelpers";
-
-// FALLBACK GENERATOR 
-import { generateChartsFromData } from "../utils/fallbackCharts"; // (we will include below)
+import { generateChartsFromData } from "../utils/fallbackCharts"; 
 
 
 // GLOBAL API KEY ROTATION
@@ -31,11 +29,10 @@ const switchApi = () => {
   currentApi = apiKeys[apiKeyIndex];
   genAI = new GoogleGenerativeAI(currentApi);
   model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  console.log("🔄 Switched to API key:", currentApi);
+  console.log("Switched to API key:", currentApi);
 };
 
 
-// SAFE AI RUNNER WITH ROTATION + FALLBACK
 async function runAi(prompt: string) {
   let attempts = 0;
 
@@ -62,7 +59,7 @@ async function runAi(prompt: string) {
         msg.includes("exceeded") ||
         err.status === 503
       ) {
-        console.log("⚠ AI limit hit → switching key...");
+        console.log(" AI limit hit → switching key...");
         switchApi();
         attempts++;
         continue;
@@ -130,7 +127,9 @@ export const fileParsing = async (req: Request, res: Response) => {
         user_id: req.body.user_id || null,
         r2_url: fileUrl,
         data: sampleRows,
+        aggregations: aggregations,   
       });
+
 
       // AI ATTEMPT
       const prompt = generateAiPromt(metrics, aggregations, sampleRows);
@@ -138,7 +137,7 @@ export const fileParsing = async (req: Request, res: Response) => {
 
       // FALLBACK
       if (!ai) {
-        console.log("🔥 AI failed — Using fallback chart generator");
+        console.log("AI failed — Using fallback chart generator");
 
         const fallback = generateChartsFromData(sampleRows);
 

@@ -3,8 +3,8 @@ import type { Aggregations } from "./streamAggregations";
 export type FinalChart = {
   type: "bar" | "pie";
   title: string;
-  x: string;          // category column (for both bar & pie)
-  y?: string;         // numeric column (bar only)
+  x: string;
+  y?: string;
   data: Array<{ xValue: string; yValue?: number; value?: number }>;
 };
 
@@ -22,20 +22,18 @@ export function generateChartData(
     // BAR CHART
     if (chart.type === "bar") {
       const xCol = chart.x;
-      let yCol = chart.y;
+      const yCol =
+        chart.y && chart.y !== "count"
+          ? chart.y
+          : Object.keys(aggregations.numeric)[0];
 
-      // If AI used "count", FIX IT → use real numeric field
-      if (yCol === "count") {
-        // choose first numeric column instead
-        yCol = Object.keys(aggregations.numeric)[0];
-      }
+      const cat = aggregations.categorical[xCol];
+      if (!cat) continue;
 
-      const rows = Object.entries(aggregations.numeric).map(
-        ([colName, stats]: any) => ({
-          xValue: colName,
-          yValue: Number(stats.sum || 0),
-        })
-      );
+      const rows = Object.entries(cat.counts).map(([label, count]) => ({
+        xValue: label,
+        yValue: Number(count), // <-- FIXED (no more unknown)
+      }));
 
       finalCharts.push({
         type: "bar",
@@ -48,14 +46,13 @@ export function generateChartData(
 
     // PIE CHART
     if (chart.type === "pie") {
-      const xCol = chart.label; // AI uses "label" but frontend uses "x"
-
+      const xCol = chart.x;
       const cat = aggregations.categorical[xCol];
       if (!cat) continue;
 
       const rows = Object.entries(cat.counts).map(([name, count]) => ({
         xValue: name,
-        value: Number(count),
+        value: Number(count), // <-- FIXED
       }));
 
       finalCharts.push({
