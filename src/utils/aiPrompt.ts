@@ -1,36 +1,69 @@
-export const generateAiPromt = (computedMetrics: any, dataset: any) => {
+// utils/aiPrompt.ts
+export const generateAiPromt = (
+  computedMetrics: any,
+  aggregations: any,
+  datasetSample: any
+) => {
   return `
-You are an expert AI data analyst for a web app called InstaviZ.
+You are an expert AI data analyst for a web application called InstaviZ.
 
-You are given a dataset summary in JSON:
+IMPORTANT RULES — READ CAREFULLY
+1) You MUST NOT perform any calculations or numeric aggregation.
+2) All numeric metrics and aggregations are already computed and provided.
+3) Your job is ONLY to:
+      - YOU MUST output exactly:
+        1 bar chart
+        1 pie chart
+      - Do NOT output line charts or any other chart types.
+
+   - decide chart types and titles
+   - produce 3 valuable insights must be useful and clear to the person who uploaded 
+   - identify key fields
+4) Return ONLY valid JSON (no markdown, no backticks).
+
+INPUT:
 {
-  "headers": [...],
-  "rows": [sample of 10 rows],
-  "metrics": ${JSON.stringify(computedMetrics)}
+  "metrics": ${JSON.stringify(computedMetrics)},
+  "aggregations": ${JSON.stringify(aggregations)},
+  "sample_rows": ${JSON.stringify(datasetSample)}
 }
 
-Your task:
-1. Return ONLY a valid JSON object (no markdown or text).
-2. Use the provided metrics directly — do not recompute them.
-3. Generate **exactly 2 charts**:
-   - One "bar" chart for numeric comparison (choose the most meaningful numeric field).
-   - One "pie" chart for category distribution (choose a categorical field).
-4. Return strictly in this format:
+OUTPUT FORMAT (STRICT JSON):
 {
-  "metrics": {
-    "total_rows": number,
-    "total_columns": number,
-    "missing_values": number,
-    "charts_generated": 2
+  "best_columns": {
+    "numeric": ["col1", "col2"],
+    "categorical": ["col3"]
   },
   "charts": [
-    { "type": "bar", "x": "column", "y": "column or count", "title": "string" },
-    { "type": "pie", "x": "column", "y": "count", "title": "string" }
+    {
+      "type": "bar",
+      "x": "column_name",
+      "y": "column_name_or_count",
+      "title": "Meaningful bar chart title"
+    },
+    {
+      "type": "pie",
+      "label": "category_column",
+      "value": "count",
+      "title": "Meaningful pie chart title"
+    }
   ],
-  "summary": ["short bullet insight 1", "insight 2", "insight 3"]
+  "insights": [
+    "short_insight_1",
+    "short_insight_2",
+    "short_insight_3"
+  ],
+  "key_fields": [
+    "field_1",
+    "field_2"
+  ]
 }
-5.give me some important filed in this data that i can show it to user (like if the data set based on sales give total sales)
-Dataset sample:
-${JSON.stringify(dataset)}
-`;
+
+RULES FOR DECISIONS:
+• Use numeric columns for bar/line charts; prefer columns with higher variance/meaningful totals.
+• Use categorical columns for pie charts; prefer columns with clear top categories.
+• Do NOT invent columns that are not in the sample_rows.
+• Base your choices ONLY on the provided aggregations and metrics.
+
+Return exactly one JSON object that follows the schema above.`;
 };
