@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import otpModel from '../model/otpModel.ts';
 import userModel from '../model/user.ts';
 import { sendOtp } from '../utils/sendEmail.ts';
-import { theValidation } from '../services/validation.ts';
+import { resetPasswordSchema, theValidation } from '../services/validation.ts';
 import { generateOtp } from '../utils/otpGenerate.ts';
 import Jwt from 'jsonwebtoken';
 import { loginSchema } from '../services/validation.ts';
@@ -31,7 +31,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     }
 
     const user = await userModel.findOne({ email });
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -276,13 +276,13 @@ export const resendOtp = async (req: Request, res: Response) => {
     const email = req.query.email?.toString();
 
     if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+      return res.status(400).json({ message: 'Email is required' });
     }
 
     const otpData = await otpModel.findOne({ email });
 
     if (!otpData) {
-      return res.status(400).json({ message: "No OTP found for this email" });
+      return res.status(400).json({ message: 'No OTP found for this email' });
     }
 
     const otp = generateOtp();
@@ -293,17 +293,107 @@ export const resendOtp = async (req: Request, res: Response) => {
       { email },
       {
         otp,
-        createdAt: new Date() 
-      }
+        createdAt: new Date(),
+      },
     );
 
     return res.status(200).json({
       success: true,
-      message: "OTP resent successfully",
+      message: 'OTP resent successfully',
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
+export const forgotPassword = async (req: Request, res: Response) => {
+  console.log('reached here at forgot password');
+  console.log(req.body);
+
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const otp = generateOtp();
+    console.log('otp sentt for forgott', otp);
+
+    await otpModel.findOneAndUpdate({ email }, { otp }, { upsert: true });
+
+    await sendOtp(email, otp);
+
+    return res.json({
+      success: true,
+      message: 'OTP has been sent to your email',
+    });
+  } catch (err) {
+    console.error('Forgot Password Error', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+export const verifyForgotOtp = async (req: Request, res: Response) => {
+  console.log('reached here at verify otp');
+  console.log(req.body);
+
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email & OTP required' });
+    }
+
+    const savedOtp = await otpModel.findOne({ email });
+
+    if (!savedOtp) {
+      return res.status(400).json({ success: false, message: 'OTP not found' });
+    }
+
+    if (savedOtp.otp.toString() !== otp.toString()) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+
+    return res.json({ success: true, message: 'OTP verified successfully' });
+  } catch (err) {
+    console.error('OTP Verify Error', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+
+   const { error } = resetPasswordSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      const details = error.details.map(err => err.message);
+      return res.status(400).json({ success: false, message: details });
+    }
+
+    const otpData = await otpModel.findOne({ email });
+   
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await userModel.findOneAndUpdate({ email }, { password: hashed });
+
+    await otpModel.deleteOne({ email });
+
+    return res.json({
+      success: true,
+      message: 'Password has been reset successfully',
+    });
+  } catch (err) {
+    console.error('Reset Password Error', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
