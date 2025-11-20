@@ -6,7 +6,10 @@ interface Data {
   chat_id?: string;
   chart_id?: mongoose.Types.ObjectId;
   r2_url?: string;
-  device: "desktop" | "mobile";   
+
+  device: "desktop" | "mobile";  
+  status: "success" | "failed";  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,36 +23,27 @@ const dataSchema = new Schema<Data>(
       },
     ],
 
-    user_id: {
-      type: Schema.Types.ObjectId,
-      ref: "user",
-    },
+    user_id: { type: Schema.Types.ObjectId, ref: "user" },
 
-    chat_id: {
-      type: Schema.Types.ObjectId,
-      ref: "chat",
-    },
+    chat_id: { type: Schema.Types.ObjectId, ref: "chat" },
 
-    chart_id: {
-      type: Schema.Types.ObjectId,
-      ref: "chart",
-    },
+    chart_id: { type: Schema.Types.ObjectId, ref: "chart" },
 
-    r2_url: {
-      type: String,
-      required: false,
-    },
+    r2_url: { type: String },
 
-    
     device: {
       type: String,
       enum: ["desktop", "mobile"],
       required: true,
     },
+
+    status: {
+      type: String,
+      enum: ["success", "failed"],
+      default: "success",
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const dataModel = mongoose.model<Data>("data", dataSchema);

@@ -49,6 +49,14 @@ export const fileParsing = async (req: Request, res: Response) => {
 
     const handleOnError = (err: any) => {
       console.log('error while parsing csv:', err);
+      dataModel.create({
+        data: [],
+        user_id: req.body.user_id || null,
+        r2_url: null,
+        device: (req as any).device || 'desktop',
+        status: 'failed',
+      });
+
       return res.status(500).json({
         message: 'error parsing csv',
         success: false,
@@ -106,11 +114,13 @@ export const fileParsing = async (req: Request, res: Response) => {
         chat_id: null,
         chart_id: null,
         r2_url: fileUrl,
+        device: (req as any).device || 'desktop',
+        status: 'success',
       });
       const prompt = generateAiPromt(dataset, computedMetrics);
       let parsed: any;
       try {
-        console.log(currentApi)
+        console.log(currentApi);
         const result = await model.generateContent(prompt);
         let responseText = result.response
           .text()

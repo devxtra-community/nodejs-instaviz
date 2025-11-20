@@ -1,5 +1,5 @@
 import express from 'express';
-import { deviceUsage } from '../../adminController/insightController/device';
+import {getTotalDeviceSplit} from '../../adminController/insightController/device'
 import { featureStats } from '../../adminController/insightController/feature';
 import { downloadReport } from '../../adminController/insightController/downloadreport';
 import { featureUsage } from '../../utils/featureLogger';
@@ -8,7 +8,7 @@ import { verifyAdmin } from '../../middlewares/verifyAdmin';
 
 export const insightsRouter = express.Router();
 
-insightsRouter.get('/device', verifyAdmin, deviceUsage);
+insightsRouter.get('/device', verifyAdmin,getTotalDeviceSplit);
 
 insightsRouter.get('/downloads', verifyAdmin, featureUsage('download_report'), downloadReport);
 

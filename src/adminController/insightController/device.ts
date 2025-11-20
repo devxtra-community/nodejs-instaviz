@@ -1,36 +1,28 @@
 import { Request, Response } from "express";
-import { deviceModel } from "../../model/admin/insights/deviceModel";
+import dataModel from "../../model/dataModel";
 
-export const deviceUsage = async (req: Request, res: Response) => {
+export const getTotalDeviceSplit = async (req: Request, res: Response) => {
   try {
-    const user = (req as any).user || { _id: "65af1e99623a77abb102abc1" }; 
 
-    const logs = await deviceModel.find({
-      userId: user._id,
-      action: "/fileupload"
-    });
+    const desktop = await dataModel.countDocuments({ device: "desktop" });
+    const mobile = await dataModel.countDocuments({ device: "mobile" });
 
-    let mobile = 0;
-    let desktop = 0;
+    const total = desktop + mobile;
 
-    logs.forEach((log) => {
-      const ua = log.userAgent?.toLowerCase() || "";
-      if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
-        mobile++;
-      } else {
-        desktop++;
-      }
-    });
-
-    const total = mobile + desktop;
-
-    res.json({
-      mobile: total ? Math.round((mobile / total) * 100) : 0,
-      desktop: total ? Math.round((desktop / total) * 100) : 0
+    return res.json({
+      desktop,
+      mobile,
+      desktopPercentage: total ? Math.round((desktop / total) * 100) : 0,
+      mobilePercentage: total ? Math.round((mobile / total) * 100) : 0
     });
 
   } catch (err) {
-    console.log(" Error device stats:", err);
-    res.status(500).json({ message: "Error fetching stats" });
+    console.log("Device split error:", err);
+    res.status(500).json({
+      desktop: 0,
+      mobile: 0,
+      desktopPercentage: 0,
+      mobilePercentage: 0
+    });
   }
 };
