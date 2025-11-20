@@ -34,6 +34,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     }
 
     const user = await userModel.findOne({ email });
+    
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -68,6 +69,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     );
 
     const hashed = hashToken(refreshToken);
+
     await refreshModel.findOneAndUpdate(
       { userId: user._id },
       {
@@ -225,7 +227,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 100,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     await otpModel.deleteOne({ email });
 
@@ -284,23 +286,26 @@ export const googleCallback = async (req: Request, res: Response) => {
 
 
 
-export const logout = async (req: Request, res: Response) => {
-  try {
-    const refreToken = req.cookies.refreshToken;
-    if (!refreToken) {
-      return res.status(200).json({ success: true, message: 'Logged out' });
-    }
-    const hashed = hashToken(refreToken);
-    await refreshModel.deleteOne({ tokenhash: hashed });
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
-    });
-    return res.status(200).json({ success: true, message: 'Logged out successfully' });
-  } catch (err) {
-    console.log('error in logout');
-    return res.status(500).json({ success: false, message: 'Internal server Error' });
+export const logout = async(req:Request,res:Response)=>{
+  try{
+     const refreToken  = req.cookies.refreshToken;
+     if(!refreToken){
+      return res.status(200).json({success:true,message :"Logged out"})
+     }
+     const hashed = hashToken(refreToken);
+      await refreshModel.deleteOne({tokenhash:hashed})
+       res.clearCookie("refreshToken",{
+        httpOnly:true,
+        secure:false,
+        sameSite:"strict"
+       })
+       return res.status(200).json({sccess:true,message:"Logged out successfully"})
+
+
+  }catch(err){
+    console.log("error in logout");
+    return res.status(500).json({success:false,message:"Internal server Error"})
+    
   }
 };
 
@@ -311,3 +316,40 @@ export const testpro = (req: Request, res: Response) => {
     return res.json({ message: 'error', error: err });
   }
 };
+
+export const resendOtp = async (req: Request, res: Response) => {
+  try {
+    const email = req.query.email?.toString();
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const otpData = await otpModel.findOne({ email });
+
+    if (!otpData) {
+      return res.status(400).json({ message: "No OTP found for this email" });
+    }
+
+    const otp = generateOtp();
+
+    await sendOtp(email, otp);
+
+    await otpModel.findOneAndUpdate(
+      { email },
+      {
+        otp,
+        createdAt: new Date() 
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP resent successfully",
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+

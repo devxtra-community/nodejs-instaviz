@@ -1,7 +1,6 @@
-import express, { NextFunction, Request, Response } from 'express';
-import dotenv from 'dotenv';
+import express, { NextFunction, Request, Response } from "express";
+import dotenv from "dotenv";
 dotenv.config();
-import multer from 'multer';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import cors from 'cors';
@@ -15,12 +14,14 @@ import paymentRouter from './routes/paymentRoutes.js';
 import { adminrouter } from './routes/adminroutes/userRouter.ts';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
+import chatRouter from "./routes/chatRouter.ts"
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
+app.use(morgan("dev"));
 app.use(morgan('dev')); //TODO: WHY ???. dev
 
 const limiter = rateLimit({
@@ -34,7 +35,7 @@ const limiter = rateLimit({
 const connection = async () => {
   try {
     await mongoose.connect(process.env.mongo_uri!);
-    console.log('Mongoose connected');
+    console.log("Mongoose connected");
   } catch (err) {
     console.log(err);
   }
@@ -66,13 +67,9 @@ app.use('/admin/dashboard', insightsRouter);
 //file upload check
 app.use(fileSizeCheck);
 
-// TODO: Where is 404 route
-// TODO: Helth check route ? is server active ?. is mongodb connected proplery.
-
 //listening
-// TODO: use .env for urls
-app.listen(process.env.PORT, () => {
-  connection();
+app.listen(process.env.PORT, async() => {
+  await connection();
   console.log(` Server running on http://localhost:${process.env.PORT}`);
 });
 app.get('/health', async (req, res) => {

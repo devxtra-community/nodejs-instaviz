@@ -14,7 +14,7 @@ export const sendOtp = async (email: string, otp: string) => {
     const info = await sendMail.sendMail({
       from: "shanuvr.work.org@gmail.com",
       to: email,
-      subject: "your OTP for InstaViz",
+      subject: "from you 2000 years ago",
       text: `your otp is ${otp}`,
     });
     console.log("opt sentttt");

@@ -7,6 +7,7 @@ import { testpro } from "../auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import {deviceLogger} from '../utils/deviceLogger.ts'
 import { verifyToken } from "../middlewares/verifyToken.ts";
+import { resendOtp } from "../auth/auth.ts";
 
 
 const authRouter = Router();
@@ -15,6 +16,7 @@ const authRouter = Router();
 authRouter.post('/login',loginCheck , deviceLogger);
 authRouter.post("/register",register);
 authRouter.post("/verifyOtp",verifyOtp);
+authRouter.post("/resendOtp",resendOtp)
 authRouter.get("/test",verifyToken,testpro)
 authRouter.post("/newRefreshToken",refreshAccessToken)
 authRouter.post("/logout",logout)
