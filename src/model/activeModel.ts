@@ -8,12 +8,20 @@ const userSessionSchema = new Schema(
     lastHeartbeat: { type: Date, default: Date.now },
     endTime: { type: Date, default: null },
 
-    duration: { type: Number, default: 0 }, // total seconds  
+    duration: { type: Number, default: 0 }, // seconds
+
+    userAgent: { type: String },
+    ipAddress: { type: String },
+    screenWidth: { type: Number },
+    screenHeight: { type: Number },
+
+    ended: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
 export default mongoose.model("UserSession", userSessionSchema);
+
 
  // userAgent : 
     // ipAddress : 
