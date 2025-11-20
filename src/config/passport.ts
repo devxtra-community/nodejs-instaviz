@@ -7,6 +7,8 @@ import userModel from "../model/user.ts";
 dotenv.config()
 
 export default passport.use(
+  
+    
     new GoogleStrategy(
         {
             clientID: process.env.GOOGLE_CLIENT_ID!,
@@ -14,7 +16,7 @@ export default passport.use(
             callbackURL: process.env.GOOGLE_CALLBACK_URL!,
         },
         async (_accessToken, _refreshToken, profile: Profile, done) => {
-            try {
+            try {  console.log("hiiiii");
                 const googleId = profile.id;
                 const email = profile.emails?.[0]?.value;
                 const picture = profile.photos?.[0]?.value;

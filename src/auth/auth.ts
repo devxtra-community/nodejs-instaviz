@@ -11,108 +11,130 @@ import { signJwt } from '../services/jwtServices.ts';
 import mongoose from 'mongoose';
 import refreshModel from '../model/refreshtoken';
 import { hashToken } from '../utils/hashTokens.ts';
-import activeModel from '../model/activeModel.ts';
 
-
+import UserSession from "../model/activeModel";
 
 export const loginCheck = async (req: Request, res: Response) => {
-  console.log(' reached here login');
-  console.log(req.body);
+
 
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: "Email and password are required",
       });
     }
+
     const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
-      const details = error.details.map(err => err.message);
-      return res.status(400).json({ success: false, message: details });
+      return res.status(400).json({
+        success: false,
+        message: error.details.map((d) => d.message),
+      });
     }
 
+    // Fetch user
     const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found. Please register first.',
+        message: "User not found. Please register first.",
       });
     }
 
     if (!user.password) {
       return res.status(400).json({
         success: false,
-        message: 'This account was created using Google. Please login with Google.',
+        message: "This account was created using Google. Please login with Google.",
       });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password!);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: "Invalid email or password",
       });
     }
 
+   
+
+    if (user?.status === "disabled") {
+      return res.status(403).json({
+        success: false,
+        message: "User deactivated by admin.",
+      });
+    }
+
+    // Create tokens
     const accessToken = signJwt({ id: user._id, email: user.email });
 
     const refreshToken = Jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-      },
+      { id: user._id, email: user.email },
       process.env.REFRESH_SECRET!,
-      { expiresIn: '30d' },
+      { expiresIn: "30d" }
     );
 
+    // Store refresh token
     const hashed = hashToken(refreshToken);
     await refreshModel.findOneAndUpdate(
-      {userId: user._id,},
+      { userId: user._id },
       {
         userId: user._id,
         tokenhash: hashed,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
-      { upsert: true,},
+      { upsert: true }
     );
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
+      sameSite: "strict",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    // ⭐⭐⭐ ADD SESSION HERE (ONLY THIS NEW CODE) ⭐⭐⭐
-    const session = await activeModel.create({
-      userId: user._id,
-      startTime: new Date(),
-    });
-    // ⭐⭐⭐ END OF ADDED SESSION CODE ⭐⭐⭐
 
+    const now = new Date();
+    const session = await UserSession.create({
+      userId: user._id,
+      startTime: now,
+      lastHeartbeat: now,
+      endTime: null,
+      duration: 0,
+      userSnapshot: {
+        id: user._id,
+        name: user.name || "no user",
+        email: user.email,
+      },
+    });
+
+    console.log("session created", session._id);
+
+    // Send response
     return res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "login successful",
       accessToken,
-      sessionId: session._id,   // ⭐ Added to response
+      sessionId: session._id,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
       },
     });
-  } catch (err) {
-    console.log('catch in login worked');
 
-    console.error('Login error:', err);
+  } catch (err) {
+    console.error("Login error:", err);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
+
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;

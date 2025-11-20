@@ -18,7 +18,7 @@ import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
 import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
 
-import sessionRoutes from "./routes/sessionRoutes.ts";
+import sessionRoutes from "./routes/sessionRouter.ts";
 
 
 

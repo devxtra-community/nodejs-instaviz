@@ -1,34 +1,21 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IUserSession extends Document {
-  userId: mongoose.Types.ObjectId;
-  startTime: Date;
-  endTime?: Date | null;
-  duration?: number;
-}
-
-const userSessionSchema = new Schema<IUserSession>(
+const userSessionSchema = new Schema(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    startTime: {
-      type: Date,
-      default: Date.now,
-      required: true,
-    },
-    endTime: {
-      type: Date,
-      default: null
-    },
-    duration: {
-      type: Number,
-      default: 0
-    }
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+
+    startTime: { type: Date, default: Date.now },
+    lastHeartbeat: { type: Date, default: Date.now },
+    endTime: { type: Date, default: null },
+
+    duration: { type: Number, default: 0 }, // total seconds  
   },
   { timestamps: true }
 );
 
-export default mongoose.model<IUserSession>("UserSession", userSessionSchema);
+export default mongoose.model("UserSession", userSessionSchema);
+
+ // userAgent : 
+    // ipAddress : 
+    // screenWidth
+    // screenHeight

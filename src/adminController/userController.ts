@@ -6,6 +6,7 @@ import { log } from "console";
 import { Type } from "@aws-sdk/client-s3";
 import { performance } from "perf_hooks";
 import { start } from "repl";
+import activeModel from "../model/activeModel";
 
 //function for get allloged users count to admindashboard graph
 export const loggedusers = async(req:Request,res:Response)=>{
@@ -171,6 +172,29 @@ export const singleUsertoken = async (req: Request, res: Response) => {
    }
 
   }   
+
+  //get activ time
+ export const getUserActiveTime = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const sessions = await activeModel.find({ userId });
+
+    const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+
+    return res.status(200).json({
+      userId,
+      totalActiveSeconds: totalSeconds,
+      totalActiveMinutes: Math.floor(totalSeconds / 60),
+      totalActiveHours: (totalSeconds / 3600).toFixed(2),
+      sessions
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Error calculating time", error: err });
+  }
+};
+
 
   
 

@@ -1,6 +1,4 @@
 import { Router } from "express";
-
-
 import { loggedusers } from "../../adminController/userController"
 import { fetchAllgustusers } from "../../adminController/userController"
 import { getNewUsersPerMonth } from "../../adminController/userController"
@@ -10,9 +8,9 @@ import { GetSingleuser } from "../../adminController/userController"
 import { singleUsertoken } from "../../adminController/userController";
 import { addGustuser } from "../../adminController/userController";
 import { updateUserstatus } from "../../adminController/userController";
+import { getUserActiveTime } from "../../adminController/userController";
 
 export  const adminUserRouter = Router()
-
 
 adminUserRouter.get("/loggedusers",loggedusers)
 adminUserRouter.get("/gustusers",fetchAllgustusers)
@@ -23,10 +21,7 @@ adminUserRouter.get("/alluserspage",alluserspage)
 adminUserRouter.get("/singleuser/:id",GetSingleuser)
 adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
-
-
-
-
 adminUserRouter.post("/addgustuser",addGustuser)
 adminUserRouter.put("/status/:id",updateUserstatus)
+adminUserRouter.get("/active-time/:userId", getUserActiveTime);
 
