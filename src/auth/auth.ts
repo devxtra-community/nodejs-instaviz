@@ -67,15 +67,19 @@ export const loginCheck = async (req: Request, res: Response) => {
 
     const hashed = hashToken(refreshToken);
 
-    await refreshModel.findOneAndUpdate(
-      { userId: user._id },
-      {
-        userId: user._id,
-        tokenhash: hashed,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-      { upsert: true },
-    );
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.ip || 'unknown';
+
+    await refreshModel.create({
+      userId: user._id,
+      tokenhash: hashed,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      userAgent,
+      ip,
+      createdAt: new Date(),
+      lastActiveAt: new Date(),
+      isValid: true,
+    });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -372,15 +376,13 @@ export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
 
-
-   const { error } = resetPasswordSchema.validate(req.body, { abortEarly: false });
+    const { error } = resetPasswordSchema.validate(req.body, { abortEarly: false });
     if (error) {
       const details = error.details.map(err => err.message);
       return res.status(400).json({ success: false, message: details });
     }
 
     const otpData = await otpModel.findOne({ email });
-   
 
     const hashed = await bcrypt.hash(newPassword, 10);
 
@@ -395,5 +397,31 @@ export const resetPassword = async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Reset Password Error', err);
     return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+export const getAllSessions = async (req: Request, res: Response) => {
+  console.log("inside ");
+  
+  try {
+    interface JwtUser {
+      id: string;
+      email: string;
+    }
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    const sessions = await refreshModel.find({ userId, isValid: true }).select('-tokenhash');
+
+    return res.status(200).json({
+      success: true,
+      sessions,
+    });
+  } catch (err) {
+    console.error('Get sessions error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
   }
 };
