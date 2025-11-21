@@ -14,6 +14,7 @@ IMPORTANT RULES — READ CAREFULLY
       - YOU MUST output exactly:
         1 bar chart
         1 pie chart
+        1 line chart
       - Do NOT output line charts or any other chart types.
 
    - decide chart types and titles
@@ -46,6 +47,12 @@ OUTPUT FORMAT (STRICT JSON):
       "label": "category_column",
       "value": "count",
       "title": "Meaningful pie chart title"
+    },
+    {
+      "type": "line",
+      "x": "column_name",
+      "y": "column_name",
+      "title": "Meaningful line chart title"
     }
   ],
   "insights": [
