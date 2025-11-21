@@ -4,6 +4,10 @@ const userSessionSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
+    
+    userName: { type: String },
+    userEmail: { type: String },
+
     startTime: { type: Date, default: Date.now },
     lastHeartbeat: { type: Date, default: Date.now },
     endTime: { type: Date, default: null },

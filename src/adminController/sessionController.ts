@@ -1,29 +1,32 @@
 import { Request, Response } from "express";
 import UserSession from "../model/activeModel";
+import UserModel from "../model/user";
 
 interface JwtUser {
   id: string;
   email: string;
 }
 
+
 export const startSession = async (req: Request, res: Response) => {
   try {
     console.log("startSession called");
 
     const user = req.user as JwtUser | undefined;
-
     if (!user?.id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID missing",
-      });
+      return res.status(400).json({ success: false, message: "User ID missing" });
     }
 
     const userId = user.id;
 
+    // Get user name + email
+    const fullUser = await UserModel.findById(userId).select("name email");
+    if (!fullUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
     // Check existing active session
     const existing = await UserSession.findOne({ userId, ended: false });
-
     if (existing) {
       return res.status(200).json({
         success: true,
@@ -36,6 +39,9 @@ export const startSession = async (req: Request, res: Response) => {
 
     const session = await UserSession.create({
       userId,
+      userName: fullUser.name,
+      userEmail: fullUser.email,
+
       startTime: now,
       lastHeartbeat: now,
       ended: false,
@@ -51,35 +57,25 @@ export const startSession = async (req: Request, res: Response) => {
       message: "New session started",
       session,
     });
-
   } catch (err) {
     console.error("startSession ERR:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-
 export const heartbeat = async (req: Request, res: Response) => {
   try {
-    console.log("api entering in heartbeat")
+    console.log("api entering in heartbeat");
     const user = req.user as JwtUser | undefined;
 
     if (!user?.id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID missing",
-      });
+      return res.status(400).json({ success: false, message: "User ID missing" });
     }
 
     const userId = user.id;
 
-    const session = await UserSession.findOne({
-      userId,
-      ended: false,
-    }).sort({ startTime: -1 });
+    const session = await UserSession.findOne({ userId, ended: false })
+      .sort({ startTime: -1 });
 
     if (!session) {
       return res.status(404).json({
@@ -92,7 +88,7 @@ export const heartbeat = async (req: Request, res: Response) => {
     const last = session.lastHeartbeat;
 
     let delta = Math.floor((now.getTime() - last.getTime()) / 1000);
-    delta = Math.max(1, Math.min(delta, 60)); // Prevent huge jumps
+    delta = Math.max(1, Math.min(delta, 60)); // cap to prevent jumps
 
     session.duration += delta;
     session.lastHeartbeat = now;
@@ -106,13 +102,9 @@ export const heartbeat = async (req: Request, res: Response) => {
       totalDuration: session.duration,
       sessionId: session._id,
     });
-
   } catch (err) {
     console.error("heartbeat ERR:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -122,19 +114,12 @@ export const endSession = async (req: Request, res: Response) => {
     const user = req.user as JwtUser | undefined;
 
     if (!user?.id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID missing",
-      });
+      return res.status(400).json({ success: false, message: "User ID missing" });
     }
 
     const userId = user.id;
 
-    const session = await UserSession.findOne({
-      userId,
-      ended: false,
-    });
-
+    const session = await UserSession.findOne({ userId, ended: false });
     if (!session) {
       return res.json({
         success: true,
@@ -152,13 +137,9 @@ export const endSession = async (req: Request, res: Response) => {
       message: "Session ended",
       session,
     });
-
   } catch (err) {
     console.error("endSession ERR:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
