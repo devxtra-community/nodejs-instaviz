@@ -3,76 +3,10 @@ import { Request, Response } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { loadDatasetFromDB } from "../utils/loadDatasetFromDB";
 import { buildChatPrompt } from "../utils/chartPrompt";
-
-import {
-  interpretChartRequest,
-  fallbackChartGenerator,
-} from "../utils/chartInterpreter";
-
-
-let apiKeyIndex = 0;
-const apiKeys = process.env.GEMINI_API_KEY!.split(",").map(k => k.trim());
-
-let currentKey = apiKeys[apiKeyIndex];
-let genAI = new GoogleGenerativeAI(currentKey);
-let model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-const switchApi = () => {
-  apiKeyIndex = (apiKeyIndex + 1) % apiKeys.length;
-  currentKey = apiKeys[apiKeyIndex];
-  genAI = new GoogleGenerativeAI(currentKey);
-  model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-  console.log("Switched to API key:", currentKey);
-};
-
-
-async function runAi(prompt: string) {
-  let attempts = 0;
-
-  while (attempts < apiKeys.length) {
-    try {
-      console.log(` Using Gemini Key #${apiKeyIndex + 1}`);
-
-      const res = await model.generateContent(prompt);
-      let raw = res.response.text().replace(/```json|```/g, "").trim();
-
-      // extract JSON only
-      const start = raw.indexOf("{");
-      const end = raw.lastIndexOf("}");
-      if (start === -1 || end === -1) throw new Error("Invalid JSON");
-
-      return JSON.parse(raw.substring(start, end + 1));
-    } catch (err: any) {
-      const msg = String(err?.message || "");
-      console.log("⚠ Gemini Error:", msg);
-
-      // QUOTA / LIMIT / 429 / 503 → rotate key
-      if (
-        msg.includes("quota") ||
-        msg.includes("429") ||
-        msg.includes("exceeded") ||
-        err.status === 503
-      ) {
-        console.log("Limit reached → switching key...");
-        switchApi();
-        attempts++;
-        continue;
-      }
-
-      // Other error → stop AI completely
-      console.log(" Non-limit AI error. Stopping AI.");
-      return null;
-    }
-  }
-
-  console.log("All Gemini keys failed.");
-  return null;
-}
-
+import {interpretChartRequest,fallbackChartGenerator} from "../utils/chartInterpreter";
+import { runAi, switchApi } from "../services/switchingApi";
 
 // MAIN CHAT CONTROLLER
-
 export const chatController = async (req: Request, res: Response) => {
   try {
     const userMessage = req.body.message?.trim();
@@ -100,14 +34,12 @@ export const chatController = async (req: Request, res: Response) => {
 
     // Run Gemini with safe wrapper
     const parsed = await runAi(prompt);
-
     if (!parsed) {
       return res.json({
         reply: "AI failed to understand. Try rephrasing!",
         chart: null,
       });
     }
-
     // NORMAL QUESTION
     if (parsed.type === "qa") {
       return res.json({

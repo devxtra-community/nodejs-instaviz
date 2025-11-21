@@ -13,10 +13,12 @@ const chatSchema = new Schema<Chat>({
         type: Schema.Types.ObjectId, ref: "user"
     },
     chart_id: {
-        type: Schema.Types.ObjectId, ref: "chart"
+        type: Schema.Types.ObjectId, ref: "chart",
+        default:null
     },
     data_id: {
-        type: Schema.Types.ObjectId, ref: "data"
+        type: Schema.Types.ObjectId, ref: "data",
+        default:null
     },
     chat: {
         type: String

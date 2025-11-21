@@ -54,7 +54,7 @@ export const changePassword = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'All fields required..' });
     }
     const user = await userModel.findOne({ _id: userId });
-    console.log(user)
+    console.log(user);
     if (!user) {
       return res.status(400).json({ message: 'User is not found..' });
     }
