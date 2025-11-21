@@ -12,6 +12,9 @@ import mongoose from 'mongoose';
 import refreshModel from '../model/refreshtoken';
 import { hashToken } from '../utils/hashTokens.ts';
 
+
+
+
 export const loginCheck = async (req: Request, res: Response) => {
   console.log(' reached here login');
   console.log(req.body);
@@ -105,7 +108,9 @@ export const loginCheck = async (req: Request, res: Response) => {
   }
 };
 
-// dummy bro
+
+
+// dummy 
 
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
@@ -131,6 +136,10 @@ export const getUserProfile = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error fetching user', err });
   }
 };
+
+
+
+
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -165,6 +174,10 @@ export const register = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'someting went wrong', success: false });
   }
 };
+
+
+
+
 
 export const verifyOtp = async (req: Request, res: Response) => {
   console.log('reached here at verify otp');
@@ -229,37 +242,79 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
+
+
+
 // google authentication
-export const googleCallback = (req: Request, res: Response) => {
-  const user = req.user as any;
-
-  const token = signJwt({
-    id: user._id?.toString() || null,
-    googleId: user.googleId?.toString() || null,
-    email: user.email,
-  });
-
-  const frontendURL = process.env.CLIENT_URL!;
-  res.redirect(`${frontendURL}/auth/callback?token=${token}`);
-};
-
-export const logout = async (req: Request, res: Response) => {
+export const googleCallback = async (req: Request, res: Response) => {
   try {
-    const refreToken = req.cookies.refreshToken;
-    if (!refreToken) {
-      return res.status(200).json({ success: true, message: 'Logged out' });
-    }
-    const hashed = hashToken(refreToken);
-    await refreshModel.deleteOne({ tokenhash: hashed });
-    res.clearCookie('refreshToken', {
+    const user = req.user as any;
+
+    const accessToken = Jwt.sign(
+      {
+        id: user._id.toString(),
+        email: user.email,
+        googleId: user.googleId?.toString() || null,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = Jwt.sign(
+      { id: user._id.toString() },
+      process.env.REFRESH_SECRET!,     
+      { expiresIn: "30d" }             
+    );
+
+    await refreshModel.findOneAndUpdate(
+      { userId: user._id },
+      {
+        userId: user._id,
+        tokenhash: hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      { upsert: true }
+    );
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-    return res.status(200).json({ sccess: true, message: 'Logged out successfully' });
+
+    const frontendURL = process.env.CLIENT_URL!;
+    res.redirect(`${frontendURL}/auth/callback?token=${accessToken}`);
+
   } catch (err) {
-    console.log('error in logout');
-    return res.status(500).json({ success: false, message: 'Internal server Error' });
+    console.log("Google OAuth error:", err);
+    res.status(500).json({ message: "Google auth failed" });
+  }
+};
+
+
+
+
+export const logout = async(req:Request,res:Response)=>{
+  try{
+     const refreToken  = req.cookies.refreshToken;
+     if(!refreToken){
+      return res.status(200).json({success:true,message :"Logged out"})
+     }
+     const hashed = hashToken(refreToken);
+      await refreshModel.deleteOne({tokenhash:hashed})
+       res.clearCookie("refreshToken",{
+        httpOnly:true,
+        secure:false,
+        sameSite:"strict"
+       })
+       return res.status(200).json({sccess:true,message:"Logged out successfully"})
+
+
+  }catch(err){
+    console.log("error in logout");
+    return res.status(500).json({success:false,message:"Internal server Error"})
+    
   }
 };
 

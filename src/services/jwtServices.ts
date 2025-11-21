@@ -4,27 +4,24 @@ import { hashToken } from "../utils/hashTokens";
 import refreshModel from "../model/refreshtoken";
 
 export const signJwt = (payload: object) => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "10s" });
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "15m" });
 };
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
-    return res
-      .status(401)
-      .json({ success: false, message: "no refresh token" });
+    return res.status(401).json({ success: false, message: "no refresh token" });
   }
   try {
-    const correctCheck = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_SECRET!
-    ) as { id: string; email: string };
+    const correctCheck = jwt.verify(refreshToken, process.env.REFRESH_SECRET!) as {
+      id: string;
+      email: string;
+    };
     const hashedToken = hashToken(refreshToken);
-    const savedToken = await refreshModel.findOne({tokenhash:hashedToken})
-    if(!savedToken){
-      return res.status(401).json({success:false,message:"invalid refreshtoken"})
+    const savedToken = await refreshModel.findOne({ tokenhash: hashedToken });
+    if (!savedToken) {
+      return res.status(401).json({ success: false, message: "invalid refreshtoken" });
     }
-
 
     const jwtPayload = { id: correctCheck.id, email: correctCheck.email };
 
@@ -34,7 +31,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
 
     return res.status(200).json({ success: true, newAccessToken });
   } catch (err) {
-    console.log("error in refresh token worked",err)
-    return res.status(500).json({success:false,message:"internal server error"})
+    console.log("error in refresh token worked", err);
+    return res.status(500).json({ success: false, message: "internal server error" });
   }
 };
