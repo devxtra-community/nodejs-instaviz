@@ -25,7 +25,7 @@ USER QUESTION:
 TASK:
 Detect whether the user wants:
 1. A normal Q&A answer about the dataset
-2. A new chart (bar or pie)
+2. A new chart (bar or pie or line)
 
 ------------------------------------------
 STRICT JSON OUTPUT ONLY:
@@ -36,7 +36,7 @@ STRICT JSON OUTPUT ONLY:
   "chart": {
     "category": "string or null",
     "numeric": "string or null",
-    "chart_type": "bar" | "pie" | null
+    "chart_type": "bar" | "pie" | "line" | null
   }
 }
 `;

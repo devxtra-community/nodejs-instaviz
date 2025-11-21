@@ -1,7 +1,7 @@
 import type { Aggregations } from "./streamAggregations";
 
 export type FinalChart = {
-  type: "bar" | "pie";
+  type: "bar" | "pie" | "line";
   title: string;
   x: string;
   y?: string;
@@ -62,7 +62,30 @@ export function generateChartData(
         data: rows,
       });
     }
+
+    // LINE CHART
+    if (chart.type === "line") {
+      const xCol = chart.x;
+      const yCol = chart.y;
+
+      const cat = aggregations.categorical[xCol];
+      if (!cat) continue;
+
+      const rows = Object.entries(cat.counts).map(([label, count]) => ({
+        xValue: label,
+        yValue: Number(count),
+      }));
+
+      finalCharts.push({
+        type: "line",
+        title: chart.title,
+        x: xCol,
+        y: yCol,
+        data: rows,
+      });
+    }
   }
+
 
   return finalCharts;
 }
