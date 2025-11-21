@@ -255,20 +255,22 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     const userAgent = req.headers["user-agent"] || "unknown";
     const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.ip || "unknown";
-    await refreshModel.findOneAndUpdate(
-      { userId: user._id },
-      {
-        userId: user._id,
-        tokenhash: hashToken(refreshToken),
-        userAgent,
-        ip,
-        createdAt: new Date(),
-        lastActiveAt: new Date(),
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        isValid: true,
-      },
-      { upsert: true },
-    );
+    const session = await refreshModel
+      .findOneAndUpdate(
+        { userId: user._id },
+        {
+          userId: user._id,
+          tokenhash: hashToken(refreshToken),
+          userAgent,
+          ip,
+          createdAt: new Date(),
+          lastActiveAt: new Date(),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          isValid: true,
+        },
+        { upsert: true, new: true },
+      )
+      .select("_id");
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -278,7 +280,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     });
 
     const frontendURL = process.env.CLIENT_URL!;
-    res.redirect(`${frontendURL}/auth/callback?token=${accessToken}`);
+    res.redirect(`${frontendURL}/auth/callback?token=${accessToken}&sessionId=${session._id}`);
   } catch (err) {
     console.log("Google OAuth error:", err);
     res.status(500).json({ message: "Google auth failed" });
