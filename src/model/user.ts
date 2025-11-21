@@ -1,31 +1,29 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 enum Status {
-    Active = "active",
-    Disabled = "disabled"
-};
+  Active = 'active',
+  Disabled = 'disabled',
+}
 
 export interface User {
-    googleId?: number
-    name?: string,
-    picture?: string,
-    email: string,
-    password?: string,
-    token: number,
-    status?: Status,
-    isDeleted?: boolean,
-    place:String,
-    phone:Number
-};
-
-
+  googleId?: number;
+  name?: string;
+  picture?: string;
+  email: string;
+  password?: string;
+  token: number;
+  status?: Status;
+  isDeleted?: boolean;
+  place: String;
+  phone: Number;
+}
 
 const userSchema = new Schema(
   {
     googleId: {
       type: String,
       unique: true,
-      sparse: true
+      sparse: true,
     },
     name: String,
     picture: String,
@@ -60,21 +58,26 @@ const userSchema = new Schema(
 
     device: {
       type: String,
-      enum: ["desktop", "mobile"],
-      default: "desktop",
+      enum: ['desktop', 'mobile'],
+      default: 'desktop',
     },
 
     lastActiveAt: Date,
     dailyActiveTime: { type: Number, default: 0 },
     averageActiveTime: { type: Number, default: 0 },
 
+<<<<<<< HEAD
     
+=======
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+>>>>>>> adminLogin
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-
-
-const userModel = mongoose.model<User>("user", userSchema);
+const userModel = mongoose.model<User>('user', userSchema);
 
 export default userModel;
