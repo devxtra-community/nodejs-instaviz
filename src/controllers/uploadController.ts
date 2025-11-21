@@ -5,7 +5,7 @@ import csv from "csv-parser";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { r2 } from "../config/r2Client";
 import dataModel from "../model/dataModel";
-import { initStreamingAgg,updateStreamingAgg,finalizeStreamingAgg} from "../utils/streamAggregations";
+import { initStreamingAgg, updateStreamingAgg, finalizeStreamingAgg } from "../utils/streamAggregations";
 import { generateAiPromt } from "../utils/aiPrompt";
 import { generateChartData } from "../utils/chartHelpers";
 import { generateChartsFromData } from "../utils/fallbackCharts";
@@ -30,11 +30,11 @@ export const fileParsing = async (req: Request, res: Response) => {
     const sampleRows: any[] = [];
     let headers: string[] = [];
     const readStream = fs.createReadStream(filepath).pipe(csv());
-    const handleOnHeaders = (hdr: string[]) => {(headers = hdr)}
-    const handleOnData =(row: any) => {
-        if (sampleRows.length < 10) sampleRows.push(row);
-        updateStreamingAgg(streamAgg, row);
-      }
+    const handleOnHeaders = (hdr: string[]) => { (headers = hdr) }
+    const handleOnData = (row: any) => {
+      if (sampleRows.length < 10) sampleRows.push(row);
+      updateStreamingAgg(streamAgg, row);
+    }
     const handleOnEnd = async () => {
       const aggregations = finalizeStreamingAgg(streamAgg);
 
@@ -69,7 +69,7 @@ export const fileParsing = async (req: Request, res: Response) => {
       }
       // Save sample rows
       const dataset = await dataModel.create({
-        user_id: req.body.user_id || null,
+        user_id: userId || null,
         r2_url: fileUrl,
         data: sampleRows,
         aggregations: aggregations,
