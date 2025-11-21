@@ -12,6 +12,7 @@ import { forgotPassword } from "../auth/auth.ts";
 import { verifyForgotOtp } from "../auth/auth.ts";
 import { resetPassword } from "../auth/auth.ts";
 import { getAllSessions } from "../auth/auth.ts";
+import { logoutDevice } from "../auth/auth.ts";
 
 
 
@@ -29,6 +30,7 @@ authRouter.post("/forgotPassword",forgotPassword)
 authRouter.post("/verifyForgotOtp",verifyForgotOtp)
 authRouter.post("/resetPassword",resetPassword)
 authRouter.get("/getAllSessions",verifyToken,getAllSessions)
+authRouter.post("/logoutDevice",verifyToken,logoutDevice)
 
 // google authentication
 authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));

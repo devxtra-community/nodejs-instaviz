@@ -70,7 +70,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.ip || 'unknown';
 
-    await refreshModel.create({
+   const session =  await refreshModel.create({
       userId: user._id,
       tokenhash: hashed,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -92,6 +92,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       success: true,
       message: 'Login successful',
       accessToken,
+      sessionId : session._id,
       user: {
         id: user._id,
         name: user.name,
@@ -425,3 +426,42 @@ export const getAllSessions = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const logoutDevice = async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.body;
+     interface JwtUser {
+      id: string;
+      email: string;
+    }
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: "Session ID required" });
+    }
+
+    const session = await refreshModel.findOne({
+      _id: sessionId,
+      userId
+    });
+
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Session not found" });
+    }
+
+    await refreshModel.deleteOne({ _id: sessionId });
+
+    return res.json({
+      success: true,
+      message: "Device logged out successfully",
+    });
+  } catch (err) {
+    console.error("Logout Device Error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
