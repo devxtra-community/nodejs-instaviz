@@ -6,6 +6,7 @@ import chartModel from '../model/chart';
 import guestModel from '../model/guest';
 
 interface JwtPayload {
+  id:string;
   userId: string;
 }
 
@@ -33,11 +34,11 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       ) as JwtPayload;
 
       authedReq.user = {
-        userId: decoded.userId,
+        userId: decoded.id,
         isGuest: false,
       };
-      console.log('Authenticated user from JWT:', decoded.userId);
-      const currentUserToken = await userModel.findById({ _id: decoded.userId })
+      console.log('Authenticated user from JWT:', decoded.id);
+      const currentUserToken = await userModel.findById({ _id: decoded.id })
       if (currentUserToken?.token == 0) {
         return res.json({ message: "Token is finished ! buy more token..", success: false })
       }
