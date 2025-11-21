@@ -5,7 +5,7 @@ export interface Plans{
     title:string
     price:number
     billed:string
-    features:string
+    features:string[]
     offerlabel:string
 
 
@@ -25,10 +25,11 @@ billed:{
     type:String,
     required:true
 },
-features:{
-    type:String,
-    required:true
+features: {
+  type: [String],
+  required: true
 },
+
 offerlabel:{
     type:String,
 }

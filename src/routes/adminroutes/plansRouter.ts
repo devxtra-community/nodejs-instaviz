@@ -6,7 +6,7 @@ import { deleteplan } from '../../adminController/plansController';
 import { verifyAdmin } from '../../middlewares/verifyAdmin';
 export const plansRouter = Router();
 
-plansRouter.post('/addplans', verifyAdmin, addplan);
-plansRouter.get('/showplans', verifyAdmin, showplan);
-plansRouter.put('/updateplans/:id', verifyAdmin, updateplan);
-plansRouter.delete('/deleteplans/:id', verifyAdmin, deleteplan);
+plansRouter.post('/plans', addplan);
+plansRouter.get('/plans',  showplan);
+plansRouter.put('/plans/:id', verifyAdmin, updateplan);
+plansRouter.delete('/plans/:id', verifyAdmin, deleteplan);

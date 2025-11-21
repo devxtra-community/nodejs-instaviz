@@ -68,10 +68,7 @@ const userSchema = new Schema(
     dailyActiveTime: { type: Number, default: 0 },
     averageActiveTime: { type: Number, default: 0 },
 
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    }
+    
   },
   { timestamps: true }
 );
