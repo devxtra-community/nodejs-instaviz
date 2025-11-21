@@ -58,8 +58,6 @@ app.use('/user', userRouter);
 app.use('/auth', authRouter);
 app.use('/payment', paymentRouter);
 
-app.use('/payment', paymentRouter);
-
 // admin routes
 app.use('/admin/dashboard', adminrouter);
 app.use('/admin/dashboard', insightsRouter);
