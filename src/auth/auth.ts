@@ -250,13 +250,21 @@ export const googleCallback = async (req: Request, res: Response) => {
   try {
     const user = req.user as any;
 
-    const token = signJwt({
-      id: user._id?.toString() || null,
-      googleId: user.googleId?.toString() || null,
-      email: user.email,
-    });
+    const accessToken = Jwt.sign(
+      {
+        id: user._id.toString(),
+        email: user.email,
+        googleId: user.googleId?.toString() || null,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "15m" }
+    );
 
-    const refreshToken = signJwt({ id: user._id });
+    const refreshToken = Jwt.sign(
+      { id: user._id.toString() },
+      process.env.REFRESH_SECRET!,     
+      { expiresIn: "30d" }             
+    );
 
     await refreshModel.findOneAndUpdate(
       { userId: user._id },
@@ -265,23 +273,24 @@ export const googleCallback = async (req: Request, res: Response) => {
         tokenhash: hashToken(refreshToken),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
-      { upsert: true },
+      { upsert: true }
     );
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     const frontendURL = process.env.CLIENT_URL!;
-    res.redirect(`${frontendURL}/auth/callback?token=${token}`);
+    res.redirect(`${frontendURL}/auth/callback?token=${accessToken}`);
+
   } catch (err) {
-    res.status(500).json({ message: err });
+    console.log("Google OAuth error:", err);
+    res.status(500).json({ message: "Google auth failed" });
   }
 };
-
 
 
 
