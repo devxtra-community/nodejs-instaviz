@@ -40,7 +40,7 @@ export const refreshAdminAccessToken = async (req: Request, res: Response) => {
         role:"admin"
       },
       process.env.JWT_SECRET!,
-      { expiresIn: '15min' },
+      { expiresIn: '15m' },
     );
 
     return res.status(200).json({
