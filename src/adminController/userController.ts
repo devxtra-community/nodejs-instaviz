@@ -173,28 +173,101 @@ export const singleUsertoken = async (req: Request, res: Response) => {
 
   }   
 
-  //get activ time
- export const getUserActiveTime = async (req: Request, res: Response) => {
+
+
+
+
+// get all users average active time per day + hourly active users
+export const hourlyActiveUserCount = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const { day } = req.query;
 
-    const sessions = await activeModel.find({ userId });
+    if (!day) {
+      return res.status(400).json({
+        success: false,
+        message: "day (YYYY-MM-DD) is required",
+      });
+    }
 
-    const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
 
-    return res.status(200).json({
-      userId,
-      totalActiveSeconds: totalSeconds,
-      totalActiveMinutes: Math.floor(totalSeconds / 60),
-      totalActiveHours: (totalSeconds / 3600).toFixed(2),
-      sessions
+    const sessions = await activeModel.find({ day });
+
+
+    if (!sessions.length) {
+      return res.json({
+        success: true,
+        day,
+        hourlyActive: Array.from({ length: 24 }, (_, i) => ({
+          hour: i,
+          active: 0,
+        })),
+        averageSeconds: 0,
+        averageFormatted: "0h 0m",
+      });
+    }
+
+
+
+    const hourly = Array(24).fill(0);
+
+    sessions.forEach((session) => {
+      const start = new Date(session.startTime);
+      const end = new Date(session.endTime || session.lastHeartbeat);
+
+      let startHour = start.getHours();
+      let endHour = end.getHours();
+
+      if (endHour < startHour) endHour = startHour;
+
+      for (let hr = startHour; hr <= endHour && hr < 24; hr++) {
+        hourly[hr] += 1;
+      }
+    });
+
+    const hourlyFormatted = hourly.map((count, hr) => ({
+      hour: hr,
+      active: count,
+    }));
+
+
+
+    const totalSeconds = sessions.reduce((sum, s) => sum + s.duration, 0);
+
+    const uniqueUsers = new Set(sessions.map((s) => s.userId.toString())).size;
+
+    const averageSeconds = Math.floor(totalSeconds / uniqueUsers);
+
+    const hours = Math.floor(averageSeconds / 3600);
+    const minutes = Math.floor((averageSeconds % 3600) / 60);
+
+    const formatted = `${hours}h ${minutes}m`;
+
+  
+    return res.json({
+      success: true,
+      day,
+      hourlyActive: hourlyFormatted,
+      averageSeconds,
+      averageFormatted: formatted,
     });
 
   } catch (err) {
-    res.status(500).json({ message: "Error calculating time", error: err });
+    console.error("Hourly active count error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
 
-  
+//user avarage active time 
+export const singleUseractivetime = async()=>{
 
+ try{
+
+ }
+ catch{
+  
+ } 
+}

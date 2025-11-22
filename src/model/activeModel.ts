@@ -4,9 +4,8 @@ const userSessionSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
-    
-    userName: { type: String },
-    userEmail: { type: String },
+    userName: String,
+    userEmail: String,
 
     startTime: { type: Date, default: Date.now },
     lastHeartbeat: { type: Date, default: Date.now },
@@ -14,18 +13,24 @@ const userSessionSchema = new Schema(
 
     duration: { type: Number, default: 0 }, // seconds
 
-    userAgent: { type: String },
-    ipAddress: { type: String },
-    screenWidth: { type: Number },
-    screenHeight: { type: Number },
+    userAgent: String,
+    ipAddress: String,
+    screenWidth: Number,
+    screenHeight: Number,
 
     ended: { type: Boolean, default: false },
+
+    // YYYY-MM-DD
+    day: {
+      type: String,
+      index: true,
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
 export default mongoose.model("UserSession", userSessionSchema);
-
 
  // userAgent : 
     // ipAddress : 

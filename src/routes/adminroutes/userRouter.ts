@@ -8,7 +8,8 @@ import { GetSingleuser } from "../../adminController/userController"
 import { singleUsertoken } from "../../adminController/userController";
 import { addGustuser } from "../../adminController/userController";
 import { updateUserstatus } from "../../adminController/userController";
-import { getUserActiveTime } from "../../adminController/userController";
+import { hourlyActiveUserCount } from "../../adminController/userController";
+
 
 export  const adminUserRouter = Router()
 
@@ -23,5 +24,6 @@ adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
 adminUserRouter.post("/addgustuser",addGustuser)
 adminUserRouter.put("/status/:id",updateUserstatus)
-adminUserRouter.get("/active-time/:userId", getUserActiveTime);
+adminUserRouter.get("/activetime",hourlyActiveUserCount)
+
 
