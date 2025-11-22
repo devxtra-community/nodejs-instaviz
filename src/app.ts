@@ -16,7 +16,7 @@ import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import chatRouter from "./routes/chatRouter.ts"
 
 const app = express();
-app.use(express.json({limit:"50mb"}));
+app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
@@ -42,7 +42,7 @@ app.use(
 app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
-app.use("/upload", uploadRouter)
+app.use("/upload", uploadRouter, fileSizeCheck)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
