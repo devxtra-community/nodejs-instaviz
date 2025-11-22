@@ -5,33 +5,25 @@ export const getWeeklyUploads = async (req: Request, res: Response) => {
   try {
     const today = new Date();
 
-    // Find Monday (local time)
-    const day = today.getDay(); // Sun=0
+    // Compute Monday (local week structure but using UTC)
+    const day = today.getUTCDay(); // Sun=0
     const diff = day === 0 ? -6 : 1 - day;
 
     const monday = new Date(today);
-    monday.setDate(today.getDate() + diff);
-    monday.setHours(0, 0, 0, 0);
+    monday.setUTCDate(today.getUTCDate() + diff);
+    monday.setUTCHours(0, 0, 0, 0);
 
     const result: { day: string; uploads: number }[] = [];
 
     for (let i = 0; i < 7; i++) {
       const current = new Date(monday);
-      current.setDate(monday.getDate() + i);
+      current.setUTCDate(monday.getUTCDate() + i);
 
-      const start = new Date(
-        current.getFullYear(),
-        current.getMonth(),
-        current.getDate(),
-        0, 0, 0, 0
-      );
+      const start = new Date(current);
+      start.setUTCHours(0, 0, 0, 0);
 
-      const end = new Date(
-        current.getFullYear(),
-        current.getMonth(),
-        current.getDate(),
-        23, 59, 59, 999
-      );
+      const end = new Date(current);
+      end.setUTCHours(23, 59, 59, 999);
 
       const count = await dataModel.countDocuments({
         createdAt: { $gte: start, $lte: end },
@@ -50,3 +42,4 @@ export const getWeeklyUploads = async (req: Request, res: Response) => {
     return res.status(500).json([]);
   }
 };
+
