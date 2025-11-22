@@ -1,9 +1,12 @@
-import { Request,Response } from "express";
+import { Request,Response,NextFunction } from "express";
 import userModel from "../model/user";
 import guestModel from "../model/guest";
-import { cache } from "joi";
+import { any, cache } from "joi";
 import { log } from "console";
-
+import { Type } from "@aws-sdk/client-s3";
+import { performance } from "perf_hooks";
+import { start } from "repl";
+import activeModel from "../model/activeModel";
 
 //function for get allloged users count to admindashboard graph
 export const loggedusers = async(req:Request,res:Response)=>{
@@ -19,11 +22,19 @@ catch{
     res.status(500).json({message:"user not found"})
 }}
 
-
-
-
-
-
+export const updateUserstatus  =  async(req:Request,res:Response)=>{
+  try{
+  const {id}  = req.params
+  const {status} = req.body
+  const usestatus  = await userModel.findByIdAndUpdate (id,{
+    status:req.body.status
+  },{new:true})
+  res.status(200).json({message:"userstatus updated",success:true})
+}
+catch(err){
+res.status(500).json({message:"user status cant update",success:false})
+}
+}
 
 //function for get new logged users count per month
 export const getNewUsersPerMonth = async (req: Request, res: Response) => {
@@ -55,16 +66,6 @@ export const getNewUsersPerMonth = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
-//function for  get aravarage time to all users
-
-
-
-
-
-
 //function for add guestusers
 export const addGustuser = async(req:Request,res:Response)=>{
       try {
@@ -81,7 +82,6 @@ res.status(500).json({message:"guest user not added some error"})
 }
 }
 
-
 //function for get full gustusers count
 export const fetchAllgustusers = async(req:Request,res:Response)=>{
   try{
@@ -93,8 +93,6 @@ export const fetchAllgustusers = async(req:Request,res:Response)=>{
 
   }
 }
-
-
 
 //function for get all users count
 export const getAllusers = async (req: Request, res: Response) => {
@@ -115,9 +113,6 @@ export const getAllusers = async (req: Request, res: Response) => {
     res.status(500).json({ message: "failed to fetch all users", error: err });
   }
 };
-
-
-
 
 //get allusers to a single page
 
@@ -176,6 +171,103 @@ export const singleUsertoken = async (req: Request, res: Response) => {
     
    }
 
-    
+  }   
 
+
+
+
+
+// get all users average active time per day + hourly active users
+export const hourlyActiveUserCount = async (req: Request, res: Response) => {
+  try {
+    const { day } = req.query;
+
+    if (!day) {
+      return res.status(400).json({
+        success: false,
+        message: "day (YYYY-MM-DD) is required",
+      });
+    }
+
+
+    const sessions = await activeModel.find({ day });
+
+
+    if (!sessions.length) {
+      return res.json({
+        success: true,
+        day,
+        hourlyActive: Array.from({ length: 24 }, (_, i) => ({
+          hour: i,
+          active: 0,
+        })),
+        averageSeconds: 0,
+        averageFormatted: "0h 0m",
+      });
+    }
+
+
+
+    const hourly = Array(24).fill(0);
+
+    sessions.forEach((session) => {
+      const start = new Date(session.startTime);
+      const end = new Date(session.endTime || session.lastHeartbeat);
+
+      let startHour = start.getHours();
+      let endHour = end.getHours();
+
+      if (endHour < startHour) endHour = startHour;
+
+      for (let hr = startHour; hr <= endHour && hr < 24; hr++) {
+        hourly[hr] += 1;
+      }
+    });
+
+    const hourlyFormatted = hourly.map((count, hr) => ({
+      hour: hr,
+      active: count,
+    }));
+
+
+
+    const totalSeconds = sessions.reduce((sum, s) => sum + s.duration, 0);
+
+    const uniqueUsers = new Set(sessions.map((s) => s.userId.toString())).size;
+
+    const averageSeconds = Math.floor(totalSeconds / uniqueUsers);
+
+    const hours = Math.floor(averageSeconds / 3600);
+    const minutes = Math.floor((averageSeconds % 3600) / 60);
+
+    const formatted = `${hours}h ${minutes}m`;
+
+  
+    return res.json({
+      success: true,
+      day,
+      hourlyActive: hourlyFormatted,
+      averageSeconds,
+      averageFormatted: formatted,
+    });
+
+  } catch (err) {
+    console.error("Hourly active count error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
+};
+
+
+//user avarage active time 
+export const singleUseractivetime = async()=>{
+
+ try{
+
+ }
+ catch{
+  
+ } 
+}

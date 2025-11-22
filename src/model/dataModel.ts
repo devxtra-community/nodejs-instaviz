@@ -16,12 +16,23 @@ interface Data {
 
 const dataSchema = new Schema<Data>(
   {
+const dataSchema = new Schema<Data>(
+  {
     data: [
       {
         type: Map,
         of: Schema.Types.Mixed,
       },
+      {
+        type: Map,
+        of: Schema.Types.Mixed,
+      },
     ],
+
+    aggregations: {
+      type: Schema.Types.Mixed, 
+      required: false,
+    },
 
     user_id: { type: Schema.Types.ObjectId, ref: "user" },
 
@@ -47,5 +58,4 @@ const dataSchema = new Schema<Data>(
 );
 
 const dataModel = mongoose.model<Data>("data", dataSchema);
-
 export default dataModel;

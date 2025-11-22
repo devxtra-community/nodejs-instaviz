@@ -1,6 +1,8 @@
-import mongoose, { Schema } from "mongoose";
+import { required } from 'joi';
+import mongoose, { Schema } from 'mongoose';
 
 interface Admin {
+
     email: string,
     password: string,
     role : string,
@@ -18,7 +20,12 @@ const adminSchema = new Schema<Admin>({
         type : String , default : "admin"
     },
 
-});
+
+
+})
+
+
+
 
 const adminModel = mongoose.model<Admin>('admin', adminSchema);
 
