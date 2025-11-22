@@ -6,6 +6,8 @@ export const verifyToken = (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("inside verify token");
+  
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -13,10 +15,12 @@ export const verifyToken = (
   }
 
   const token = authHeader.split(" ")[1];
+  console.log("TOKEN EXPIRY CHECK", Jwt.decode(token));
+
   try {
     const decoded = Jwt.verify(token, process.env.JWT_SECRET!);
     req.user = decoded;
-    console.log("req.user succefully set")
+  
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
