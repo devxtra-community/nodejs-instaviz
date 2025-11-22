@@ -6,7 +6,8 @@ import chartModel from '../model/chart';
 import guestModel from '../model/guest';
 
 interface JwtPayload {
-  id: string;
+  id:string;
+  userId: string;
 }
 
 interface UserPayload {
@@ -23,7 +24,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
     console.log('Checking whether user is logged in or guest');
     const authedReq = req as AuthedRequest;
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
 
@@ -31,7 +32,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
         token,
         process.env.JWT_SECRET as string
       ) as JwtPayload;
-      console.log(decoded)
+
       authedReq.user = {
         userId: decoded.id,
         isGuest: false,

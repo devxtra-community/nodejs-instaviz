@@ -53,7 +53,6 @@ export const fileParsing = async (req: Request, res: Response) => {
     };
     const authedReq = req as AuthedRequest;
     const userId = authedReq.user?.userId;
-      console.log(userId)
     const dataset = await createDatasetWithRows(
       results,
       userId as string || null,
