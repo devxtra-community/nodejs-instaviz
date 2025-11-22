@@ -294,8 +294,14 @@ export const logout = async (req: Request, res: Response) => {
       return res.status(200).json({ success: true, message: "Logged out" });
     }
     const hashed = hashToken(refreToken);
+
     await refreshModel.deleteOne({ tokenhash: hashed });
     res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+    res.clearCookie("accessToken", {
       httpOnly: true,
       secure: false,
       sameSite: "strict",
