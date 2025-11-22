@@ -66,16 +66,19 @@ export const loginCheck = async (req: Request, res: Response) => {
     );
 
     const hashed = hashToken(refreshToken);
-    await refreshModel.findOneAndUpdate(
-      { userId: user._id, },
-      {
-        userId: user._id,
-        tokenhash: hashed,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-      { upsert: true, },
-    );
+    const userAgent = req.headers["user-agent"] || "unknown";
+    const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.ip || "unknown";
 
+    const session = await refreshModel.create({
+      userId: user._id,
+      tokenhash: hashed,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      userAgent,
+      ip,
+      createdAt: new Date(),
+      lastActiveAt: new Date(),
+      isValid: true,
+    });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
