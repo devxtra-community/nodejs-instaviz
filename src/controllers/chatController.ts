@@ -8,44 +8,45 @@ import { modelLight } from "../services/aiModels";
 export const chatController = async (req: Request, res: Response) => {
   try {
     const { message } = req.body;
-    console.log("message:",message,"req.user:",req.user)
-    // // Ensure user is authenticated
-    // if (!req.user || !req.user) {
-    //   return res.status(401).json({
-    //     reply: "Please log in before chatting with InstaviZ AI.",
-    //     chart: null,
-    //   });
-    // }
-    // console.log("req.user is console loging",req.user)
-    // const userId = req.user;
+    console.log("message:", message, "req.cookies.userId:", req.cookies.userId)
+    // Ensure user is authenticated
+    if (!req.cookies.userId) {
+      return res.status(401).json({
+        reply: "Please log in or continue as guest.",
+        chart: null,
+      });
+    }
 
-    // // latest dataset for user
-    // const dataset = await Dataset.findOne({ user_id: userId })
-    //   .sort({ created_at: -1 });
+    console.log("req.cookies.userId is console loging", req.cookies.userId)
+    const userId = req.cookies.userId;
+    console.log()
+    // latest dataset for user
+    const dataset = await Dataset.findOne({ user_id: userId })
+      .sort({ created_at: -1 });
 
-    // if (!dataset) {
-    //   return res.json({
-    //     reply: "Please upload a dataset first.",
-    //     chart: null,
-    //   });
-    // }
+    if (!dataset) {
+      return res.json({
+        reply: "Please upload a dataset first.",
+        chart: null,
+      });
+    }
 
-    // // If chart requested → Heavy model
-    // if (userWantsChart(message)) {
-    //   const result = await runChartAnalysis(message, dataset);
-    //   return res.json(result);
-    // }
+    // If chart requested → Heavy model
+    if (userWantsChart(message)) {
+      const result = await runChartAnalysis(message, dataset);
+      return res.json(result);
+    }
 
-    // // Otherwise → Cheap model
-    // const prompt = createChatPrompt(message, dataset);
-    // const chat = modelLight.startChat({ history: [] });
+    // Otherwise → Cheap model
+    const prompt = createChatPrompt(message, dataset);
+    const chat = modelLight.startChat({ history: [] });
 
-    // const reply = await chat.sendMessage(prompt);
+    const reply = await chat.sendMessage(prompt);
 
-    // return res.json({
-    //   reply: reply.response.text(),
-    //   chart: null,
-    // });
+    return res.json({
+      reply: reply.response.text(),
+      chart: null,
+    });
 
   } catch (err) {
     console.error(err);

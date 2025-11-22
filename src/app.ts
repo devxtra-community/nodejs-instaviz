@@ -43,7 +43,7 @@ app.use(
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
 //middleware
-app.use("/upload", uploadRouter)
+app.use("/upload", uploadRouter,fileSizeCheck)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
@@ -52,9 +52,6 @@ app.use("/chat",chatRouter);
 // admin routes
 app.use("/admin/dashboard",adminrouter)
 app.use('/admin/dashboard',insightsRouter)
-
-//file upload check
-app.use(fileSizeCheck);
 
 // TODO: Where is 404 route
 // TODO: Helth check route ? is server active ?. is mongodb connected proplery.

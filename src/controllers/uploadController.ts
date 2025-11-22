@@ -3,8 +3,17 @@ import fs from "fs";
 import { CustomError } from "../utils/CustomError";
 import { parseCsvFile } from "../services/csvService";
 import { uploadCsvToR2 } from "../services/r2Service";
-import { createDatasetWithRows } from "../services/datasetService"; 
+import { createDatasetWithRows } from "../services/datasetService";
 import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
+
+
+interface UserPayload {
+  userId: string;
+  isGuest?: boolean;
+}
+type AuthedRequest = Request & {
+  user?: UserPayload;
+};
 
 export const fileParsing = async (req: Request, res: Response) => {
   let filepath: string | undefined;
@@ -42,10 +51,12 @@ export const fileParsing = async (req: Request, res: Response) => {
       total_columns: totalColumns,
       missing_values: missingValues,
     };
-
+    const authedReq = req as AuthedRequest;
+    const userId = authedReq.user?.userId;
+      console.log(userId)
     const dataset = await createDatasetWithRows(
       results,
-      (req.body.user_id as string) || null,
+      userId as string || null,
       fileUrl,
       file.originalname,
       totalColumns

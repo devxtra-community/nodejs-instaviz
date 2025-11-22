@@ -5,6 +5,6 @@ import { tokenCheck } from '../middlewares/tokenCheck.ts';
 
 const uploadRouter = Router()
 // uploadRouter.use('/fileupload',tokenCheck)
-uploadRouter.post("/fileupload", upload.single('file'), fileParsing);
+uploadRouter.post("/fileupload", upload.single('file'),tokenCheck, fileParsing);
 
 export default uploadRouter;
