@@ -261,13 +261,175 @@ export const hourlyActiveUserCount = async (req: Request, res: Response) => {
 };
 
 
-//user avarage active time 
-export const singleUseractivetime = async()=>{
 
- try{
 
- }
- catch{
-  
- } 
-}
+export const getUserDailyActiveTime = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = id;
+    const { startDate, endDate } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId is required",
+      });
+    }
+
+    // Build query filter
+    const filter: any = { userId };
+
+    // If date range provided, filter by it
+    if (startDate || endDate) {
+      filter.day = {};
+      if (startDate) filter.day.$gte = startDate;
+      if (endDate) filter.day.$lte = endDate;
+    }
+
+    // Get all sessions for this user
+    const sessions = await activeModel.find(filter).sort({ day: 1 });
+
+    if (!sessions.length) {
+      return res.json({
+        success: true,
+        userId,
+        message: "No active sessions found",
+        dailyActiveTime: [],
+        totalSeconds: 0,
+        totalFormatted: "0h 0m",
+      });
+    }
+
+    // Group sessions by day and calculate total time per day
+    const dailyMap = new Map<string, number>();
+
+    sessions.forEach((session) => {
+      const day = session.day;
+      const currentTotal = dailyMap.get(day) || 0;
+      dailyMap.set(day, currentTotal + session.duration);
+    });
+
+    // Format the daily active time
+    const dailyActiveTime = Array.from(dailyMap.entries()).map(([day, totalSeconds]) => {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      
+      let formatted = "";
+      if (hours > 0) {
+        formatted = `${hours}h ${minutes}m`;
+      } else {
+        formatted = `${minutes}m`;
+      }
+
+      // Get day name
+      const date = new Date(day);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+      return {
+        date: day,
+        dayName,
+        totalSeconds,
+        formatted,
+      };
+    });
+
+    // Calculate overall total
+    const totalSeconds = sessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+    const totalFormatted = `${totalHours}h ${totalMinutes}m`;
+
+    // Calculate average per day
+    const avgSeconds = Math.floor(totalSeconds / dailyActiveTime.length);
+    const avgHours = Math.floor(avgSeconds / 3600);
+    const avgMinutes = Math.floor((avgSeconds % 3600) / 60);
+    const avgFormatted = `${avgHours}h ${avgMinutes}m`;
+
+    return res.json({
+      success: true,
+      userId,
+      dailyActiveTime,
+      totalSeconds,
+      totalFormatted,
+      averagePerDay: {
+        seconds: avgSeconds,
+        formatted: avgFormatted,
+      },
+    });
+
+  } catch (err) {
+    console.error("User daily active time error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+
+// Alternative: Get user active time for specific days
+export const getUserActiveTimeByDays = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = id;
+    const { days } = req.body; // Array of days ["2025-11-22", "2025-11-23"]
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId is required",
+      });
+    }
+
+    if (!days || !Array.isArray(days)) {
+      return res.status(400).json({
+        success: false,
+        message: "days array is required",
+      });
+    }
+
+    const sessions = await activeModel.find({
+      userId,
+      day: { $in: days },
+    });
+
+    const dailyMap = new Map<string, number>();
+
+    // Initialize all requested days with 0
+    days.forEach(day => dailyMap.set(day, 0));
+
+    // Add actual session durations
+    sessions.forEach((session) => {
+      const currentTotal = dailyMap.get(session.day) || 0;
+      dailyMap.set(session.day, currentTotal + session.duration);
+    });
+
+    const result = Array.from(dailyMap.entries()).map(([day, totalSeconds]) => {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      
+      const date = new Date(day);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+      return {
+        date: day,
+        dayName,
+        totalSeconds,
+        formatted: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
+      };
+    });
+
+    return res.json({
+      success: true,
+      userId,
+      activeTime: result,
+    });
+
+  } catch (err) {
+    console.error("User active time by days error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
