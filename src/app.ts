@@ -23,7 +23,9 @@ import { dashboardRouter } from './routes/adminroutes/dashboardRouter.ts';
 
 
 
+
 import sessionRoutes from "./routes/sessionRouter.ts";
+import chatRouter from './routes/chatRouter.ts'
 
 
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
@@ -32,7 +34,7 @@ import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
 import { adminUserRouter } from './routes/adminroutes/userRouter.ts';
 
 const app = express();
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
@@ -76,6 +78,7 @@ app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 app.use("/session",sessionRoutes)
 
 //middleware
+
 app.use('/upload', uploadRouter);
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
@@ -93,6 +96,12 @@ app.use('/admin', adminUserRouter);
 app.use('/admin', tokenrouter);
 app.use('/admin', plansRouter);
 
+
+app.use("/upload", uploadRouter, fileSizeCheck)
+app.use("/user", userRouter)
+app.use("/auth", authRouter)
+app.use("/payment", paymentRouter)
+app.use("/chat",chatRouter)
 
 //file upload check
 app.use(fileSizeCheck);

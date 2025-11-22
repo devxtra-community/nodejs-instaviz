@@ -167,6 +167,4 @@ export const finalizeStreamingAgg = (state: StreamingAggState) => {
     },
   };
 };
-
 export type Aggregations = ReturnType<typeof finalizeStreamingAgg>;
-
