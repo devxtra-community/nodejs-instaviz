@@ -14,6 +14,7 @@ import { adminrouter } from './routes/adminroutes/userRouter.ts';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import mcpClient from './services/mcpClient.ts';
+import chatRouter from "./routes/chatRoutes.ts"
 
 const app = express();
 app.use(express.json({limit:"50mb"}));
@@ -46,6 +47,7 @@ app.use("/upload", uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
+app.use("/chat",chatRouter);
 
 // admin routes
 app.use("/admin/dashboard",adminrouter)
