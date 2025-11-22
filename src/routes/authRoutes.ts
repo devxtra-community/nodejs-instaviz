@@ -7,6 +7,13 @@ import { testpro } from "../auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import {deviceLogger} from '../utils/deviceLogger.ts'
 import { verifyToken } from "../middlewares/verifyToken.ts";
+import { resendOtp } from "../auth/auth.ts";
+import { forgotPassword } from "../auth/auth.ts";
+import { verifyForgotOtp } from "../auth/auth.ts";
+import { resetPassword } from "../auth/auth.ts";
+import { getAllSessions } from "../auth/auth.ts";
+import { logoutDevice } from "../auth/auth.ts";
+
 
 
 const authRouter = Router();
@@ -15,9 +22,15 @@ const authRouter = Router();
 authRouter.post('/login',loginCheck , deviceLogger);
 authRouter.post("/register",register);
 authRouter.post("/verifyOtp",verifyOtp);
+authRouter.post("/resendOtp",resendOtp)
 authRouter.get("/test",verifyToken,testpro)
 authRouter.post("/newRefreshToken",refreshAccessToken)
 authRouter.post("/logout",logout)
+authRouter.post("/forgotPassword",forgotPassword)
+authRouter.post("/verifyForgotOtp",verifyForgotOtp)
+authRouter.post("/resetPassword",resetPassword)
+authRouter.get("/getAllSessions",verifyToken,getAllSessions)
+authRouter.post("/logoutDevice",verifyToken,logoutDevice)
 
 // google authentication
 authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));

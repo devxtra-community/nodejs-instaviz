@@ -1,167 +1,147 @@
-import type { Request, Response } from 'express';
-import fs from 'fs';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import csv from 'csv-parser';
-import fetch from 'node-fetch';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2 } from '../config/r2Client';
-import dataModel from '../model/dataModel';
-import { CustomError } from '../utils/CustomError';
-import { generateAiPromt } from '../utils/aiPrompt';
+// controllers/fileParsing.ts
+import type { Request, Response } from "express";
+import fs from "fs";
+import csv from "csv-parser";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { r2 } from "../config/r2Client";
+import dataModel from "../model/dataModel";
+import { initStreamingAgg,updateStreamingAgg,finalizeStreamingAgg} from "../utils/streamAggregations";
+import { generateAiPromt } from "../utils/aiPrompt";
+import { generateChartData } from "../utils/chartHelpers";
+import { generateChartsFromData } from "../utils/fallbackCharts";
+import { runAi } from "../services/switchingApi";
 
-// const apikey =
-let apiKeyIndex = 1;
-const apiKeys = process.env.GEMINI_API_KEY!.split(',').map(k => k.trim());
-let currentApi = apiKeys[apiKeyIndex];
-let genAI = new GoogleGenerativeAI(currentApi);
-let model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-const switchApi = () => {
-  apiKeyIndex = (apiKeyIndex + 1) % apiKeys.length;
-  currentApi = apiKeys[apiKeyIndex];
-  genAI = new GoogleGenerativeAI(currentApi);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  console.log('Api Key swithed', currentApi);
+interface UserPayload {
+  userId: string;
+  isGuest?: boolean;
+}
+type AuthedRequest = Request & {
+  user?: UserPayload;
 };
 
+// FILE PARSING (MAIN CONTROLLER)
 export const fileParsing = async (req: Request, res: Response) => {
   try {
-    console.time('checking');
-    if (!req.file) {
-      return res.status(404).json({ message: 'File Not Uploaded' });
-    }
-    const file = req.file as Express.Multer.File;
+    console.log(req.user)
+    if (!req.file) return res.status(400).json({ message: "File not uploaded" });
+    const file = req.file;
     const filepath = file.path;
-    const results: any[] = [];
+    const streamAgg = initStreamingAgg();
+    const sampleRows: any[] = [];
     let headers: string[] = [];
-    let totalRows = 0;
-    let responded = false;
-    const handleOnHeaders = (hdrs: string[]) => {
-      headers = hdrs;
-      // TODO: Check and remove
-      // console.log("Header evert called : ", headerOnCalledCount++, hdrs);
-    };
-
-    const handleOnData = (data: any) => {
-      totalRows++;
-      results.push(data);
-    };
-
-    const handleOnError = (err: any) => {
-      console.log('error while parsing csv:', err);
-      dataModel.create({
-        data: [],
-        user_id: req.body.user_id || null,
-        r2_url: null,
-        device: (req as any).device || 'desktop',
-        status: 'failed',
-      });
-
-      return res.status(500).json({
-        message: 'error parsing csv',
-        success: false,
-        error: String(err),
-      });
-    };
-
+    const readStream = fs.createReadStream(filepath).pipe(csv());
+    const handleOnHeaders = (hdr: string[]) => {(headers = hdr)}
+    const handleOnData =(row: any) => {
+        if (sampleRows.length < 10) sampleRows.push(row);
+        updateStreamingAgg(streamAgg, row);
+      }
     const handleOnEnd = async () => {
-      if (responded) return;
-      responded = true;
-      console.timeEnd('Parsing CSV');
+      const aggregations = finalizeStreamingAgg(streamAgg);
 
-      // Upload to Cloudflare R2
+      const metrics = {
+        total_rows: aggregations.meta.total_rows,
+        total_columns: aggregations.meta.total_columns,
+        missing_values: calculateTotalMissing(aggregations),
+      };
+      // Upload CSV
       const fileBuffer = fs.readFileSync(filepath);
       const fileName = `${Date.now()}_${file.originalname}`;
 
-      try {
-        await r2.send(
-          new PutObjectCommand({
-            Bucket: process.env.R2_BUCKET_NAME!,
-            Key: fileName,
-            Body: fileBuffer,
-            ContentType: 'text/csv',
-          }),
-        );
-      } catch (err) {
-        console.error('R2 upload error:', err);
-        return res.status(500).json({ message: 'R2 upload failed', success: false });
-      }
-
-      fs.unlink(filepath, () => {});
-
-      // Public file URL
+      await r2.send(
+        new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME!,
+          Key: fileName,
+          Body: fileBuffer,
+          ContentType: "text/csv",
+        })
+      );
       const fileUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
-      console.log(fileUrl);
-      // Compute metrics
-      const totalColumns = headers.length;
-      let missingValues = 0;
-      for (const row of results) {
-        for (const val of Object.values(row)) {
-          if (val === '' || val === null || val === undefined) missingValues++;
-        }
+      fs.unlinkSync(filepath);
+      //  Get user id from middleware 
+      const authedReq = req as AuthedRequest;
+      const userId = authedReq.user?.userId;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not identified',
+        });
       }
-
-      const computedMetrics = {
-        total_rows: totalRows,
-        total_columns: totalColumns,
-        missing_values: missingValues,
-      };
-
-      // Save sample data in MongoDB
+      // Save sample rows
       const dataset = await dataModel.create({
-        data: results.slice(0, 10),
         user_id: req.body.user_id || null,
-        chat_id: null,
-        chart_id: null,
         r2_url: fileUrl,
-        device: (req as any).device || 'desktop',
-        status: 'success',
+        data: sampleRows,
+        aggregations: aggregations,
       });
-      const prompt = generateAiPromt(dataset, computedMetrics);
-      let parsed: any;
-      try {
-        console.log(currentApi);
-        const result = await model.generateContent(prompt);
-        let responseText = result.response
-          .text()
-          .trim()
-          .replace(/```json|```/g, '');
-        parsed = JSON.parse(responseText);
-        console.log(parsed);
-      } catch (err: any) {
-        const msg = String(err?.message || '');
-        if (
-          err.status == 503 ||
-          msg.includes('quota') ||
-          msg.includes('exceeded') ||
-          msg.includes('429')
-        ) {
-          console.log('Limit Reached For This Api Key');
-          switchApi();
-        } else {
-          console.log(err);
-        }
-      }
+      // AI ATTEMPT
+      const prompt = generateAiPromt(metrics, aggregations, sampleRows);
+      let ai = await runAi(prompt);
 
-      res.status(200).json({
+      // FALLBACK
+      if (!ai) {
+        console.log("AI failed — Using fallback chart generator");
+        console.log(sampleRows)
+        const fallback = generateChartsFromData(sampleRows);
+
+        ai = {
+          best_columns: {},
+          charts: [
+            {
+              type: "bar",
+              title: `${fallback.columns.barChartNumeric} by ${fallback.columns.barChartCategory}`,
+              x: fallback.columns.barChartCategory,
+              y: fallback.columns.barChartNumeric,
+              data: fallback.barData,
+            },
+            {
+              type: "pie",
+              title: `Distribution of ${fallback.columns.pieChartCategory}`,
+              x: fallback.columns.pieChartCategory,
+              value: "count",
+              data: fallback.pieData,
+            },
+          ],
+          insights: [
+            `Dataset has ${metrics.total_rows} rows and ${metrics.total_columns} columns.`,
+            `${metrics.missing_values} missing values detected.`,
+            `Top bar category: ${fallback.barData[0]?.xValue || "N/A"}`,
+          ],
+          key_fields: Object.keys(sampleRows[0] || {}).slice(0, 4),
+        };
+      }
+      // Generate REAL chart-ready data
+      const finalCharts = generateChartData(ai.charts || [], aggregations);
+      return res.json({
         success: true,
-        message: 'Dataset processed successfully',
         datasetId: dataset._id,
         r2Url: fileUrl,
-        data: parsed,
+        data: {
+          metrics: { ...metrics, charts_generated: finalCharts.length },
+          charts: finalCharts,
+          summary: ai.insights || [],
+          best_columns: ai.best_columns || {},
+          key_fields: ai.key_fields || [],
+        },
+        aggregations,
       });
-    };
+    }
+    const handleOnError = (err: Error) => {
+      return res.status(500).json({ success: false, message: "CSV parse error", error: err });
+    }
+    readStream.on("headers", handleOnHeaders);
+    readStream.on("data", handleOnData);
+    readStream.on("end", handleOnEnd);
+    readStream.on("error", handleOnError);
 
-    const stream = fs.createReadStream(filepath, { encoding: 'utf-8' }).pipe(csv());
-    stream
-      .on('headers', handleOnHeaders)
-      .on('data', handleOnData)
-      .on('error', handleOnError)
-      .on('end', handleOnEnd);
-    //..
   } catch (err) {
-    console.log(err);
-    const error = new CustomError({ errorData: String(err), statusCode: 404 });
-    return res.status(error.statusCode).json(error);
+    return res.status(500).json({ success: false, message: "Server error", error: err });
   }
 };
+// Calculate missing
+function calculateTotalMissing(aggregations: any): number {
+  let total = 0;
+  for (const col in aggregations.numeric) total += aggregations.numeric[col].missing;
+  for (const col in aggregations.categorical) total += aggregations.categorical[col].missing;
+  return total;
+}

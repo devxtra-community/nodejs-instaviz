@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
-import dataModel from "../../model/dataModel";
+
+import userModel from "../../model/user";
 
 export const getTotalDeviceSplit = async (req: Request, res: Response) => {
   try {
 
-    const desktop = await dataModel.countDocuments({ device: "desktop" });
-    const mobile = await dataModel.countDocuments({ device: "mobile" });
+    const desktop = await userModel.countDocuments({ device: "desktop" });
+    const mobile = await userModel.countDocuments({ device: "mobile" });
 
     const total = desktop + mobile;
 

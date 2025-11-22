@@ -1,13 +1,17 @@
 import { Router } from 'express'
-import upload from '../utils/multerUpload.ts';
+import upload from '../utils/multerUpload.ts'
 import { fileParsing } from '../controllers/uploadController.ts'
 
 
 import { deviceLogger } from '../utils/deviceLogger.ts';
 
-const uploadRouter = Router()
-// uploadRouter.use('/fileupload',tokenCheck)
-uploadRouter.post("/fileupload", upload.single('file'), fileParsing);
-uploadRouter.post("/fileupload", upload.single('file'), deviceLogger , fileParsing);
+const uploadRouter = Router();
 
-export default uploadRouter;
+uploadRouter.post(
+  "/fileupload",
+  deviceLogger,
+  upload.single("file"),
+  fileParsing
+);
+
+export default uploadRouter
