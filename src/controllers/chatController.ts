@@ -8,7 +8,6 @@ import { modelLight } from "../services/aiModels";
 export const chatController = async (req: Request, res: Response) => {
   try {
     const { message } = req.body;
-    console.log("message:", message, "req.cookies.userId:", req.cookies.userId)
     // Ensure user is authenticated
     if (!req.cookies.userId) {
       return res.status(401).json({
@@ -19,7 +18,7 @@ export const chatController = async (req: Request, res: Response) => {
 
     console.log("req.cookies.userId is console loging", req.cookies.userId)
     const userId = req.cookies.userId;
-    console.log()
+    console.log(userId)
     // latest dataset for user
     const dataset = await Dataset.findOne({ user_id: userId })
       .sort({ created_at: -1 });
