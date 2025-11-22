@@ -14,8 +14,7 @@ interface Data {
   updatedAt: Date;
 }
 
-const dataSchema = new Schema<Data>(
-  {
+
 const dataSchema = new Schema<Data>(
   {
     data: [
