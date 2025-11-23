@@ -42,7 +42,8 @@
     "passport-google-oauth20": "^2.0.0",
     "stripe": "^19.2.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

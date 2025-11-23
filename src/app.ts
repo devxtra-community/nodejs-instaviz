@@ -31,13 +31,16 @@ const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "My API",
+      title: "InstaviZ Api documentation",
       version: "1.0.0",
       description: "API Documentation",
     },
     servers: [
-      { url: `http://localhost:${process.env.PORT}` },
+      {
+        url: `http://localhost:${process.env.PORT}`,
+      },
     ],
+
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -47,9 +50,15 @@ const swaggerOptions = {
         },
       },
     },
-    security: [{ bearerAuth: [] }],
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: ["./src/routes/**/*.{ts,js}"], 
+
+  apis: ["./src/routes/**/*.{ts,js}"],
 };
 
 
