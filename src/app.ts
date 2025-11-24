@@ -30,6 +30,7 @@ import { dashboardRouter } from "./routes/adminroutes/dashboardRouter.ts";
 import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
 import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
 import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
+import router from "./routes/sessionRouter.ts";
 
 const app = express();
 app.use(express.json({ limit: "50mb" }));
@@ -139,6 +140,7 @@ app.use("/admin", activityRouter);
 app.use("/admin", adminUserRouter);
 app.use("/admin", tokenrouter);
 app.use("/admin", plansRouter);
+app.use("/session", router);
 
 //file upload check
 app.use(fileSizeCheck);
