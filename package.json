@@ -41,10 +41,10 @@
     "nodemailer": "^7.0.10",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "posthog-node": "^5.11.2",
-    "stopwatch-js": "^0.0.1",
-    "stopwatch-node": "^1.1.0",
-    "stripe": "^19.2.1"
+    "stripe": "^19.2.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
@@ -54,7 +54,8 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.3",
-    "eslint": "^9.39.1",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",

@@ -1,10 +1,10 @@
-dotenv.config();
-import multer, { FileFilterCallback } from 'multer';
+
 import path from 'path';
-import mongoose from 'mongoose';
-import morgan, { token } from 'morgan';
-import express, { NextFunction, Request, Response } from 'express';
+import mongoose from 'mongoose'
+import morgan from 'morgan';
+import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
 import cors from 'cors';
 import passport from './config/passport.ts';
 import cookieParser from 'cookie-parser';
@@ -13,19 +13,24 @@ import authRouter from './routes/authRoutes.ts';
 import uploadRouter from './routes/uploadRouter.ts';
 import userRouter from './routes/userRouter.ts';
 import paymentRouter from './routes/paymentRoutes.js';
-import { raw } from 'body-parser';
 import { insightsRouter } from './routes/adminroutes/insightsRouter.ts';
-import { tokenrouter } from './routes/adminroutes/tokenRouter.ts';
-import { plansRouter } from './routes/adminroutes/plansRouter.ts';
-import { dashboardRouter } from './routes/adminroutes/dashboardRouter.ts';
+import {tokenrouter} from  './routes/adminroutes/tokenRouter.ts'
+import {plansRouter} from  './routes/adminroutes/plansRouter.ts'
+
+import sessionRoutes from "./routes/sessionRouter.ts";
 
 import { fileSizeCheck } from './middlewares/fileSizeCheck.ts';
 import { activityRouter } from './routes/adminroutes/activityRouter.ts';
 import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
 import { adminUserRouter } from './routes/adminroutes/userRouter.ts';
+import { activityRouter } from './routes/adminroutes/activityRouter.ts';
+import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
+import {adminUserRouter} from "./routes/adminroutes/userRouter.ts"
+
+
 
 const app = express();
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
@@ -33,7 +38,7 @@ app.use(morgan('dev')); //TODO: WHY ???. dev
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  limit: 520,
+  limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -65,23 +70,20 @@ app.use(limiter);
 
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
-//middleware
+app.use("/session",sessionRoutes)
 
+//middleware
 app.use('/upload', uploadRouter);
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
 app.use('/payment', paymentRouter);
 
+app.use('/payment', paymentRouter);
 
-
-//admin routes
-app.use('/admin', adminAuthRouter);
-app.use('/admin', dashboardRouter);
-app.use('/admin', insightsRouter);
-app.use('/admin', activityRouter);
+// admin routes
 app.use('/admin', adminUserRouter);
-app.use('/admin', tokenrouter);
-app.use('/admin', plansRouter);
+app.use('/admin/', insightsRouter);
+app.use('/admin',plansRouter)
 
 //file upload check
 app.use(fileSizeCheck);
