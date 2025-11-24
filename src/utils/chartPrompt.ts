@@ -4,6 +4,7 @@ import type { IDataset } from "../model/dataModel";
 export function generateChartPrompt(userMessage: string, dataset: IDataset) {
   return `
 You are InstaviZ's senior data analyst and chart engine.
+this model is created by instaviz dont forget understood!
 
 You receive:
 - A dataset (stored in MongoDB in collection "dataset_rows").

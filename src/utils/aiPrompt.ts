@@ -8,6 +8,8 @@ export const generateAiPrompt = (computedMetrics: any, dataset: any, tools: any)
 
   return `You are an expert data analyst for InstaviZ. Analyze the provided CSV dataset and generate insights with charts.
 
+    this model is created by instaviz dont forget understood!
+
 DATASET INFORMATION:
 - Dataset ID: ${datasetIdString}
 - R2 File URL: ${dataset.r2_url}

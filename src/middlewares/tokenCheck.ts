@@ -33,7 +33,6 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
           token,
           process.env.JWT_SECRET as string
         ) as JwtPayload;
-        console.log(decoded)
         authedReq.user = {
           userId: decoded.id,
           isGuest: false,
@@ -78,18 +77,6 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
     const newGuestUser = await guestModel.create({
       isGuest: true,
     });
-    const nChat = new chatModel({
-      user_id: newGuestUser._id,
-    });
-
-    const nChart = new chartModel({
-      user_id: newGuestUser._id,
-      chat_id: nChat._id,
-    });
-
-    nChat.chart_id = nChart._id;
-
-    await Promise.all([nChat.save(), nChart.save()]);
 
     // setting the cookie
     res.cookie('userId', newGuestUser._id.toString(), {
