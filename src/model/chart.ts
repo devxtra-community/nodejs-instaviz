@@ -1,9 +1,11 @@
+import { any } from "joi";
 import mongoose, { Schema } from "mongoose";
 
 interface Chart {
     chat_id?: mongoose.Types.ObjectId,
     user_id?: mongoose.Types.ObjectId,
-    chart_data?: any
+    data_id?: mongoose.Types.ObjectId,
+    chart_data?: any[]
 };
 
 const chartSchema = new Schema<Chart>({
@@ -14,8 +16,11 @@ const chartSchema = new Schema<Chart>({
     chat_id: {
         type: Schema.Types.ObjectId, ref: "chat"
     },
+    data_id: {
+        type: Schema.Types.ObjectId, ref: "datas"
+    },
     chart_data: {
-        type: String
+        type: [{}]
     },
 
 });

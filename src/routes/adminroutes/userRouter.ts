@@ -15,10 +15,10 @@ import { getUserActiveTimeByDays } from "../../adminController/userController";
 
 export  const adminUserRouter = Router()
 
-adminUserRouter.get("/loggedusers",loggedusers)
-adminUserRouter.get("/gustusers",fetchAllgustusers)
-adminUserRouter.get("/getallusers",getAllusers)
-adminUserRouter.get("/newuserpermonth",getNewUsersPerMonth)
+adminUserRouter.get('/loggedusers', verifyAdmin, loggedusers);
+adminUserRouter.get('/gustusers', fetchAllgustusers);
+adminUserRouter.get('/getallusers', verifyAdmin, getAllusers);
+adminUserRouter.get('/newuserpermonth', verifyAdmin, getNewUsersPerMonth);
 
 adminUserRouter.get("/alluserspage",alluserspage)
 adminUserRouter.get("/singleuser/:id",GetSingleuser)

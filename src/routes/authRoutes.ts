@@ -19,8 +19,8 @@ import { logoutDevice } from "../auth/auth.ts";
 const authRouter = Router();
 
 // login authentication
-authRouter.post('/login',loginCheck , deviceLogger);
-authRouter.post("/register",register);
+authRouter.post('/login', deviceLogger,loginCheck );
+authRouter.post("/register",deviceLogger,register);
 authRouter.post("/verifyOtp",verifyOtp);
 authRouter.post("/resendOtp",resendOtp)
 authRouter.get("/test",verifyToken,testpro)

@@ -1,45 +1,58 @@
-import { Response, Request } from "express";
-import { UploadLog } from "../../model/admin/activity/upload";
+import { Request, Response } from "express";
+import dataModel from "../../model/dataModel";
 
-export const peakHours = async (req: Request ,res: Response, ) => {
+export const peakHours = async (req: Request, res: Response) => {
   try {
-    const logs = await UploadLog.find();
+    // Fetch ALL uploads (no date filter)
+    const logs = await dataModel.find().select("createdAt");
+
     if (logs.length === 0) {
       return res.json([]);
     }
-    const hourCounts: any = {};
+
+    // Count uploads for each hour (0–23)
+    const hourCounts = {} as Record<number, number>;
+
     logs.forEach((log) => {
       const hour = new Date(log.createdAt).getHours();
       hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
-    const formattedData = Object.entries(hourCounts).map(([hourstr, value]) => {
-      const hours = Number(hourstr);
-      let label = "";
-      if (hours === 0) label = "12 AM";
-      else if (hours === 12) label = "12 PM";
-      else if (hours > 12) label = `${hours - 12} PM`;
-      else label = `${hours} AM`;
 
-      return {
-        time: label,
-        value: value as number,
-      };
-    });
-    const sortedTime = (label: string) => {
-      const [num, mer] = label.split(" ");
-      let hour = Number(num);
+    // Format hours into AM/PM labels
+    const formattedData = Object.entries(hourCounts).map(
+      ([hourStr, value]) => {
+        const hour = Number(hourStr);
+        let label = "";
 
-      if (mer === "AM") {
-        if (hour === 12) hour = 0;
-      } else {
-        if (hour != 12) hour += 12;
+        if (hour === 0) label = "12 AM";
+        else if (hour === 12) label = "12 PM";
+        else if (hour > 12) label = `${hour - 12} PM`;
+        else label = `${hour} AM`;
+
+        return {
+          time: label,
+          value: value as number,
+        };
       }
-      return hour;
+    );
+
+    // Sort the results in chronological order
+    const parseLabelTo24 = (label: string) => {
+      const [num, mer] = label.split(" ");
+      let h = Number(num);
+
+      if (mer === "AM") return h === 12 ? 0 : h;
+      else return h === 12 ? 12 : h + 12;
     };
-    formattedData.sort((a, b) => sortedTime(a.time) - sortedTime(b.time));
-    res.json(formattedData);
+
+    formattedData.sort(
+      (a, b) => parseLabelTo24(a.time) - parseLabelTo24(b.time)
+    );
+
+    return res.json(formattedData);
+
   } catch (err) {
     console.log("Peak hour stats error:", err);
-    res.status(500).json([]);
+    return res.status(500).json([]);
   }
 };

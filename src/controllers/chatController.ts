@@ -1,78 +1,72 @@
-// controllers/chatController.ts
-import { Request, Response } from "express";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { loadDatasetFromDB } from "../utils/loadDatasetFromDB";
-import { buildChatPrompt } from "../utils/chartPrompt";
-import {interpretChartRequest,fallbackChartGenerator} from "../utils/chartInterpreter";
-import { runAi, switchApi } from "../services/switchingApi";
+import type { Request, Response } from "express";
+import Dataset from "../model/dataModel";
+import { userWantsChart } from "../utils/chatDetection";
+import { createChatPrompt } from "../utils/chatPrompt";
+import { runChartAnalysis } from "../services/chatAiService";
+import { modelLight } from "../services/aiModels";
+import chatModel from "../model/chat";
+import mongoose from "mongoose";
 
-// MAIN CHAT CONTROLLER
 export const chatController = async (req: Request, res: Response) => {
   try {
-    const userMessage = req.body.message?.trim();
-
-    if (!userMessage) {
-      return res.status(400).json({
-        reply: "Please type something.",
+    const { message } = req.body;
+    // Ensure user is authenticated
+    if (!req.cookies.userId) {
+      return res.status(401).json({
+        reply: "Please log in or continue as guest.",
         chart: null,
       });
     }
 
-    // Load saved CSV dataset
-    const dataset = await loadDatasetFromDB();
-    if (!dataset || !dataset.aggregations) {
+    console.log("req.cookies.userId  also in userId:", req.cookies.userId)
+    const userId = req.cookies.userId;
+    // latest dataset for user
+    const dataset = await Dataset.findOne({ user_id: userId })
+      .sort({ created_at: -1 });
+
+    if (!dataset) {
       return res.json({
         reply: "Please upload a dataset first.",
         chart: null,
       });
     }
 
-    const { sampleRows, aggregations } = dataset;
-
-    // Build prompt
-    const prompt = buildChatPrompt(aggregations, sampleRows, userMessage);
-
-    // Run Gemini with safe wrapper
-    const parsed = await runAi(prompt);
-    if (!parsed) {
-      return res.json({
-        reply: "AI failed to understand. Try rephrasing!",
-        chart: null,
-      });
-    }
-    // NORMAL QUESTION
-    if (parsed.type === "qa") {
-      return res.json({
-        reply: parsed.question_answer || "Here’s what I found.",
-        chart: null,
-      });
+    // If chart requested → Heavy model
+    if (userWantsChart(message)) {
+      const result = await runChartAnalysis(message, dataset);
+      return res.json(result);
     }
 
-    // USER REQUESTED A CHART
-    const chartIntent = interpretChartRequest(parsed.chart, aggregations);
+    // Otherwise → Cheap model
+    const prompt = createChatPrompt(message, dataset);
+    const chat = modelLight.startChat({ history: [] });
 
-    if (!chartIntent.valid) {
-      return res.json({
-        reply: " I cannot generate a chart from those fields.",
-        chart: null,
-      });
+    const reply = await chat.sendMessage(prompt);
+    // console.log("reply for chat", reply.response.text())
+    console.log("userid :", userId)
+    const uploadChat = async () => {
+      try {
+        const user_id = new mongoose.Types.ObjectId(userId)
+        await chatModel.updateOne(
+          { user_id: user_id },
+          { $push: { chat: { fromAi: reply.response.text(), fromUser: message } } }
+        );
+
+      }
+      catch (err) {
+        console.log("error while uploading the chat to mongodb:", err)
+      }
     }
-
-    // Always produces a valid chart
-    const finalChart = fallbackChartGenerator(chartIntent, aggregations);
-
+    uploadChat()
     return res.json({
-      reply: "Chart added to dashboard!",
-      chart: finalChart,
+      reply: reply.response.text(),
+      chart: null,
     });
 
-  } catch (err: any) {
-    console.error(" chatController fatal error:", err?.message);
-
-    switchApi();
-
+  } catch (err) {
+    console.error("error occured in chat response with ai:", err);
     return res.json({
-      reply: " Something went wrong. Please try again.",
+      reply: "Something went wrong. Try again.",
       chart: null,
     });
   }

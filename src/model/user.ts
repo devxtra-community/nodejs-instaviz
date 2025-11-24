@@ -2,21 +2,22 @@ import mongoose, { Schema, Document } from "mongoose";
 
 enum Status {
   Active = "active",
-  Disabled = "disabled"
-};
+  Disabled = "disabled",
+}
 
-export interface User {
-  googleId?: number
-  name?: string,
-  picture?: string,
-  email: string,
-  password?: string,
-  token: number,
-  status?: Status,
-  isDeleted?: boolean,
-  place: String,
-  phone: Number
-};
+export interface User extends Document {
+  googleId?: number;
+  name?: string;
+  picture?: string;
+  email: string;
+  password?: string;
+  token: number;
+  status?: Status;
+  isDeleted?: boolean;
+  place: string;
+  phone: number;
+  device?: "mobile" | "desktop";
+}
 
 const userSchema = new Schema(
   {
@@ -36,16 +37,24 @@ const userSchema = new Schema(
     status: {
       type: String,
       enum: Object.values(Status),
-      default: Status.Active
+      default: Status.Active,
     },
+
     isDeleted: {
       type: Boolean,
-      default: false
+      default: false,
     },
+
+    device: {
+      type: String,
+      enum: ["mobile", "desktop"],
+      default: "desktop",
+    },
+
     createdAt: {
       type: Date,
-      default: Date.now
-    }
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );

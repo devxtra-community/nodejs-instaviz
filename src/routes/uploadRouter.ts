@@ -1,13 +1,27 @@
-import { Router } from 'express'
-import upload from '../utils/multerUpload.ts';
-import { fileParsing } from '../controllers/uploadController.ts'
+import { Router } from "express";
+import upload from "../utils/multerUpload.ts";
+import { fileParsing } from "../controllers/uploadController.ts";
+import { deviceLogger } from "../utils/deviceLogger.ts";
+import { tokenCheck } from "../middlewares/tokenCheck.ts";
 
+const uploadRouter = Router();
 
-import { deviceLogger } from '../utils/deviceLogger.ts';
+uploadRouter.use((req, res, next) => {
+  req.uploadStatus = "success";
+  next();
+});
 
-const uploadRouter = Router()
-// uploadRouter.use('/fileupload',tokenCheck)
-uploadRouter.post("/fileupload", upload.single('file'), fileParsing);
-uploadRouter.post("/fileupload", upload.single('file'), deviceLogger , fileParsing);
+uploadRouter.post(
+  "/fileupload",
+  deviceLogger,
+  tokenCheck,
+  upload.single("file"),
+  (req, res, next) => {
+    res.locals.device = req.device;
+    res.locals.uploadStatus = req.uploadStatus;
+    next();
+  },
+  fileParsing,
+);
 
 export default uploadRouter;
