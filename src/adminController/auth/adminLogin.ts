@@ -18,7 +18,7 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials', success: false });
+      return res.status(401).json({ message: 'Password is not Correct', success: false });
     }
 
     const accessToken = signJwt({

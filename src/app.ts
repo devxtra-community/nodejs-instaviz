@@ -148,14 +148,10 @@ app.use(fileSizeCheck);
 //listening
 app.listen(process.env.PORT, async () => {
   await connection();
-  app.listen(process.env.PORT, () => {
-    connection();
-    console.log(` Server running on http://localhost:${process.env.PORT}`);
-  });
+  console.log(` Server running on http://localhost:${process.env.PORT}`);
 
   app.get("/health", async (req, res) => {
     const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
-
     res.json({
       status: "ok",
       db: dbStatus,
