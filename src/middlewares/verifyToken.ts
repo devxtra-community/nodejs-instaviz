@@ -1,8 +1,7 @@
 import Jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import refreshModel from "../model/refreshtoken";
 
-export const verifyToken = async(
+export const verifyToken = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -22,23 +21,8 @@ export const verifyToken = async(
     const decoded = Jwt.verify(token, process.env.JWT_SECRET!);
     req.user = decoded;
   
-    
+    next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
-
-
-  const sessionId = req.headers["x-session-id"];
-  if (!sessionId || typeof sessionId !== "string") {
-    return res.status(401).json({ message: "Session ID missing" });
-  }
-
-  const session = await refreshModel.findOne({ _id: sessionId });
-
-  if (!session) {
-    return res.status(401).json({
-      message: "Session expired or logged out",
-    });
-  }
-next();
 };
