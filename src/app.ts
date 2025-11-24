@@ -25,6 +25,7 @@ import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
 import {adminUserRouter} from "./routes/adminroutes/userRouter.ts"
 
 
+
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -74,6 +75,7 @@ app.use('/payment', paymentRouter);
 // admin routes
 app.use('/admin', adminUserRouter);
 app.use('/admin/', insightsRouter);
+app.use('/admin',plansRouter)
 
 //file upload check
 app.use(fileSizeCheck);
