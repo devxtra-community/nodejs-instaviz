@@ -19,28 +19,24 @@ import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
 import chatRouter from "./routes/chatRouter.ts";
 
 dotenv.config();
-import multer, { FileFilterCallback } from 'multer';
-import path from 'path';
+// import multer, { FileFilterCallback } from "multer";
+// import path from "path";
+// import { raw } from "body-parser";
 
-import { raw } from 'body-parser';
+import { tokenrouter } from "./routes/adminroutes/tokenRouter.ts";
+import { plansRouter } from "./routes/adminroutes/plansRouter.ts";
+import { dashboardRouter } from "./routes/adminroutes/dashboardRouter.ts";
 
-import { tokenrouter } from './routes/adminroutes/tokenRouter.ts';
-import { plansRouter } from './routes/adminroutes/plansRouter.ts';
-import { dashboardRouter } from './routes/adminroutes/dashboardRouter.ts';
-
-
-import { activityRouter } from './routes/adminroutes/activityRouter.ts';
-import adminAuthRouter from './routes/adminroutes/adminAuthRouter.ts';
-import { adminUserRouter } from './routes/adminroutes/userRouter.ts';
+import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
+import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
+import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
 
 const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
-app.use(morgan("dev"));
 app.use(morgan("dev")); //TODO: WHY ???. dev
-app.use(morgan('dev')); //TODO: WHY ???. dev
 
 const swaggerOptions = {
   definition: {
@@ -76,7 +72,6 @@ const swaggerOptions = {
   apis: ["./src/routes/**/*.{ts,js}"],
 };
 
-
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -92,7 +87,7 @@ const limiter = rateLimit({
 const connection = async () => {
   try {
     await mongoose.connect(process.env.mongo_uri!);
-    console.log('Mongoose connected');
+    console.log("Mongoose connected");
   } catch (err) {
     console.log(err);
   }
@@ -101,10 +96,7 @@ const connection = async () => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        process.env.CLIENT_URL,
-        `http://localhost:${process.env.PORT}`
-      ];
+      const allowedOrigins = [process.env.CLIENT_URL, `http://localhost:${process.env.PORT}`];
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -114,10 +106,10 @@ app.use(
     },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.path.startsWith("/admin")) {
     return next();
   }
@@ -129,49 +121,44 @@ app.use(limiter);
 app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
-app.use("/upload", uploadRouter, fileSizeCheck)
-app.use("/user", userRouter)
-app.use("/auth", authRouter)
-app.use("/payment", paymentRouter)
-app.use("/chat",chatRouter)
-app.use('/upload', uploadRouter);
-app.use('/user', userRouter);
-app.use('/auth', authRouter);
-app.use('/payment', paymentRouter);
-
-
+app.use("/upload", uploadRouter, fileSizeCheck);
+app.use("/user", userRouter);
+app.use("/auth", authRouter);
+app.use("/payment", paymentRouter);
+app.use("/chat", chatRouter);
+app.use("/upload", uploadRouter);
+app.use("/user", userRouter);
+app.use("/auth", authRouter);
+app.use("/payment", paymentRouter);
 
 //admin routes
-app.use('/admin', adminAuthRouter);
-app.use('/admin', dashboardRouter);
-app.use('/admin', insightsRouter);
-app.use('/admin', activityRouter);
-app.use('/admin', adminUserRouter);
-app.use('/admin', tokenrouter);
-app.use('/admin', plansRouter);
+app.use("/admin", adminAuthRouter);
+app.use("/admin", dashboardRouter);
+app.use("/admin", insightsRouter);
+app.use("/admin", activityRouter);
+app.use("/admin", adminUserRouter);
+app.use("/admin", tokenrouter);
+app.use("/admin", plansRouter);
 
 //file upload check
 app.use(fileSizeCheck);
 
-// TODO: Where is 404 route
-// TODO: Helth check route ? is server active ?. is mongodb connected proplery.
-
 //listening
 app.listen(process.env.PORT, async () => {
   await connection();
-// TODO: use .env for urls
-app.listen(process.env.PORT, () => {
-  connection();
-  console.log(` Server running on http://localhost:${process.env.PORT}`);
-});
-app.get("/health", async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+  app.listen(process.env.PORT, () => {
+    connection();
+    console.log(` Server running on http://localhost:${process.env.PORT}`);
+  });
 
-  res.json({
-    status: "ok",
-    db: dbStatus,
-    uptime: process.uptime(),
-    time: new Date().toISOString(),
+  app.get("/health", async (req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+
+    res.json({
+      status: "ok",
+      db: dbStatus,
+      uptime: process.uptime(),
+      time: new Date().toISOString(),
+    });
   });
 });
-})
