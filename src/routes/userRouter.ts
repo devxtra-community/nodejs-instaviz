@@ -20,7 +20,7 @@ const userRouter = Router();
  *     description: Fetches the profile details of a user using userId.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -46,7 +46,7 @@ userRouter.get("/:userId", verifyToken, getUserProfile);
  *     description: Allows a user to upload or update their profile picture.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -76,7 +76,7 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *     description: Allows a user to change their password.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -106,6 +106,5 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *         description: Server error
  */
 userRouter.post("/newpassword", verifyToken, changePassword);
-
 
 export default userRouter;
