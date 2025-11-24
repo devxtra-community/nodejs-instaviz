@@ -11,6 +11,7 @@ import { updateUserstatus } from "../../adminController/userController";
 import { hourlyActiveUserCount } from "../../adminController/userController";
 import { getUserDailyActiveTime } from "../../adminController/userController";
 import { getUserActiveTimeByDays } from "../../adminController/userController";
+import { verifyAdmin } from "../../middlewares/verifyAdmin";
 
 
 export  const adminUserRouter = Router()
@@ -20,11 +21,11 @@ adminUserRouter.get('/gustusers', fetchAllgustusers);
 adminUserRouter.get('/getallusers', verifyAdmin, getAllusers);
 adminUserRouter.get('/newuserpermonth', verifyAdmin, getNewUsersPerMonth);
 
-adminUserRouter.get("/alluserspage",alluserspage)
-adminUserRouter.get("/singleuser/:id",GetSingleuser)
-adminUserRouter.get("/singltoken/:id",singleUsertoken)
+adminUserRouter.get("/alluserspage",verifyAdmin,alluserspage)
+adminUserRouter.get("/singleuser/:id",verifyAdmin,GetSingleuser)
+adminUserRouter.get("/singltoken/:id",verifyAdmin,singleUsertoken)
 
-adminUserRouter.post("/addgustuser",addGustuser)
+adminUserRouter.post("/addgustuser",verifyAdmin,addGustuser)
 adminUserRouter.put("/status/:id",updateUserstatus)
 adminUserRouter.get("/activetime",hourlyActiveUserCount)
 adminUserRouter.get("/user-daily-active/:id", getUserDailyActiveTime);
