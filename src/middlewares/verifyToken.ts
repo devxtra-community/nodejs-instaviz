@@ -22,12 +22,10 @@ export const verifyToken = async(
     const decoded = Jwt.verify(token, process.env.JWT_SECRET!);
     req.user = decoded;
   
-    
+   
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
-
-
   const sessionId = req.headers["x-session-id"];
   if (!sessionId || typeof sessionId !== "string") {
     return res.status(401).json({ message: "Session ID missing" });
@@ -40,5 +38,8 @@ export const verifyToken = async(
       message: "Session expired or logged out",
     });
   }
-next();
+
+
+  next();
+
 };
