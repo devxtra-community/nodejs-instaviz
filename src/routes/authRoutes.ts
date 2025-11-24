@@ -1,16 +1,13 @@
 import passport from "passport";
 import { Router } from "express";
-import { googleCallback, logout } from "../auth/auth.ts";
-
-import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
-import { testpro } from "../auth/auth.ts";
+import { register, loginCheck,  } from "../auth/auth.ts";
+import { verifyOtp,resendOtp } from "../auth/otp.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import {deviceLogger} from '../utils/deviceLogger.ts'
 import { verifyToken } from "../middlewares/verifyToken.ts";
-import { resendOtp } from "../auth/auth.ts";
-import { forgotPassword } from "../auth/auth.ts";
-import { verifyForgotOtp } from "../auth/auth.ts";
-import { resetPassword } from "../auth/auth.ts";
+import { forgotPassword } from "../auth/password.ts";
+import { verifyForgotOtp } from "../auth/otp.ts";
+import { resetPassword } from "../auth/password.ts";
 import { getAllSessions } from "../auth/auth.ts";
 import { logoutDevice } from "../auth/auth.ts";
 
@@ -23,9 +20,7 @@ authRouter.post('/login',loginCheck , deviceLogger);
 authRouter.post("/register",register);
 authRouter.post("/verifyOtp",verifyOtp);
 authRouter.post("/resendOtp",resendOtp)
-authRouter.get("/test",verifyToken,testpro)
 authRouter.post("/newRefreshToken",refreshAccessToken)
-authRouter.post("/logout",logout)
 authRouter.post("/forgotPassword",forgotPassword)
 authRouter.post("/verifyForgotOtp",verifyForgotOtp)
 authRouter.post("/resetPassword",resetPassword)
@@ -34,6 +29,6 @@ authRouter.post("/logoutDevice",verifyToken,logoutDevice)
 
 // google authentication
 authRouter.get('/google', passport.authenticate("google", { scope: ["Profile", "email"] }));
-authRouter.get('/google/callback', passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5000/auth/google" }), googleCallback);
+
 
 export default authRouter;
