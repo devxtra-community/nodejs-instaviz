@@ -66,7 +66,6 @@ export const loginCheck = async (req: Request, res: Response) => {
     );
 
     const hashed = hashToken(refreshToken);
-
     const userAgent = req.headers["user-agent"] || "unknown";
     const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.ip || "unknown";
 
@@ -80,7 +79,6 @@ export const loginCheck = async (req: Request, res: Response) => {
       lastActiveAt: new Date(),
       isValid: true,
     });
-
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
@@ -291,25 +289,29 @@ export const logout = async (req: Request, res: Response) => {
   try {
     const refreToken = req.cookies.refreshToken;
     if (!refreToken) {
-      return res.status(200).json({ success: true, message: "Logged out" });
+      return res.status(200).json({ success: true, message: "Logged out" })
     }
     const hashed = hashToken(refreToken);
-
-    await refreshModel.deleteOne({ tokenhash: hashed });
+    await refreshModel.deleteOne({ tokenhash: hashed })
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: false,
       sameSite: "strict",
     });
-    res.clearCookie("accessToken", {
+
+    res.clearCookie("userId", {
       httpOnly: true,
       secure: false,
       sameSite: "strict",
     });
-    return res.status(200).json({ sccess: true, message: "Logged out successfully" });
+
+    return res.status(200).json({ sccess: true, message: "Logged out successfully" })
+
+
   } catch (err) {
     console.log("error in logout");
-    return res.status(500).json({ success: false, message: "Internal server Error" });
+    return res.status(500).json({ success: false, message: "Internal server Error" })
+
   }
 };
 
