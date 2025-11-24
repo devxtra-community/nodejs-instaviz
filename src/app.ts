@@ -33,7 +33,7 @@ app.use(morgan('dev')); //TODO: WHY ???. dev
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  limit: 520,
+  limit: 1000,
   standardHeaders: true,
   legacyHeaders: false,
 });

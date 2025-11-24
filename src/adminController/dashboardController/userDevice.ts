@@ -3,7 +3,6 @@ import userModel from "../../model/user";
 
 export const getUserDeviceStats = async (req: Request, res: Response) => {
   try {
-    // this month's date range
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -14,19 +13,18 @@ export const getUserDeviceStats = async (req: Request, res: Response) => {
     endOfMonth.setHours(23, 59, 59, 999);
 
     const desktop = await userModel.countDocuments({
-      lastActiveAt: { $gte: startOfMonth, $lte: endOfMonth },
-      device: "desktop"
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+      device: "desktop",
+      isDeleted: false
     });
 
     const mobile = await userModel.countDocuments({
-      lastActiveAt: { $gte: startOfMonth, $lte: endOfMonth },
-      device: "mobile"
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+      device: "mobile",
+      isDeleted: false
     });
 
-    return res.json({
-      desktop,
-      mobile
-    });
+    return res.json({ desktop, mobile });
 
   } catch (err) {
     console.log("User device stats error:", err);
