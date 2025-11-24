@@ -5,10 +5,14 @@ import { parseCsvFile } from "../services/csvService";
 import { uploadCsvToR2 } from "../services/r2Service";
 import { createDatasetWithRows } from "../services/datasetService";
 import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
+import dataModel from "../model/dataModel";
+import chartModel from "../model/chart";
+import chatModel from "../model/chat";
+import mongoose from "mongoose";
 
 
 interface UserPayload {
-  userId: string;
+  userId: mongoose.Types.ObjectId;
   isGuest?: boolean;
 }
 type AuthedRequest = Request & {
@@ -55,7 +59,7 @@ export const fileParsing = async (req: Request, res: Response) => {
     const userId = authedReq.user?.userId;
     const dataset = await createDatasetWithRows(
       results,
-      userId as string || null,
+      userId as mongoose.Types.ObjectId,
       fileUrl,
       file.originalname,
       totalColumns
@@ -74,7 +78,24 @@ export const fileParsing = async (req: Request, res: Response) => {
       barChartData: aiResponse.charts[0]?.data?.length || 0,
       pieChartData: aiResponse.charts[1]?.data?.length || 0,
     });
+//uploding datas to database
+          const nChat = new chatModel({
+        user_id: userId,
+        data_id:dataset._id
+      });
 
+      const nChart = new chartModel({
+        user_id: userId,
+        chat_id: nChat._id,
+        data_id:dataset._id,
+        chart_data:aiResponse.charts
+      });
+
+      nChat.chart_id = nChart._id;
+      const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
+      await Promise.all([nChat.save(), nChart.save(),uploadSummary()]);
+
+//returning response
     return res.status(200).json({
       success: true,
       message: "Dataset processed successfully",
