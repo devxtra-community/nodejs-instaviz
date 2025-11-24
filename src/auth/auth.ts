@@ -195,3 +195,41 @@ export const logoutDevice = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const logoutAllDevices = async (req: Request, res: Response) => {
+  console.log("reached here at logout all devices");
+  try {
+    interface JwtUser {
+      id: string;
+      email: string;
+    }
+
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    const { currentSessionId } = req.body;
+    if (!currentSessionId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current session ID required" });
+    }
+
+    await refreshModel.deleteMany({
+      userId,
+      _id: { $ne: currentSessionId },
+    });
+
+    return res.json({
+      success: true,
+      message: "Logged out from all other devices",
+    });
+
+  } catch (err) {
+    console.error("Logout All Devices Error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+ 
+};

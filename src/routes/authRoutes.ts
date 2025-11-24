@@ -11,9 +11,12 @@ import { forgotPassword } from "../auth/password.ts";
 import { verifyForgotOtp } from "../auth/otp.ts";
 import { resetPassword } from "../auth/password.ts";
 import { getAllSessions } from "../auth/auth.ts";
-import { logoutDevice } from "../auth/auth.ts";
+import { logoutDevice, } from "../auth/auth.ts";
+import { logoutAllDevices } from "../auth/auth.ts";
 
 const authRouter = Router();
+
+authRouter.post("/logoutAllDevices",verifyToken,logoutAllDevices)
 
 /**
  * @swagger
@@ -235,5 +238,8 @@ authRouter.get(
   passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
   googleCallback,
 );
+
+
+
 
 export default authRouter;
