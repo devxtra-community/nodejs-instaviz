@@ -11,10 +11,8 @@ import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens.ts";
 import { theValidation } from "../services/validation.ts";
 
-export const loginCheck = async (req: Request, res: Response) => {
-  console.log(" reached here login");
-  console.log(req.body);
 
+export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -52,9 +50,7 @@ export const loginCheck = async (req: Request, res: Response) => {
         message: "Invalid email or password",
       });
     }
-
     const accessToken = signJwt({ id: user._id, email: user.email });
-
     const refreshToken = Jwt.sign(
       {
         id: user._id,
@@ -97,15 +93,13 @@ export const loginCheck = async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
-    console.log("catch in login worked");
-
-    console.error("Login error:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
 };
+
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -128,8 +122,6 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const otp = generateOtp();
-    console.log(otp);
-
     await otpModel.create({ name, password, email, otp });
 
     await sendOtp(email, otp);
@@ -141,9 +133,8 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllSessions = async (req: Request, res: Response) => {
-  console.log("inside ");
 
+export const getAllSessions = async (req: Request, res: Response) => {
   try {
     interface JwtUser {
       id: string;
@@ -166,6 +157,7 @@ export const getAllSessions = async (req: Request, res: Response) => {
     });
   }
 };
+
 
 export const logoutDevice = async (req: Request, res: Response) => {
   try {
@@ -191,7 +183,6 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
-
     return res.json({
       success: true,
       message: "Device logged out successfully",

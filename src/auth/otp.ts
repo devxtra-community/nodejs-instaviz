@@ -8,8 +8,6 @@ import Jwt from "jsonwebtoken";
 import { signJwt } from "../services/jwtServices.ts";
 
 
-
-
 export const verifyOtp = async (req: Request, res: Response) => {
   console.log("reached here at verify otp");
   try {

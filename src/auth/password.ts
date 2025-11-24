@@ -7,7 +7,6 @@ import { generateOtp } from "../utils/otpGenerate.ts";
 import { resetPasswordSchema, theValidation } from "../services/validation.ts";
 
 
-
 export const forgotPassword = async (req: Request, res: Response) => {
   console.log("reached here at forgot password");
   console.log(req.body);
