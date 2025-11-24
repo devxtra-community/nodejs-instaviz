@@ -11,7 +11,6 @@ import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens.ts";
 import { theValidation } from "../services/validation.ts";
 
-
 export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -100,7 +99,6 @@ export const loginCheck = async (req: Request, res: Response) => {
   }
 };
 
-
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
@@ -133,7 +131,6 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getAllSessions = async (req: Request, res: Response) => {
   try {
     interface JwtUser {
@@ -157,7 +154,6 @@ export const getAllSessions = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const logoutDevice = async (req: Request, res: Response) => {
   try {
@@ -189,6 +185,52 @@ export const logoutDevice = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Logout Device Error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const logoutAllDevices = async (req: Request, res: Response) => {
+  console.log("reached here at logout all devices");
+  try {
+    interface JwtUser {
+      id: string;
+      email: string;
+    }
+
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    const { currentSessionId } = req.body;
+    if (!currentSessionId) {
+      return res.status(400).json({ success: false, message: "Current session ID required" });
+    }
+
+    await refreshModel.deleteMany({
+      userId,
+      _id: { $ne: currentSessionId },
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    res.clearCookie("userId", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    return res.json({
+      success: true,
+      message: "Logged out from all other devices",
+    });
+  } catch (err) {
+    console.error("Logout All Devices Error", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
