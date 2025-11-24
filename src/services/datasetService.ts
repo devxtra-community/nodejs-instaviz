@@ -1,9 +1,10 @@
+import mongoose from "mongoose";
 import Dataset, { IDataset } from "../model/dataModel";
 import DatasetRow from "../model/datasetRowModel";
 
 export async function createDatasetWithRows(
   results: any[],
-  userId: string | null,
+  userId: mongoose.Types.ObjectId | null,
   fileUrl: string,
   fileName: string,
   totalColumns: number

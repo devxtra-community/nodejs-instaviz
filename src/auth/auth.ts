@@ -141,7 +141,6 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getAllSessions = async (req: Request, res: Response) => {
   console.log("inside ");
 
