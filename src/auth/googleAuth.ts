@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Jwt from "jsonwebtoken";
 import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens";
+
+
 export const googleCallback = async (req: Request, res: Response) => {
   try {
     const user = req.user as any;
