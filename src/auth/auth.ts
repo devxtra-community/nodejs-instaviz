@@ -11,7 +11,6 @@ import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens.ts";
 import { theValidation } from "../services/validation.ts";
 
-
 export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -27,7 +26,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     if (error) {
       return res.status(400).json({
         success: false,
-        message: error.details.map((d) => d.message),
+        message: error.details.map(d => d.message),
       });
     }
 
@@ -60,9 +59,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       { id: user._id, email: user.email },
       process.env.REFRESH_SECRET!,
 
-      { expiresIn: "30d" }
-
-
+      { expiresIn: "30d" },
     );
 
     // Store refresh token hash
@@ -81,9 +78,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       isValid: true,
     });
 
-
     // Set refresh token cookie
-
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -99,8 +94,6 @@ export const loginCheck = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
 
-     
-
       message: "Login successful",
 
       accessToken,
@@ -111,10 +104,6 @@ export const loginCheck = async (req: Request, res: Response) => {
         email: user.email,
       },
     });
-
-
-  
-
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -123,12 +112,11 @@ export const loginCheck = async (req: Request, res: Response) => {
   }
 };
 
-
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
 
-    console.log("Here", req.body)
+    console.log("Here", req.body);
 
     const { error } = theValidation.validate(req.body, { abortEarly: false });
 
@@ -158,7 +146,6 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getAllSessions = async (req: Request, res: Response) => {
   try {
     interface JwtUser {
@@ -182,7 +169,6 @@ export const getAllSessions = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const logoutDevice = async (req: Request, res: Response) => {
   try {
@@ -208,6 +194,19 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    res.clearCookie("userId", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
     return res.json({
       success: true,
       message: "Device logged out successfully",
@@ -234,9 +233,7 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
 
     const { currentSessionId } = req.body;
     if (!currentSessionId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Current session ID required" });
+      return res.status(400).json({ success: false, message: "Current session ID required" });
     }
 
     await refreshModel.deleteMany({
@@ -248,7 +245,6 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       success: true,
       message: "Logged out from all other devices",
     });
-
   } catch (err) {
     console.error("Logout All Devices Error", err);
     return res.status(500).json({
@@ -256,5 +252,4 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       message: "Internal server error",
     });
   }
- 
 };
