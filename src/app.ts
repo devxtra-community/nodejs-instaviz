@@ -106,8 +106,8 @@ app.use(
       }
     },
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+    allowedHeaders: ["Content-Type", "Authorization","x-session-id"],
+  })
 );
 
 app.use((req: Request, res: Response, next: NextFunction) => {
