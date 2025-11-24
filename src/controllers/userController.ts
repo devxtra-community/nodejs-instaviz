@@ -79,3 +79,29 @@ export const changePassword = async (req: Request, res: Response) => {
     res.status(500).json(err);
   }
 };
+
+
+export const getUserProfile = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
+    }
+
+    const user = await userModel.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : undefined },
+        { googleId: userId },
+      ].filter(Boolean),
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      user,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user", err });
+  }
+};

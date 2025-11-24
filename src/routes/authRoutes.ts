@@ -1,15 +1,15 @@
 import passport from "passport";
 import { Router } from "express";
 
-import {googleCallback} from '../auth/googleAuth.ts'
-import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
+import {googleCallback} from "../auth/googleAuth.ts"
+import { register, loginCheck,  } from "../auth/auth.ts";
+import { verifyOtp,resendOtp } from "../auth/otp.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { deviceLogger } from "../utils/deviceLogger.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
-import { resendOtp } from "../auth/auth.ts";
-import { forgotPassword } from "../auth/auth.ts";
-import { verifyForgotOtp } from "../auth/auth.ts";
-import { resetPassword } from "../auth/auth.ts";
+import { forgotPassword } from "../auth/password.ts";
+import { verifyForgotOtp } from "../auth/otp.ts";
+import { resetPassword } from "../auth/password.ts";
 import { getAllSessions } from "../auth/auth.ts";
 import { logoutDevice } from "../auth/auth.ts";
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserProfile } from "../auth/auth.ts";
+import { getUserProfile } from "../controllers/userController.ts";
 import { changePassword, userImageUpdate } from "../controllers/userController.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
 
