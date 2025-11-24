@@ -4,10 +4,10 @@ import { Request, Response } from 'express';
 
 export const getWeeklyUser = async (req: Request, res: Response) => {
   try {
-    const IST = 330;
+    const IST = 330; // 5h 30min
 
-    const startOfWeek = moment().utcOffset(IST).startOf('isoWeek').toDate();
-    const endOfWeek = moment().utcOffset(IST).endOf('isoWeek').toDate();
+    const startOfWeek = moment().utcOffset(IST).startOf('isoWeek').toDate(); // compute IST-based start and end 
+    const endOfWeek = moment().utcOffset(IST).endOf('isoWeek').toDate(); 
 
     const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -37,7 +37,7 @@ export const getWeeklyUser = async (req: Request, res: Response) => {
     const countsByDay: Record<string, number> = {};
 
     users.forEach(u => {
-      const weekday = moment(u._id).format("ddd"); 
+      const weekday = moment(u._id).format("ddd"); // convert grouped days into weekdays name 
       countsByDay[weekday] = u.count;
     });
 
