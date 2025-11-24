@@ -1,28 +1,23 @@
 
+
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import otpModel from '../model/otpModel.ts';
 import userModel from '../model/user.ts';
 import { sendOtp } from '../utils/sendEmail.ts';
-import { resetPasswordSchema, theValidation } from '../services/validation.ts';
-import { generateOtp } from '../utils/otpGenerate.ts';
-import Jwt from 'jsonwebtoken';
-import { loginSchema } from '../services/validation.ts';
-import { signJwt } from '../services/jwtServices.ts';
+import { resetPasswordSchema } from '../services/validation.ts';
 import mongoose from 'mongoose';
-import refreshModel from '../model/refreshtoken';
-import { hashToken } from '../utils/hashTokens.ts';
 import userSession from '../model/activeModel.ts';
-
-
-
-
+import { generateOtp } from "../utils/otpGenerate.ts";
+import Jwt from "jsonwebtoken";
+import { loginSchema } from "../services/validation.ts";
+import { signJwt } from "../services/jwtServices.ts";
+import refreshModel from "../model/refreshtoken";
+import { hashToken } from "../utils/hashTokens.ts";
+import { theValidation } from "../services/validation.ts";
 
 
 export const loginCheck = async (req: Request, res: Response) => {
-  console.log(" reached here login");
-  console.log(req.body);
-
 
   try {
     const { email, password } = req.body;
@@ -67,6 +62,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+
     if (user?.status === "disabled") {
       return res.status(403).json({
         success: false,
@@ -75,6 +71,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     }
 
     // Create tokens
+
     const accessToken = signJwt({ id: user._id, email: user.email });
     const refreshToken = Jwt.sign(
       { id: user._id, email: user.email },
@@ -136,16 +133,20 @@ export const loginCheck = async (req: Request, res: Response) => {
   
 
   } catch (err) {
+
     console.log("catch in login worked");
 
 
     console.error("Login error:", err);
+
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
 };
+
 
 
 
@@ -269,4 +270,44 @@ export const logoutDevice = async (req: Request, res: Response) => {
       message: "Internal server error",
     });
   }
+
 };
+
+export const logoutAllDevices = async (req: Request, res: Response) => {
+  console.log("reached here at logout all devices");
+  try {
+    interface JwtUser {
+      id: string;
+      email: string;
+    }
+
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    const { currentSessionId } = req.body;
+    if (!currentSessionId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current session ID required" });
+    }
+
+    await refreshModel.deleteMany({
+      userId,
+      _id: { $ne: currentSessionId },
+    });
+
+    return res.json({
+      success: true,
+      message: "Logged out from all other devices",
+    });
+
+  } catch (err) {
+    console.error("Logout All Devices Error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+ 
+};
+

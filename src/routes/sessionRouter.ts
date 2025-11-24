@@ -6,12 +6,12 @@ import {
   endSession
 } from "../adminController/sessionController";
 
-const router = express.Router();
+export const sessionRouter = express.Router();
 
 
 
-router.post("/start", verifyToken, startSession);
-router.post("/heartbeat", verifyToken, heartbeat);
-router.post("/end", verifyToken, endSession);
+sessionRouter.post("/start", verifyToken, startSession);
+sessionRouter.post("/heartbeat", verifyToken, heartbeat);
+sessionRouter.post("/end", verifyToken, endSession);
 
-export default router;
+export default sessionRouter;
