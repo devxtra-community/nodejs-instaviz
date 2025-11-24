@@ -1,9 +1,7 @@
 import passport from "passport";
 import { Router } from "express";
-import { googleCallback, logout } from "../auth/auth.ts";
-
+import {googleCallback} from '../auth/googleAuth.ts'
 import { register, loginCheck, verifyOtp } from "../auth/auth.ts";
-import { testpro } from "../auth/auth.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { deviceLogger } from "../utils/deviceLogger.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
@@ -125,22 +123,6 @@ authRouter.post("/resendOtp", resendOtp);
 
 /**
  * @swagger
- * /auth/test:
- *   get:
- *     summary: Protected test route
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Token valid
- *       401:
- *         description: Unauthorized
- */
-authRouter.get("/test", verifyToken, testpro);
-
-/**
- * @swagger
  * /auth/newRefreshToken:
  *   post:
  *     summary: Get a new access token using refresh token
@@ -152,18 +134,6 @@ authRouter.get("/test", verifyToken, testpro);
  *         description: Invalid or expired refresh token
  */
 authRouter.post("/newRefreshToken", refreshAccessToken);
-
-/**
- * @swagger
- * /auth/logout:
- *   post:
- *     summary: Logout user (deletes refresh token)
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Logged out
- */
-authRouter.post("/logout", logout);
 
 /**
  * @swagger

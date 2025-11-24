@@ -88,7 +88,7 @@ app.use(
     origin: (origin, callback) => {
       const allowedOrigins = [
         process.env.CLIENT_URL,
-        "http://localhost:5000"
+        `http://localhost:${process.env.PORT}`
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
