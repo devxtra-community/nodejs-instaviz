@@ -84,9 +84,13 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *           schema:
  *             type: object
  *             required:
+ *               - userId
  *               - oldPassword
  *               - newPassword
  *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: objectId
  *               oldPassword:
  *                 type: string
  *               newPassword:
@@ -102,5 +106,6 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *         description: Server error
  */
 userRouter.post("/newpassword", verifyToken, changePassword);
+
 
 export default userRouter;
