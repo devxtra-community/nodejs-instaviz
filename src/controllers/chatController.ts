@@ -34,7 +34,7 @@ export const chatController = async (req: Request, res: Response) => {
     // If chart requested use Heavy model
     if (userWantsChart(message)) {
       const result = await runChartAnalysis(message, dataset);
-      return res.json(result);
+      return res.json({ message: "chart generated based on chat", result, success: true });
     }
 
     // Otherwise use Cheap model
