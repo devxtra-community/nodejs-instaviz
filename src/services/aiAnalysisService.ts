@@ -72,7 +72,7 @@ export async function analyzeDatasetWithAiOrFallback(
       break;
     }
   }
-
+  aiResponse=null;
   if (!aiResponse) {
     console.log("Fallback  local chart generation");
 
@@ -84,21 +84,30 @@ export async function analyzeDatasetWithAiOrFallback(
         {
           type: "bar",
           title: `${columns.barChartNumeric} by ${columns.barChartCategory}`,
+          description: `Shows the distribution of ${columns.barChartNumeric} across ${columns.barChartCategory}.`,
           x: columns.barChartCategory,
           y: columns.barChartNumeric,
           data: barData,
+          style: { layout: "vertical", limit: 15 },
         },
         {
           type: "pie",
-          title: `Distribution by ${columns.pieChartCategory}`,
+          title: `Distribution of ${columns.pieChartCategory}`,
+          description: `Highlights how ${columns.pieChartCategory} values are distributed.`,
           x: columns.pieChartCategory,
           y: "count",
           data: pieData,
+          style: { showLabels: true, showLegend: true },
         },
       ],
-      summary: ["Local chart analysis used due to AI failure."],
-      key_fields: Object.keys(results[0]).slice(0, 5),
+      summary: [
+        `Dataset contains ${computedMetrics.total_rows} rows and ${computedMetrics.total_columns} columns.`,
+        `${computedMetrics.missing_values} missing values found.`,
+        `Top bar category: ${barData[0]?.xValue || "N/A"} (${barData[0]?.yValue || 0})`,
+      ],
+      key_fields: Object.keys(results[0] || {}).slice(0, 5),
     };
+
   }
 
   return aiResponse;
