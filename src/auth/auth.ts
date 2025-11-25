@@ -14,18 +14,23 @@ import { theValidation } from "../services/validation.ts";
 export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Email and password are required",
       });
     }
+
     const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
-      const details = error.details.map(err => err.message);
-      return res.status(400).json({ success: false, message: details });
+      return res.status(400).json({
+        success: false,
+        message: error.details.map(d => d.message),
+      });
     }
 
+    // Fetch user
     const user = await userModel.findOne({ email });
 
     if (!user) {
@@ -42,7 +47,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password!);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
@@ -51,14 +56,13 @@ export const loginCheck = async (req: Request, res: Response) => {
     }
     const accessToken = signJwt({ id: user._id, email: user.email });
     const refreshToken = Jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-      },
+      { id: user._id, email: user.email },
       process.env.REFRESH_SECRET!,
+
       { expiresIn: "30d" },
     );
 
+    // Store refresh token hash
     const hashed = hashToken(refreshToken);
     const userAgent = req.headers["user-agent"] || "unknown";
     const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.ip || "unknown";
@@ -73,6 +77,9 @@ export const loginCheck = async (req: Request, res: Response) => {
       lastActiveAt: new Date(),
       isValid: true,
     });
+
+    // Set refresh token cookie
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
@@ -80,9 +87,15 @@ export const loginCheck = async (req: Request, res: Response) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
+    // ❗ IMPORTANT: Removed session creation here
+    // Heartbeat /session/start will handle session documents
+
+    // Send response
     return res.status(200).json({
       success: true,
+
       message: "Login successful",
+
       accessToken,
       sessionId: session._id,
       user: {
@@ -102,6 +115,8 @@ export const loginCheck = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
+
+    console.log("Here", req.body);
 
     const { error } = theValidation.validate(req.body, { abortEarly: false });
 
@@ -179,7 +194,7 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
-     res.clearCookie("refreshToken", {
+    res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: false,
       sameSite: "strict",
@@ -224,7 +239,7 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       _id: { $ne: currentSessionId },
     });
 
-  
+
     return res.json({
       success: true,
       message: "Logged out from all other devices",

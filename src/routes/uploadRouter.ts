@@ -2,9 +2,9 @@ import { Router } from "express";
 import upload from "../utils/multerUpload";
 import { fileParsing } from "../controllers/uploadController";
 import { tokenCheck } from "../middlewares/tokenCheck";
+import { deviceLogger } from "../utils/deviceLogger";
 
 const uploadRouter = Router();
-
 /**
  * @swagger
  * tags:
@@ -42,6 +42,22 @@ const uploadRouter = Router();
  *       500:
  *         description: Server error
  */
-uploadRouter.post("/fileupload", upload.single("file"), tokenCheck, fileParsing);
+uploadRouter.use((req, res, next) => {
+  req.uploadStatus = "success";
+  next();
+});
+
+uploadRouter.post(
+  "/fileupload",
+  deviceLogger,
+  tokenCheck,
+  upload.single("file"),
+  (req, res, next) => {
+    res.locals.device = req.device;
+    res.locals.uploadStatus = req.uploadStatus;
+    next();
+  },
+  fileParsing,
+);
 
 export default uploadRouter;
