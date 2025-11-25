@@ -25,7 +25,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use(morgan("dev"));
-app.use(morgan("dev")); //TODO: WHY ???. dev
 
 const swaggerOptions = {
   definition: {
