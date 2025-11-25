@@ -37,7 +37,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
-app.use(morgan("dev")); //TODO: WHY ???. dev
+app.use(morgan("dev")); 
 
 const swaggerOptions = {
   definition: {
