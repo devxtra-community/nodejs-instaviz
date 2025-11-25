@@ -107,5 +107,4 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  */
 userRouter.post("/newpassword", verifyToken, changePassword);
 
-
 export default userRouter;
