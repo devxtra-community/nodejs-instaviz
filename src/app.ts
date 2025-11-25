@@ -53,7 +53,7 @@ app.use(limiter);
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
 //middleware
-app.use("/upload", uploadRouter, fileSizeCheck)
+app.use("/upload", fileSizeCheck, uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
