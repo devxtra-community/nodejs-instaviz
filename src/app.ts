@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use(morgan("dev"));
-app.use(morgan('dev')); //TODO: WHY ???. dev
+app.use(morgan('dev')); 
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -74,7 +74,7 @@ app.get('/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
 
   res.json({
-    status: 'ok',
+    status: 'ok ',
     db: dbStatus,
     uptime: process.uptime(),
     time: new Date().toISOString(),

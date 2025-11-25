@@ -60,7 +60,7 @@ export const changePassword = async (req: Request, res: Response) => {
     }
 
     if (user.googleId) {
-      return res.status(200).json({
+      return res.status(403).json({
         message: 'This account uses Google Login. Password cannot be changed.',
       });
     }
