@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import adminModel from '../../model/admin/adminModel';
 import { hashToken } from '../../utils/hashTokens';
 import refreshModel from '../../model/refreshtoken';
 

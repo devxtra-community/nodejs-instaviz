@@ -18,7 +18,7 @@ export const dashboardStats = async (req: Request, res: Response) => {
 
     const totalUsers = await userModel.countDocuments();
 
-    const premiumUsers = await userModel.distinct('userId', {
+    const premiumUsers = await Payment.distinct('userId', {
       status: 'success',
     });
 
