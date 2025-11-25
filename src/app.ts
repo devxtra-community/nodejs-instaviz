@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from "express";
+import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
@@ -8,7 +8,6 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-
 import authRouter from "./routes/authRoutes.ts";
 import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
@@ -107,7 +106,7 @@ app.use(limiter);
 app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
-app.use("/upload", uploadRouter, fileSizeCheck)
+app.use("/upload", fileSizeCheck, uploadRouter)
 app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
@@ -128,7 +127,7 @@ app.get("/health", async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
 
   res.json({
-    status: "ok",
+    status: 'ok',
     db: dbStatus,
     uptime: process.uptime(),
     time: new Date().toISOString(),

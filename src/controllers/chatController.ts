@@ -31,13 +31,13 @@ export const chatController = async (req: Request, res: Response) => {
       });
     }
 
-    // If chart requested → Heavy model
+    // If chart requested use Heavy model
     if (userWantsChart(message)) {
       const result = await runChartAnalysis(message, dataset);
-      return res.json(result);
+      return res.json({ message: "chart generated based on chat", result, success: true });
     }
 
-    // Otherwise → Cheap model
+    // Otherwise use Cheap model
     const prompt = createChatPrompt(message, dataset);
     const chat = modelLight.startChat({ history: [] });
 

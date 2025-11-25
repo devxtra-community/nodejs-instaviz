@@ -3,7 +3,7 @@ import type { IDataset } from "../model/dataModel";
 
 export function generateChartPrompt(userMessage: string, dataset: IDataset) {
   return `
-You are InstaviZ's senior data analyst and chart engine.
+You are InstaviZ's senior data analyst and chart engine with 10 year experience.
 this model is created by instaviz dont forget understood!
 
 You receive:
@@ -212,6 +212,6 @@ If, and only if, the user is clearly NOT requesting a chart but just an explanat
   "chart": null
 }
 
-Do not ask the user for more information. Make an expert best guess from the data and their message.
+Do not ask the user for more information. Make an expert best guess from the data and their message be compatative and use your maximum iq to do this.
 `;
 }

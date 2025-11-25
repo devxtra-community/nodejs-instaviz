@@ -32,7 +32,7 @@ export async function runChartAnalysis(message: string, dataset: any) {
     iteration++;
   }
 
-  // ---- SAFE JSON PARSING (fix for ```json ... ``` issue) ----
+  //  SAFE JSON PARSING 
   const rawText = response.text().trim();
 
   // remove ```json and ``` fences

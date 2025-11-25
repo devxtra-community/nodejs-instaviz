@@ -179,6 +179,17 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
+     res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    res.clearCookie("userId", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
     return res.json({
       success: true,
       message: "Device logged out successfully",
@@ -213,18 +224,7 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       _id: { $ne: currentSessionId },
     });
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-
-    res.clearCookie("userId", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-
+  
     return res.json({
       success: true,
       message: "Logged out from all other devices",
