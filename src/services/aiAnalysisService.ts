@@ -62,19 +62,19 @@ export async function analyzeDatasetWithAiOrFallback(
         msg.includes("exceeded") ||
         err.status === 503
       ) {
-        console.log("Rate limit → switching key...");
+        console.log("Rate limit  switching key...");
         switchApi();
         attempts++;
         continue;
       }
 
-      console.log("Non-limit AI error → stopping.");
+      console.log("Non-limit AI error  stopping.");
       break;
     }
   }
-
+  
   if (!aiResponse) {
-    console.log("Fallback → local chart generation");
+    console.log("Fallback  local chart generation");
 
     const { barData, pieData, columns } = generateChartsFromData(results);
 

@@ -1,9 +1,9 @@
 import passport from "passport";
 import { Router } from "express";
 
-import {googleCallback} from "../auth/googleAuth.ts"
-import { register, loginCheck,  } from "../auth/auth.ts";
-import { verifyOtp,resendOtp } from "../auth/otp.ts";
+import { googleCallback } from "../auth/googleAuth.ts"
+import { register, loginCheck, } from "../auth/auth.ts";
+import { verifyOtp, resendOtp } from "../auth/otp.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { deviceLogger } from "../utils/deviceLogger.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
@@ -13,10 +13,11 @@ import { resetPassword } from "../auth/password.ts";
 import { getAllSessions } from "../auth/auth.ts";
 import { logoutDevice, } from "../auth/auth.ts";
 import { logoutAllDevices } from "../auth/auth.ts";
+import { cookieCheck } from "../middlewares/cookieCheck.ts"
 
 const authRouter = Router();
 
-authRouter.post("/logoutAllDevices",verifyToken,logoutAllDevices)
+authRouter.post("/logoutAllDevices", verifyToken, logoutAllDevices)
 
 /**
  * @swagger
@@ -44,7 +45,7 @@ authRouter.post("/logoutAllDevices",verifyToken,logoutAllDevices)
  *       400:
  *         description: Invalid credentials
  */
-authRouter.post("/login", loginCheck, deviceLogger);
+authRouter.post("/login", cookieCheck, loginCheck, deviceLogger);
 
 /**
  * @swagger
@@ -224,7 +225,7 @@ authRouter.post("/logoutDevice", verifyToken, logoutDevice);
  *     summary: Google OAuth login
  *     tags: [Auth]
  */
-authRouter.get("/google", passport.authenticate("google", { scope: ["Profile", "email"] }));
+authRouter.get("/google", cookieCheck, passport.authenticate("google", { scope: ["Profile", "email"] }));
 
 /**
  * @swagger
@@ -234,9 +235,9 @@ authRouter.get("/google", passport.authenticate("google", { scope: ["Profile", "
  *     tags: [Auth]
  */
 authRouter.get(
-  "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
-  googleCallback,
+    "/google/callback",
+    passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
+    googleCallback,
 );
 
 
