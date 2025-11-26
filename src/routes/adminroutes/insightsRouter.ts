@@ -2,6 +2,8 @@ import express from "express";
 import { getTotalDeviceSplit } from "../../adminController/insightController/device";
 import { verifyAdmin } from "../../middlewares/verifyAdmin";
 import { getWeeklyUser } from "../../adminController/insightController/userWeekly";
+import {getUserHeatScore} from '../../adminController/insightController/userheatscore'
+import {getUploadFrequency} from '../../adminController/insightController/uploadFrequency'
 
 export const insightsRouter = express.Router();
 
@@ -45,6 +47,10 @@ insightsRouter.get("/device", verifyAdmin, getTotalDeviceSplit);
  *         description: Server error
  */
 insightsRouter.get("/weeklyuser", getWeeklyUser);
+
+insightsRouter.get('/userheatscore' , getUserHeatScore)
+
+insightsRouter.get('/uploadfrequency' , getUploadFrequency)
 
 
 
