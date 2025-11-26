@@ -1,0 +1,164 @@
+// controllers/sessionController.ts
+import { Request, Response } from "express";
+import crypto from "crypto";
+import mongoose from "mongoose";
+import { SessionModel } from "../model/session";
+
+function getUserId(req: Request): string | null {
+  return (req as any).user?.userId ?? null;
+}
+
+export const createSession = async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req);
+
+    let session_token: string | null = null;
+    if (!userId) {
+      session_token = (req.headers["x-session-token"] as string) || crypto.randomUUID();
+    }
+
+    const payload: any = {
+      user_id: userId ?new mongoose.Types.ObjectId(userId) : null,
+      session_token: userId ? null : session_token,
+      data_id: req.body.data_id ?new mongoose.Types.ObjectId(req.body.data_id) : null,
+      title: req.body.title || "New Session",
+      messages: req.body.messages || [],
+      charts: req.body.charts || [],
+      metrics: req.body.metrics || {},
+    };
+
+    const session = await SessionModel.create(payload);
+
+    // Return consistent envelope the frontend expects
+    return res.status(201).json({
+      session,
+      // only send session_token when we generated/used one (guest)
+      ...(session_token ? { session_token } : {}),
+    });
+  } catch (err) {
+    console.error("createSession error", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+export const getSession = async (req: Request, res: Response) => {
+    try {
+        const userId = getUserId(req);
+        const id = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(id))
+            return res.status(400).json({ error: "Invalid session id" });
+
+        const session = await SessionModel.findOne({
+            _id: id,
+            user_id: userId,
+        })
+            .populate("data_id")
+            .lean();
+
+        if (!session) return res.status(404).json({ error: "Not found" });
+
+        return res.json(session);
+    } catch (err) {
+        console.error("getSession error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const listSessions = async (req: Request, res: Response) => {
+    try {
+        const userId = getUserId(req);
+
+        const sessions = await SessionModel.find({ user_id: userId })
+            .sort({ updatedAt: -1 })
+            .select("title createdAt updatedAt data_id")
+            .populate("data_id")
+            .lean();
+
+        return res.json({ sessions });
+    } catch (err) {
+        console.error("listSessions error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const appendMessage = async (req: Request, res: Response) => {
+    try {
+        const userId = getUserId(req);
+        const id = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(id))
+            return res.status(400).json({ error: "Invalid session id" });
+
+        const message = {
+            fromUser: req.body.fromUser || null,
+            fromAi: req.body.fromAi || null,
+            createdAt: new Date(),
+        };
+
+        const session = await SessionModel.findOneAndUpdate(
+            { _id: id, user_id: userId },
+            { $push: { messages: message }, updatedAt: new Date() },
+            { new: true }
+        );
+
+        return res.json(session);
+    } catch (err) {
+        console.error("appendMessage error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const appendChart = async (req: Request, res: Response) => {
+    try {
+        const userId = getUserId(req);
+        const id = req.params.id;
+
+        if (!req.body.chart)
+            return res.status(400).json({ error: "Missing chart data" });
+
+        const session = await SessionModel.findOneAndUpdate(
+            { _id: id, user_id: userId },
+            { $push: { charts: req.body.chart }, updatedAt: new Date() },
+            { new: true }
+        );
+
+        return res.json(session);
+    } catch (err) {
+        console.error("appendChart error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const updateSession = async (req: Request, res: Response) => {
+    try {
+        const userId = getUserId(req);
+        const id = req.params.id;
+
+        const session = await SessionModel.findOneAndUpdate(
+            { _id: id, user_id: userId },
+            { ...req.body, updatedAt: new Date() },
+            { new: true }
+        );
+
+        return res.json(session);
+    } catch (err) {
+        console.error("updateSession error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const deleteSession = async (req: Request, res: Response) => {
+    try {
+        const userId = getUserId(req);
+        const id = req.params.id;
+
+        await SessionModel.findOneAndDelete({ _id: id, user_id: userId });
+
+        return res.json({ ok: true });
+    } catch (err) {
+        console.error("deleteSession error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+};

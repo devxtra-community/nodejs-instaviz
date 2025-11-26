@@ -72,7 +72,6 @@ export async function analyzeDatasetWithAiOrFallback(
       break;
     }
   }
-  aiResponse=null;
   if (!aiResponse) {
   console.log("Fallback → local chart + intelligent insight generation");
 

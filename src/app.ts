@@ -11,6 +11,7 @@ import swaggerUi from "swagger-ui-express";
 import authRouter from "./routes/authRoutes.ts";
 import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
+import sessionRouter from "./routes/sessionRoutes.ts"
 import paymentRouter from "./routes/paymentRoutes.js";
 import { adminrouter } from "./routes/adminroutes/userRouter.ts";
 import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
@@ -111,6 +112,7 @@ app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
 app.use("/chat",chatRouter)
+app.use("/session",sessionRouter)
 // admin routes
 app.use("/admin/dashboard", adminrouter);
 app.use("/admin/dashboard", insightsRouter);
