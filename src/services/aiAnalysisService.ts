@@ -72,7 +72,7 @@ export async function analyzeDatasetWithAiOrFallback(
       break;
     }
   }
-
+  
   if (!aiResponse) {
     console.log("Fallback  local chart generation");
 
