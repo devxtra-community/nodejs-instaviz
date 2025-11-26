@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loggedusers } from "../../adminController/userController"
+import { loggedusers, suspendUser } from "../../adminController/userController"
 import { fetchAllgustusers } from "../../adminController/userController"
 import { getNewUsersPerMonth } from "../../adminController/userController"
 import { getAllusers } from "../../adminController/userController"
@@ -30,6 +30,7 @@ adminUserRouter.put("/status/:id",updateUserstatus)
 adminUserRouter.get("/activetime",hourlyActiveUserCount)
 adminUserRouter.get("/user-daily-active/:id", getUserDailyActiveTime);
 adminUserRouter.get("/singleUsertime/:id", getsingleUserDailyActiveTime);
+adminUserRouter.put("/suspend/:id",suspendUser)
 
 
 

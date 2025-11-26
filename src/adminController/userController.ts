@@ -173,10 +173,6 @@ export const singleUsertoken = async (req: Request, res: Response) => {
 
   }   
 
-
-
-
-
 // get all users average active time per day + hourly active users
 export const hourlyActiveUserCount = async (req: Request, res: Response) => {
   try {
@@ -259,9 +255,6 @@ export const hourlyActiveUserCount = async (req: Request, res: Response) => {
     });
   }
 };
-
-
-
 
 export const getUserDailyActiveTime = async (req: Request, res: Response) => {
   try {
@@ -365,11 +358,7 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
 //singleuser avarage time
-
 export const getsingleUserDailyActiveTime = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -444,7 +433,7 @@ export const getsingleUserDailyActiveTime = async (req: Request, res: Response) 
     return res.json({
       success: true,
       userId,
-      dailyActiveTime, // Monday → Sunday always present
+      dailyActiveTime, 
       totalSeconds,
       totalFormatted,
       averagePerDay: {
@@ -459,5 +448,45 @@ export const getsingleUserDailyActiveTime = async (req: Request, res: Response) 
       success: false,
       message: "Server error",
     });
+  }
+};
+
+//user suspend for days 
+export const suspendUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;    
+    const { days } = req.query;
+
+    // Validation
+    if (!days || isNaN(Number(days)) || Number(days) <= 0) {
+      return res.status(400).json({ 
+        message: "Invalid number of days. Must be a positive number." 
+      });
+    }
+
+    const suspensionEnd = new Date();
+    suspensionEnd.setDate(suspensionEnd.getDate() + Number(days));
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      id,
+      {
+        isSuspended: true,
+        suspensionEnd,
+      },
+      { new: true } // Return updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ 
+      success: true,
+      message: `User suspended for ${days} days`,
+      suspensionEnd: suspensionEnd.toISOString()
+    });
+  } catch (error) {
+    console.error("Suspend error:", error);
+    res.status(500).json({ message: "Something went wrong", error });
   }
 };
