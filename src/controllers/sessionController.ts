@@ -46,6 +46,7 @@ export const getSession = async (req: Request, res: Response) => {
     try {
         const userId = getUserId(req);
         const id = req.params.id;
+        console.log(id,userId)
 
         if (!mongoose.Types.ObjectId.isValid(id))
             return res.status(400).json({ error: "Invalid session id" });
@@ -56,6 +57,7 @@ export const getSession = async (req: Request, res: Response) => {
         })
             .populate("data_id")
             .lean();
+            console.log(session);
 
         if (!session) return res.status(404).json({ error: "Not found" });
 

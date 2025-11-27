@@ -27,6 +27,7 @@ export const verifyToken = async(
     return res.status(401).json({ message: "Invalid or expired token" });
   }
   const sessionId = req.headers["x-session-id"];
+  console.log("session id:",sessionId);
   if (!sessionId || typeof sessionId !== "string") {
     return res.status(401).json({ message: "Session ID missing" });
   }
