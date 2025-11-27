@@ -17,6 +17,8 @@ export interface User extends Document {
   place: string;
   phone: number;
   device?: "mobile" | "desktop";
+  isSuspended: boolean;
+  suspensionEnd: Date | null;
 }
 
 const userSchema = new Schema(
@@ -55,6 +57,9 @@ const userSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    isSuspended: { type: Boolean, default: false },
+    suspensionEnd: { type: Date, default: null },
+
   },
   { timestamps: true }
 );

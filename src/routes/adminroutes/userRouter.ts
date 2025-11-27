@@ -10,77 +10,18 @@ import { addGustuser } from "../../adminController/userController";
 import { updateUserstatus } from "../../adminController/userController";
 import { hourlyActiveUserCount } from "../../adminController/userController";
 import { getUserDailyActiveTime } from "../../adminController/userController";
-import { getUserActiveTimeByDays } from "../../adminController/userController";
+import { getsingleUserDailyActiveTime } from "../../adminController/userController";
 import { verifyAdmin } from "../../middlewares/verifyAdmin";
+import { suspendUser } from "../../adminController/userController";
+import { unsuspendUser } from "../../adminController/userController";
 
-export const adminUserRouter = Router();
 
-/**
- * @swagger
- * tags:
- *   name: AdminUsers
- *   description: Admin operations for user management, activity tracking, tokens, and analytics
- */
+export  const adminUserRouter = Router()
 
-/**
- * @swagger
- * /admin/loggedusers:
- *   get:
- *     summary: Get currently logged-in active users
- *     tags: [AdminUsers]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Returns all active logged-in users
- *       401:
- *         description: Unauthorized
- */
-adminUserRouter.get("/loggedusers", verifyAdmin, loggedusers);
-
-/**
- * @swagger
- * /admin/gustusers:
- *   get:
- *     summary: Get all guest users
- *     tags: [AdminUsers]
- *     responses:
- *       200:
- *         description: Guest users fetched successfully
- */
-adminUserRouter.get("/gustusers", fetchAllgustusers);
-
-/**
- * @swagger
- * /admin/getallusers:
- *   get:
- *     summary: Get all registered users
- *     tags: [AdminUsers]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of all users
- *       401:
- *         description: Unauthorized
- */
-adminUserRouter.get("/getallusers", verifyAdmin, getAllusers);
-
-/**
- * @swagger
- * /admin/newuserpermonth:
- *   get:
- *     summary: Get new users added per month
- *     tags: [AdminUsers]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Monthly new user stats
- *       401:
- *         description: Unauthorized
- */
-adminUserRouter.get("/newuserpermonth", verifyAdmin, getNewUsersPerMonth);
+adminUserRouter.get('/loggedusers', loggedusers);
+adminUserRouter.get('/gustusers', fetchAllgustusers);
+adminUserRouter.get('/getallusers', getAllusers);
+adminUserRouter.get('/newuserpermonth',  getNewUsersPerMonth);
 
 /**
  * @swagger
@@ -229,37 +170,18 @@ adminUserRouter.get("/activetime", hourlyActiveUserCount);
  *       404:
  *         description: User not found
  */
-adminUserRouter.get("/user-daily-active/:id", getUserDailyActiveTime);
+adminUserRouter.get("/alluserspage",alluserspage)
+adminUserRouter.get("/singleuser/:id",GetSingleuser)
+adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
-/**
- * @swagger
- * /admin/user-active-by-days/{id}:
- *   post:
- *     summary: Get active time of user based on day range
- *     tags: [AdminUsers]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               startDate:
- *                 type: string
- *                 example: "2025-01-01"
- *               endDate:
- *                 type: string
- *                 example: "2025-01-31"
- *     responses:
- *       200:
- *         description: Active time by days retrieved
- *       404:
- *         description: User not found
- */
-adminUserRouter.post("/user-active-by-days/:id", getUserActiveTimeByDays);
+adminUserRouter.post("/addgustuser",verifyAdmin,addGustuser)
+adminUserRouter.put("/status/:id",updateUserstatus)
+adminUserRouter.get("/activetime",hourlyActiveUserCount)
+adminUserRouter.get("/user-daily-active/:id", getUserDailyActiveTime);
+adminUserRouter.get("/singleUsertime/:id", getsingleUserDailyActiveTime);
+adminUserRouter.put("/suspend/:id", suspendUser);
+adminUserRouter.put("/unsuspend/:id", unsuspendUser);
+
+
+
+

@@ -8,6 +8,7 @@ import { performance } from "perf_hooks";
 import { start } from "repl";
 import activeModel from "../model/activeModel";
 
+
 //function for get allloged users count to admindashboard graph
 export const loggedusers = async(req:Request,res:Response)=>{
 
@@ -173,10 +174,6 @@ export const singleUsertoken = async (req: Request, res: Response) => {
 
   }   
 
-
-
-
-
 // get all users average active time per day + hourly active users
 export const hourlyActiveUserCount = async (req: Request, res: Response) => {
   try {
@@ -260,9 +257,6 @@ export const hourlyActiveUserCount = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
 export const getUserDailyActiveTime = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -276,17 +270,16 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
       });
     }
 
-    // Build query filter
+ 
     const filter: any = { userId };
 
-    // If date range provided, filter by it
     if (startDate || endDate) {
       filter.day = {};
       if (startDate) filter.day.$gte = startDate;
       if (endDate) filter.day.$lte = endDate;
     }
 
-    // Get all sessions for this user
+
     const sessions = await activeModel.find(filter).sort({ day: 1 });
 
     if (!sessions.length) {
@@ -300,7 +293,7 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
       });
     }
 
-    // Group sessions by day and calculate total time per day
+
     const dailyMap = new Map<string, number>();
 
     sessions.forEach((session) => {
@@ -366,13 +359,11 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
   }
 };
 
-
-// Alternative: Get user active time for specific days
-export const getUserActiveTimeByDays = async (req: Request, res: Response) => {
+//singleuser avarage time
+export const getsingleUserDailyActiveTime = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = id;
-    const { days } = req.body; // Array of days ["2025-11-22", "2025-11-23"]
 
     if (!userId) {
       return res.status(400).json({
@@ -381,55 +372,168 @@ export const getUserActiveTimeByDays = async (req: Request, res: Response) => {
       });
     }
 
-    if (!days || !Array.isArray(days)) {
-      return res.status(400).json({
-        success: false,
-        message: "days array is required",
-      });
+    const { startDate, endDate } = req.query;
+
+    const filter: any = { userId };
+
+    if (startDate || endDate) {
+      filter.day = {};
+      if (startDate) filter.day.$gte = startDate;
+      if (endDate) filter.day.$lte = endDate;
     }
 
-    const sessions = await activeModel.find({
-      userId,
-      day: { $in: days },
-    });
+ 
+    const sessions = await activeModel.find(filter);
 
-    const dailyMap = new Map<string, number>();
+  
+    const weekDays: Record<string, number> = {
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0,
+    };
 
-    // Initialize all requested days with 0
-    days.forEach(day => dailyMap.set(day, 0));
-
-    // Add actual session durations
+    
     sessions.forEach((session) => {
-      const currentTotal = dailyMap.get(session.day) || 0;
-      dailyMap.set(session.day, currentTotal + session.duration);
+      const date = new Date(session.day);
+      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+
+      if (weekDays[dayName] !== undefined) {
+        weekDays[dayName] += session.duration;
+      }
     });
 
-    const result = Array.from(dailyMap.entries()).map(([day, totalSeconds]) => {
+
+    const dailyActiveTime = Object.entries(weekDays).map(([dayName, totalSeconds]) => {
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
-      
-      const date = new Date(day);
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+      const formatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
       return {
-        date: day,
         dayName,
         totalSeconds,
-        formatted: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
+        formatted,
       };
     });
+
+
+    const totalSeconds = Object.values(weekDays).reduce((sum, v) => sum + v, 0);
+
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+    const totalFormatted = `${totalHours}h ${totalMinutes}m`;
+
+    const avgSeconds = Math.floor(totalSeconds / 7);
+    const avgHours = Math.floor(avgSeconds / 3600);
+    const avgMinutes = Math.floor((avgSeconds % 3600) / 60);
+    const avgFormatted = `${avgHours}h ${avgMinutes}m`;
 
     return res.json({
       success: true,
       userId,
-      activeTime: result,
+      dailyActiveTime, 
+      totalSeconds,
+      totalFormatted,
+      averagePerDay: {
+        seconds: avgSeconds,
+        formatted: avgFormatted,
+      },
     });
 
   } catch (err) {
-    console.error("User active time by days error:", err);
+    console.error("Single user weekly time error:", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
+    });
+  }
+};
+
+// Suspend user for X days
+export const suspendUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { days } = req.query;
+
+    const suspensionDays = Number(days);
+
+    if (!suspensionDays || suspensionDays <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid suspension days. Must be greater than 0" 
+      });
+    }
+
+    const suspensionEnd = new Date();
+    suspensionEnd.setDate(suspensionEnd.getDate() + suspensionDays);
+
+    const user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        isSuspended: true,
+        suspensionEnd: suspensionEnd
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `User suspended for ${suspensionDays} days`,
+      suspensionEnd,
+      user
+    });
+
+  } catch (err) {
+    console.error("Error suspending user:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Error suspending user" 
+    });
+  }
+};
+
+// Add this new unsuspend controller
+export const unsuspendUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        isSuspended: false,
+        suspensionEnd: null
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User unsuspended successfully",
+      user
+    });
+
+  } catch (err) {
+    console.error("Error unsuspending user:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Error unsuspending user" 
     });
   }
 };

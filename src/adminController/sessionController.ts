@@ -16,13 +16,12 @@ export const startSession = async (req: Request, res: Response) => {
 
     const userId = user.id;
 
-    // Get name + email
     const fullUser = await UserModel.findById(userId).select("name email");
     if (!fullUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Already active?
+ 
     const existing = await UserSession.findOne({ userId, ended: false });
     if (existing) {
       return res.status(200).json({
@@ -35,7 +34,6 @@ export const startSession = async (req: Request, res: Response) => {
     const now = new Date();
     const day = now.toISOString().substring(0, 10); // YYYY-MM-DD
 
-    // Create fresh session
     const session = await UserSession.create({
       userId,
       userName: fullUser.name,
@@ -85,11 +83,11 @@ export const heartbeat = async (req: Request, res: Response) => {
     const now = new Date();
     const last = session.lastHeartbeat;
 
-    // Calculate delta seconds safely
+ 
     let delta = Math.floor((now.getTime() - last.getTime()) / 1000);
 
     if (delta < 1) delta = 1;
-    if (delta > 300) delta = 300; // hard cap: 5 minutes max
+    if (delta > 300) delta = 300; 
 
     session.duration += delta;
     session.lastHeartbeat = now;
@@ -133,7 +131,7 @@ export const endSession = async (req: Request, res: Response) => {
     if (delta < 1) delta = 1;
     if (delta > 300) delta = 300;
 
-    // Final update
+
     session.duration += delta;
     session.lastHeartbeat = now;
     session.endTime = now;

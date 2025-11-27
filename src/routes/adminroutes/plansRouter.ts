@@ -6,6 +6,7 @@ import { deleteplan } from "../../adminController/plansController";
 import { verifyAdmin } from "../../middlewares/verifyAdmin";
 export const plansRouter = Router();
 
+
 /**
  * @swagger
  * tags:
@@ -146,3 +147,9 @@ plansRouter.put("/plans/:id", verifyAdmin, updateplan);
  *         description: Server error
  */
 plansRouter.delete("/plans/:id", verifyAdmin, deleteplan);
+plansRouter.post('/plans',verifyAdmin, addplan);
+plansRouter.get('/plans',verifyAdmin,  showplan);
+plansRouter.put('/plans/:id', verifyAdmin,updateplan);
+plansRouter.delete('/plans/:id', verifyAdmin,deleteplan);
+
+                                                                                                      
