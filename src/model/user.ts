@@ -17,6 +17,8 @@ export interface User extends Document {
   place: string;
   phone: number;
   device?: "mobile" | "desktop";
+  isSuspended: boolean;
+  suspensionEnd: Date | null;
 }
 
 const userSchema = new Schema(

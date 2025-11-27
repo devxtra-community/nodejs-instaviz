@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loggedusers, suspendUser } from "../../adminController/userController"
+import { loggedusers } from "../../adminController/userController"
 import { fetchAllgustusers } from "../../adminController/userController"
 import { getNewUsersPerMonth } from "../../adminController/userController"
 import { getAllusers } from "../../adminController/userController"
@@ -12,6 +12,8 @@ import { hourlyActiveUserCount } from "../../adminController/userController";
 import { getUserDailyActiveTime } from "../../adminController/userController";
 import { getsingleUserDailyActiveTime } from "../../adminController/userController";
 import { verifyAdmin } from "../../middlewares/verifyAdmin";
+import { suspendUser } from "../../adminController/userController";
+import { unsuspendUser } from "../../adminController/userController";
 
 
 export  const adminUserRouter = Router()
@@ -30,7 +32,9 @@ adminUserRouter.put("/status/:id",updateUserstatus)
 adminUserRouter.get("/activetime",hourlyActiveUserCount)
 adminUserRouter.get("/user-daily-active/:id", getUserDailyActiveTime);
 adminUserRouter.get("/singleUsertime/:id", getsingleUserDailyActiveTime);
-adminUserRouter.put("/suspend/:id",suspendUser)
+adminUserRouter.put("/suspend/:id", suspendUser);
+adminUserRouter.put("/unsuspend/:id", unsuspendUser);
+
 
 
 

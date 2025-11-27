@@ -8,6 +8,7 @@ import { performance } from "perf_hooks";
 import { start } from "repl";
 import activeModel from "../model/activeModel";
 
+
 //function for get allloged users count to admindashboard graph
 export const loggedusers = async(req:Request,res:Response)=>{
 
@@ -451,42 +452,88 @@ export const getsingleUserDailyActiveTime = async (req: Request, res: Response) 
   }
 };
 
-//user suspend for days 
+// Suspend user for X days
 export const suspendUser = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;    
+    const { id } = req.params;
     const { days } = req.query;
 
-    // Validation
-    if (!days || isNaN(Number(days)) || Number(days) <= 0) {
+    const suspensionDays = Number(days);
+
+    if (!suspensionDays || suspensionDays <= 0) {
       return res.status(400).json({ 
-        message: "Invalid number of days. Must be a positive number." 
+        success: false, 
+        message: "Invalid suspension days. Must be greater than 0" 
       });
     }
 
     const suspensionEnd = new Date();
-    suspensionEnd.setDate(suspensionEnd.getDate() + Number(days));
+    suspensionEnd.setDate(suspensionEnd.getDate() + suspensionDays);
 
-    const updatedUser = await userModel.findByIdAndUpdate(
+    const user = await userModel.findByIdAndUpdate(
       id,
       {
         isSuspended: true,
-        suspensionEnd,
+        suspensionEnd: suspensionEnd
       },
-      { new: true } // Return updated document
+      { new: true }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
     }
 
-    res.json({ 
+    return res.status(200).json({
       success: true,
-      message: `User suspended for ${days} days`,
-      suspensionEnd: suspensionEnd.toISOString()
+      message: `User suspended for ${suspensionDays} days`,
+      suspensionEnd,
+      user
     });
-  } catch (error) {
-    console.error("Suspend error:", error);
-    res.status(500).json({ message: "Something went wrong", error });
+
+  } catch (err) {
+    console.error("Error suspending user:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Error suspending user" 
+    });
+  }
+};
+
+// Add this new unsuspend controller
+export const unsuspendUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        isSuspended: false,
+        suspensionEnd: null
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User unsuspended successfully",
+      user
+    });
+
+  } catch (err) {
+    console.error("Error unsuspending user:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Error unsuspending user" 
+    });
   }
 };

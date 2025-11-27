@@ -1,5 +1,3 @@
-
-
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import otpModel from '../model/otpModel.ts';
@@ -15,7 +13,7 @@ import { signJwt } from "../services/jwtServices.ts";
 import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens.ts";
 import { theValidation } from "../services/validation.ts";
-import { suspendUser } from '../adminController/userController.ts';
+
 
 
 export const loginCheck = async (req: Request, res: Response) => {
@@ -75,7 +73,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ STATUS CHECK - Check if user is disabled by admin
+    // STATUS CHECK - Check if user is disabled by admin
     if (user.status === "disabled") {
       return res.status(403).json({
         success: false,
@@ -83,7 +81,29 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ All checks passed - Create tokens
+  
+  // suspension check
+// suspension check (your existing code is correct, just improved message)
+if (user.isSuspended) {
+  const now = new Date();
+
+  // If suspension expired → auto unsuspend
+  if (user.suspensionEnd && user.suspensionEnd <= now) {
+    user.isSuspended = false;
+    user.suspensionEnd = null;
+    await user.save();
+  } else {
+    // Format the date properly for better UX
+    const suspensionEndFormatted = user.suspensionEnd
+      ? new Date(user.suspensionEnd).toLocaleString()
+      : "an indefinite period";
+    
+    return res.status(403).json({
+      success: false,
+      message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`
+    });
+  }
+}    // All checks passed - Create tokens
     const accessToken = signJwt({ id: user._id, email: user.email });
     const refreshToken = Jwt.sign(
       { id: user._id, email: user.email },
