@@ -21,7 +21,7 @@ type AuthedRequest = Request & {
 
 export const tokenCheck = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log('Checking whether user is logged in or guest');
+    console.log('api now on tokencheck middleware');
     const authedReq = req as AuthedRequest;
     const authHeader = req.headers.authorization;
     try {
@@ -29,10 +29,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         
-        const decoded = Jwt.verify(
-          token,
-          process.env.JWT_SECRET as string
-        ) as JwtPayload;
+        const decoded = Jwt.verify(token,process.env.JWT_SECRET as string) as JwtPayload;
         authedReq.user = {
           userId: decoded.id,
           isGuest: false,

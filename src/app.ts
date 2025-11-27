@@ -1,4 +1,7 @@
+
 import express, { Request, Response, NextFunction } from "express";
+
+
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
@@ -8,14 +11,17 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+
 import path from "path";
 
 // Routers
+
 import authRouter from "./routes/authRoutes.ts";
 import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
 import paymentRouter from "./routes/paymentRoutes.js";
 import sessionRoutes from "./routes/sessionRouter.ts";
+import chatRouter  from "./routes/chatRouter.ts"
 
 // Admin routes
 
@@ -26,6 +32,7 @@ import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
 import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
 import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
 
+
 // Middlewares
 import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
 
@@ -33,14 +40,13 @@ dotenv.config();
 
 const app = express();
 
-/* -------------------- Middleware -------------------- */
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-/* -------------------- Swagger Setup -------------------- */
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -71,7 +77,7 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-/* -------------------- Rate Limiter -------------------- */
+
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   limit: 220,
@@ -85,7 +91,7 @@ app.use((req, res, next) => {
   return limiter(req, res, next);
 });
 
-/* -------------------- CORS -------------------- */
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -101,14 +107,26 @@ app.use(
       }
     },
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization","x-session-id"],
   })
 );
 
-/* -------------------- Stripe Raw Webhook -------------------- */
+
 app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
-/* -------------------- Routes -------------------- */
+
+
+
+//middleware
+app.use("/upload", fileSizeCheck, uploadRouter)
+app.use("/user", userRouter)
+app.use("/auth", authRouter)
+app.use("/payment", paymentRouter)
+app.use("/chat",chatRouter)
+// admin routes
+
+app.use("/admin/dashboard", insightsRouter);
+
 
 // main routes
 app.use("/auth", authRouter);
@@ -130,13 +148,13 @@ app.use("/admin", adminAuthRouter);
 // file size check
 app.use(fileSizeCheck);
 
-/* -------------------- Health Check -------------------- */
+
 app.get("/health", (req: Request, res: Response) => {
   const dbStatus =
     mongoose.connection.readyState === 1 ? "connected" : "disconnected";
 
   res.json({
-    status: "ok",
+    status: 'ok',
     db: dbStatus,
     uptime: process.uptime(),
     time: new Date().toISOString(),
@@ -156,5 +174,5 @@ const connectDB = async () => {
 
 app.listen(process.env.PORT, async () => {
   await connectDB();
-  console.log(`🚀 Server running at http://localhost:${process.env.PORT}`);
+  console.log(` Server running at http://localhost:${process.env.PORT}`);
 });

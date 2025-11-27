@@ -5,7 +5,7 @@ export type NumericSummary = {
   sum: number;
   min: number;
   max: number;
-  count: number; // valid numeric entries
+  count: number; 
   missing: number;
   unique: Set<string>;
 };
@@ -41,7 +41,7 @@ export const initStreamingAgg = (): StreamingAggState => {
     numericCols: new Set(),
     categoricalCols: new Set(),
     detectionSamples: 0,
-    columnDetectionLimit: 500, // auto-detect numeric vs categorical using first 500 rows 
+    columnDetectionLimit: 500, 
     numeric: {},
     categorical: {},
   };
@@ -90,7 +90,7 @@ export const updateStreamingAgg = (state: StreamingAggState, row: Row) => {
 
   if (state.detectionSamples < state.columnDetectionLimit) {
     detectColumnTypes(state, row);
-    return; // don’t aggregate yet until types are detected
+    return; 
   }
 
   // lock types after detection phase
