@@ -181,13 +181,13 @@ export const logoutDevice = async (req: Request, res: Response) => {
     await refreshModel.deleteOne({ _id: sessionId });
      res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: false,
+      secure:process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
 
     res.clearCookie("userId", {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
     return res.json({
