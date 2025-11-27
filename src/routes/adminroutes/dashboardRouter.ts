@@ -30,7 +30,7 @@ export const dashboardRouter = Router();
  *       500:
  *         description: Server error
  */
-dashboardRouter.get("/dashboard/userdevices", verifyAdmin, getUserDeviceStats);
+dashboardRouter.get("/userdevices", verifyAdmin, getUserDeviceStats);
 
 /**
  * @swagger
@@ -49,7 +49,7 @@ dashboardRouter.get("/dashboard/userdevices", verifyAdmin, getUserDeviceStats);
  *       500:
  *         description: Server error
  */
-dashboardRouter.get("/dashboard/useruploads", verifyAdmin, getUploadDeviceStats);
+dashboardRouter.get("/useruploads", verifyAdmin, getUploadDeviceStats);
 
 /**
  * @swagger
@@ -68,4 +68,4 @@ dashboardRouter.get("/dashboard/useruploads", verifyAdmin, getUploadDeviceStats)
  *       500:
  *         description: Server error
  */
-dashboardRouter.get("/dashboard", verifyAdmin, dashboardStats);
+dashboardRouter.get("/", verifyAdmin, dashboardStats);

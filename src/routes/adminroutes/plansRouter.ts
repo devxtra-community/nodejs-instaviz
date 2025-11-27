@@ -53,7 +53,7 @@ export const plansRouter = Router();
  *       500:
  *         description: Server error
  */
-plansRouter.post("/plans", verifyAdmin, addplan);
+plansRouter.post("/", verifyAdmin, addplan);
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ plansRouter.post("/plans", verifyAdmin, addplan);
  *       500:
  *         description: Server error
  */
-plansRouter.get("/plans", verifyAdmin, showplan);
+plansRouter.get("/", verifyAdmin, showplan);
 
 /**
  * @swagger
@@ -118,7 +118,7 @@ plansRouter.get("/plans", verifyAdmin, showplan);
  *       500:
  *         description: Server error
  */
-plansRouter.put("/plans/:id", verifyAdmin, updateplan);
+plansRouter.put("/:id", verifyAdmin, updateplan);
 
 /**
  * @swagger
@@ -146,10 +146,6 @@ plansRouter.put("/plans/:id", verifyAdmin, updateplan);
  *       500:
  *         description: Server error
  */
-plansRouter.delete("/plans/:id", verifyAdmin, deleteplan);
-plansRouter.post('/plans',verifyAdmin, addplan);
-plansRouter.get('/plans',verifyAdmin,  showplan);
-plansRouter.put('/plans/:id', verifyAdmin,updateplan);
-plansRouter.delete('/plans/:id', verifyAdmin,deleteplan);
+plansRouter.delete("/:id", verifyAdmin, deleteplan);
 
                                                                                                       

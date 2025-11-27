@@ -134,12 +134,12 @@ app.use("/payment", paymentRouter);
 
 //admin routes
 app.use("/admin", adminAuthRouter);
-app.use("/admin", dashboardRouter);
-app.use("/admin", insightsRouter);
-app.use("/admin", activityRouter);
-app.use("/admin", adminUserRouter);
-app.use("/admin", tokenrouter);
-app.use("/admin", plansRouter);
+app.use("/admin/dashboard", dashboardRouter);
+app.use("/admin/insights", insightsRouter);
+app.use("/admin/activities", activityRouter);
+app.use("/admin/user", adminUserRouter);
+app.use("/admin/token", tokenrouter);
+app.use("/admin/plans", plansRouter);
 app.use("/session", router);
 
 //file upload check

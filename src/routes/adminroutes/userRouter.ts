@@ -19,9 +19,9 @@ import { unsuspendUser } from "../../adminController/userController";
 export  const adminUserRouter = Router()
 
 adminUserRouter.get('/loggedusers', loggedusers);
-adminUserRouter.get('/gustusers', fetchAllgustusers);
-adminUserRouter.get('/getallusers', getAllusers);
-adminUserRouter.get('/newuserpermonth',  getNewUsersPerMonth);
+adminUserRouter.get('/guestusers', fetchAllgustusers);
+adminUserRouter.get('/stats', getAllusers);
+adminUserRouter.get('/newusers',  getNewUsersPerMonth);
 
 /**
  * @swagger
@@ -37,7 +37,7 @@ adminUserRouter.get('/newuserpermonth',  getNewUsersPerMonth);
  *       401:
  *         description: Unauthorized
  */
-adminUserRouter.get("/alluserspage", verifyAdmin, alluserspage);
+adminUserRouter.get("/allusers", verifyAdmin, alluserspage);
 
 /**
  * @swagger
@@ -87,7 +87,7 @@ adminUserRouter.get("/singleuser/:id", verifyAdmin, GetSingleuser);
  *       401:
  *         description: Unauthorized
  */
-adminUserRouter.get("/singltoken/:id", verifyAdmin, singleUsertoken);
+adminUserRouter.get("/singletoken/:id", verifyAdmin, singleUsertoken);
 
 /**
  * @swagger
@@ -114,7 +114,7 @@ adminUserRouter.get("/singltoken/:id", verifyAdmin, singleUsertoken);
  *       401:
  *         description: Unauthorized
  */
-adminUserRouter.post("/addgustuser", verifyAdmin, addGustuser);
+adminUserRouter.post("/addguestuser", verifyAdmin, addGustuser);
 
 /**
  * @swagger
@@ -170,13 +170,11 @@ adminUserRouter.get("/activetime", hourlyActiveUserCount);
  *       404:
  *         description: User not found
  */
-adminUserRouter.get("/alluserspage",alluserspage)
-adminUserRouter.get("/singleuser/:id",GetSingleuser)
-adminUserRouter.get("/singltoken/:id",singleUsertoken)
 
-adminUserRouter.post("/addgustuser",verifyAdmin,addGustuser)
-adminUserRouter.put("/status/:id",updateUserstatus)
-adminUserRouter.get("/activetime",hourlyActiveUserCount)
+
+
+
+
 adminUserRouter.get("/user-daily-active/:id", getUserDailyActiveTime);
 adminUserRouter.get("/singleUsertime/:id", getsingleUserDailyActiveTime);
 adminUserRouter.put("/suspend/:id", suspendUser);
