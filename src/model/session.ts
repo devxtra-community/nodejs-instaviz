@@ -16,7 +16,7 @@ export interface IChartData {
 }
 
 export interface ISession extends Document {
-  user_id: Types.ObjectId;      
+  user_id: Types.ObjectId;
   data_id?: Types.ObjectId;
   title: string;
   messages: ISessionMessage[];
@@ -36,9 +36,9 @@ const SessionSchema = new Schema<ISession>(
 
     messages: [
       {
-        fromAi: String,
-        fromUser: String,
-        createdAt: { type: Date, default: () => new Date() },
+        user: { type: String, default: "" },
+        ai: { type: String, default: "" },
+        createdAt: { type: Date, default: Date.now },
       },
     ],
 

@@ -5,40 +5,40 @@ import mongoose from "mongoose";
 import { SessionModel } from "../model/session";
 
 function getUserId(req: Request): string | null {
-  return (req as any).user?.userId ?? null;
+    return (req as any).user?.userId ?? null;
 }
 
 export const createSession = async (req: Request, res: Response) => {
-  try {
-    const userId = getUserId(req);
+    try {
+        const userId = getUserId(req);
 
-    let session_token: string | null = null;
-    if (!userId) {
-      session_token = (req.headers["x-session-token"] as string) || crypto.randomUUID();
+        let session_token: string | null = null;
+        if (!userId) {
+            session_token = (req.headers["x-session-token"] as string) || crypto.randomUUID();
+        }
+
+        const payload: any = {
+            user_id: userId ? new mongoose.Types.ObjectId(userId) : null,
+            session_token: userId ? null : session_token,
+            data_id: req.body.data_id ? new mongoose.Types.ObjectId(req.body.data_id) : null,
+            title: req.body.title || "New Session",
+            messages: req.body.messages || [],
+            charts: req.body.charts || [],
+            metrics: req.body.metrics || {},
+        };
+
+        const session = await SessionModel.create(payload);
+
+        // Return consistent envelope the frontend expects
+        return res.status(201).json({
+            session,
+            // only send session_token when we generated/used one (guest)
+            ...(session_token ? { session_token } : {}),
+        });
+    } catch (err) {
+        console.error("createSession error", err);
+        return res.status(500).json({ error: "Server error" });
     }
-
-    const payload: any = {
-      user_id: userId ?new mongoose.Types.ObjectId(userId) : null,
-      session_token: userId ? null : session_token,
-      data_id: req.body.data_id ?new mongoose.Types.ObjectId(req.body.data_id) : null,
-      title: req.body.title || "New Session",
-      messages: req.body.messages || [],
-      charts: req.body.charts || [],
-      metrics: req.body.metrics || {},
-    };
-
-    const session = await SessionModel.create(payload);
-
-    // Return consistent envelope the frontend expects
-    return res.status(201).json({
-      session,
-      // only send session_token when we generated/used one (guest)
-      ...(session_token ? { session_token } : {}),
-    });
-  } catch (err) {
-    console.error("createSession error", err);
-    return res.status(500).json({ error: "Server error" });
-  }
 };
 
 
@@ -84,31 +84,36 @@ export const listSessions = async (req: Request, res: Response) => {
 };
 
 export const appendMessage = async (req: Request, res: Response) => {
-    try {
-        const userId = getUserId(req);
-        const id = req.params.id;
+  try {
+    const userId = getUserId(req);
+    const id = req.params.id;
 
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ error: "Invalid session id" });
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: "Invalid session id" });
 
-        const message = {
-            fromUser: req.body.fromUser || null,
-            fromAi: req.body.fromAi || null,
-            createdAt: new Date(),
-        };
+    const message = {
+      user: req.body.user ?? "",
+      ai: req.body.ai ?? "",
+      createdAt: new Date(),
+    };
 
-        const session = await SessionModel.findOneAndUpdate(
-            { _id: id, user_id: userId },
-            { $push: { messages: message }, updatedAt: new Date() },
-            { new: true }
-        );
+    const session = await SessionModel.findOneAndUpdate(
+      { _id: id, user_id: userId },
+      {
+        $push: { messages: message },
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
 
-        return res.json(session);
-    } catch (err) {
-        console.error("appendMessage error", err);
-        return res.status(500).json({ error: "Server error" });
-    }
+    return res.json(session);
+  } catch (err) {
+    console.error("appendMessage error", err);
+    return res.status(500).json({ error: "Server error" });
+  }
 };
+
+
 
 export const appendChart = async (req: Request, res: Response) => {
     try {
@@ -130,6 +135,7 @@ export const appendChart = async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Server error" });
     }
 };
+
 
 export const updateSession = async (req: Request, res: Response) => {
     try {
