@@ -14,6 +14,7 @@ import { getsingleUserDailyActiveTime } from "../../adminController/userControll
 import { verifyAdmin } from "../../middlewares/verifyAdmin";
 import { suspendUser } from "../../adminController/userController";
 import { unsuspendUser } from "../../adminController/userController";
+import { getalluserspagination } from "../../adminController/userController";
 
 
 export  const adminUserRouter = Router()
@@ -38,6 +39,7 @@ adminUserRouter.get('/newusers',  getNewUsersPerMonth);
  *         description: Unauthorized
  */
 adminUserRouter.get("/allusers", verifyAdmin, alluserspage);
+adminUserRouter.get("/user/allusers", getalluserspagination);
 
 /**
  * @swagger

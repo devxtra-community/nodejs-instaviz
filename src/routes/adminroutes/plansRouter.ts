@@ -72,7 +72,7 @@ plansRouter.post("/", verifyAdmin, addplan);
  *       500:
  *         description: Server error
  */
-plansRouter.get("/", verifyAdmin, showplan);
+plansRouter.get("/",  showplan);
 
 /**
  * @swagger
