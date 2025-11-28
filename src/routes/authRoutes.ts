@@ -1,15 +1,11 @@
 import passport from "passport";
 import { Router } from "express";
 
-<<<<<<< HEAD
+
 import { googleCallback } from "../auth/googleAuth.ts";
 import { register,  loginCheck, getAllSessions, logoutDevice, logoutAllDevices,} from "../auth/auth.ts";
 import { verifyOtp, resendOtp, verifyForgotOtp } from "../auth/otp.ts";
-=======
-import { googleCallback } from "../auth/googleAuth.ts"
-import { register, loginCheck, } from "../auth/auth.ts";
-import { verifyOtp, resendOtp } from "../auth/otp.ts";
->>>>>>> riyas
+
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { deviceLogger } from "../utils/deviceLogger.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
@@ -192,11 +188,9 @@ authRouter.post("/logoutAllDevices", verifyToken, logoutAllDevices);
  *     summary: Login with Google OAuth
  *     tags: [Auth]
  */
-<<<<<<< HEAD
-authRouter.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-=======
+
 authRouter.get("/google", cookieCheck, passport.authenticate("google", { scope: ["Profile", "email"] }));
->>>>>>> riyas
+
 
 /**
  * @swagger

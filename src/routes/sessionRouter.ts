@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyToken } from "../middlewares/verifyToken";
-import { startSession, heartbeat, endSession } from "../adminController/sessionController";
+import { startSession, heartbeat, endSession } from "../adminController/activitytrackerController";
 
 export const sessionRouter = express.Router();
 
