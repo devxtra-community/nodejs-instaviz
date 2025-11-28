@@ -31,3 +31,22 @@ export interface GeneratedCharts {
   pieData: PiePoint[];
   columns: ChartColumns;
 }
+
+
+// src/types/chart.ts
+export interface IChartPoint {
+  xValue?: string;
+  yValue?: number;
+  value?: number;
+  rawValue?: number;
+  formattedValue?: string;
+}
+
+export interface IChartData {
+  type: "bar" | "pie" | "line";
+  title: string;
+  x?: string;
+  y?: string;
+  data: IChartPoint[];
+  style?: Record<string, any>;
+}

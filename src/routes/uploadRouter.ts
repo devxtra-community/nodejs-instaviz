@@ -42,22 +42,6 @@ const uploadRouter = Router();
  *       500:
  *         description: Server error
  */
-uploadRouter.use((req, res, next) => {
-  req.uploadStatus = "success";
-  next();
-});
-
-uploadRouter.post(
-  "/fileupload",
-  deviceLogger,
-  tokenCheck,
-  upload.single("file"),
-  (req, res, next) => {
-    res.locals.device = req.device;
-    res.locals.uploadStatus = req.uploadStatus;
-    next();
-  },
-  fileParsing,
-);
+uploadRouter.post("/fileupload",tokenCheck, upload.single("file"), fileParsing);
 
 export default uploadRouter;

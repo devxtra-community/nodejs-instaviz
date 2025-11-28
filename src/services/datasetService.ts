@@ -18,7 +18,7 @@ export async function createDatasetWithRows(
     row_count: results.length,
     column_count: totalColumns,
     sample_data: results.slice(0, 10),
-  }) as IDataset; // ⬅️ FIX HERE
+  }) as IDataset; 
 
   console.log("Dataset saved to MongoDB:", dataset._id);
   console.timeEnd("dataset uploading to mongodb:")
