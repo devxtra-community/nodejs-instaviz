@@ -1,4 +1,7 @@
-import express, { NextFunction, Request, Response } from "express";
+
+import express, { Request, Response, NextFunction } from "express";
+
+
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
@@ -9,14 +12,21 @@ import rateLimit from "express-rate-limit";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
+
+import path from "path";
+
 import authRouter from "./routes/authRoutes.ts";
 import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
 import paymentRouter from "./routes/paymentRoutes.js";
 
+import chatRouter  from "./routes/chatRouter.ts"
+
+// Admin routes
+
+
 import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
 import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
-import chatRouter from "./routes/chatRouter.ts";
 
 dotenv.config();
 // import multer, { FileFilterCallback } from "multer";
@@ -33,6 +43,18 @@ import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
 import router from "./routes/sessionRouter.ts";
 
 const app = express();
+
+import activeTimertracker from "./routes/activeTimetracker.ts"
+
+// Middlewares
+
+
+dotenv.config();
+
+
+
+
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
@@ -76,7 +98,11 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+
 // rate limiter per request
+
+
+
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   limit: 1000,
@@ -93,6 +119,8 @@ const connection = async () => {
     console.log(err);
   }
 };
+
+
 
 app.use(
   cors({
@@ -124,16 +152,35 @@ app.use("/payment/webhook", express.raw({ type: "application/json" }));
 //middleware
 app.use("/upload", uploadRouter, fileSizeCheck);
 app.use("/user", userRouter);
+
+app.use("/payment/webhook", express.raw({ type: "application/json" }));
+
+
+
+
+//middleware
+app.use("/upload", fileSizeCheck, uploadRouter)
+app.use("/user", userRouter)
+app.use("/auth", authRouter)
+app.use("/payment", paymentRouter)
+app.use("/chat",chatRouter)
+// admin routes
+
+app.use("/admin/dashboard", insightsRouter);
+
+
+
 app.use("/auth", authRouter);
 app.use("/payment", paymentRouter);
 app.use("/chat", chatRouter);
 app.use("/upload", uploadRouter);
 app.use("/user", userRouter);
 app.use("/auth", authRouter);
-app.use("/payment", paymentRouter);
+
 
 //admin routes
 app.use("/admin", adminAuthRouter);
+
 app.use("/admin/dashboard", dashboardRouter);
 app.use("/admin/insights", insightsRouter);
 app.use("/admin/activities", activityRouter);
@@ -142,8 +189,12 @@ app.use("/admin/token", tokenrouter);
 app.use("/admin/plans", plansRouter);
 app.use("/session", router);
 
+app.use("/admin", activeTimertracker);
+
+
 //file upload check
 app.use(fileSizeCheck);
+
 
 //listening
 app.listen(process.env.PORT, async () => {
@@ -160,3 +211,33 @@ app.listen(process.env.PORT, async () => {
     });
   });
 });
+
+
+app.get("/health", (req: Request, res: Response) => {
+  const dbStatus =
+    mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+
+  res.json({
+    status: 'ok',
+    db: dbStatus,
+    uptime: process.uptime(),
+    time: new Date().toISOString(),
+  });
+});
+
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.mongo_uri!);
+    console.log("MongoDB connected");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
+app.listen(process.env.PORT, async () => {
+  await connectDB();
+  console.log(` Server running at http://localhost:${process.env.PORT}`);
+});
+

@@ -6,7 +6,7 @@ import userModel from "../model/user.ts";
 import { sendOtp } from "../utils/sendEmail.ts";
 import { resetPasswordSchema } from '../services/validation.ts';
 import mongoose from 'mongoose';
-import userSession from '../model/activeModel.ts';
+import userSession from '../model/activeModel.ts.ts';
 import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
 import { loginSchema } from "../services/validation.ts";
@@ -181,6 +181,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User ID required" });
     }
 
+
     const user = await userModel.findOne({
       $or: [
         { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : undefined },
@@ -283,7 +284,9 @@ export const logoutDevice = async (req: Request, res: Response) => {
 
     await refreshModel.deleteOne({ _id: sessionId });
 
+
     res.clearCookie("refreshToken", {
+
       httpOnly: true,
       secure: false,
       sameSite: "strict",
@@ -330,6 +333,7 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       _id: { $ne: currentSessionId },
     });
 
+  
     return res.json({
       success: true,
       message: "Logged out from all other devices",

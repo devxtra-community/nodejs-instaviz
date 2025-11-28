@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
-// GLOBAL API KEY ROTATION
 let apiKeyIndex = 0;
 const apiKeys = process.env.GEMINI_API_KEY!.split(",").map(k => k.trim());
 
@@ -12,11 +11,9 @@ let model: GenerativeModel = genAI.getGenerativeModel({
   model: "gemini-2.5-flash"
 });
 
-// ========== PUBLIC HELPERS ==========
 export const getModel = () => model;
 export const getApiKeyCount = () => apiKeys.length;
 
-// ========== SWITCH API KEY ==========
 export const switchApi = () => {
   apiKeyIndex = (apiKeyIndex + 1) % apiKeys.length;
   currentApi = apiKeys[apiKeyIndex];
@@ -27,7 +24,6 @@ export const switchApi = () => {
   console.log("Switched to API key:", currentApi);
 };
 
-// ========== SIMPLE JSON LLM CALL ==========
 export async function runAi(prompt: string) {
   let attempts = 0;
 
@@ -48,7 +44,6 @@ export async function runAi(prompt: string) {
 
       console.log("Gemini Error:", msg);
 
-      // AI LIMIT HIT → ROTATE KEY
       if (
         msg.includes("quota") ||
         msg.includes("429") ||
@@ -61,7 +56,6 @@ export async function runAi(prompt: string) {
         continue;
       }
 
-      // OTHER ERRORS → STOP
       console.log("Non-limit AI failure. Stopping AI.");
       return null;
     }
