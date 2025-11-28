@@ -1,16 +1,19 @@
 import passport from "passport";
 import { Router } from "express";
 
-
 import { googleCallback } from "../auth/googleAuth.ts";
-import { register,  loginCheck, getAllSessions, logoutDevice, logoutAllDevices,} from "../auth/auth.ts";
-import { verifyOtp, resendOtp, verifyForgotOtp } from "../auth/otp.ts";
-
+import { register, loginCheck } from "../auth/auth.ts";
+import { verifyOtp, resendOtp } from "../auth/otp.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { deviceLogger } from "../utils/deviceLogger.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
-import { forgotPassword, resetPassword } from "../auth/password.ts";
-
+import { forgotPassword } from "../auth/password.ts";
+import { verifyForgotOtp } from "../auth/otp.ts";
+import { resetPassword } from "../auth/password.ts";
+import { getAllSessions } from "../auth/auth.ts";
+import { logoutDevice } from "../auth/logoutAuth.ts";
+import { logoutAllDevices } from "../auth/logoutAuth.ts";
+import { cookieCheck } from "../middlewares/cookieCheck.ts";
 
 const authRouter = Router();
 
@@ -20,14 +23,6 @@ const authRouter = Router();
  *   name: Auth
  *   description: User authentication, registration, OTP, password reset, sessions & OAuth
  */
-
-import { cookieCheck } from "../middlewares/cookieCheck.ts"
-
-
-
-authRouter.post("/logoutAllDevices", verifyToken, logoutAllDevices)
-
-
 
 /**
  * @swagger
@@ -188,9 +183,15 @@ authRouter.post("/logoutAllDevices", verifyToken, logoutAllDevices);
  *     summary: Login with Google OAuth
  *     tags: [Auth]
  */
+authRouter.get("/google", cookieCheck, (req, res, next) => {
+  const redirect = typeof req.query.redirect === "string" ? req.query.redirect : "/home";
+  const authenticator = passport.authenticate("google", {
+    scope: ["profile", "email"],
+    state: redirect,
+  });
 
-authRouter.get("/google", cookieCheck, passport.authenticate("google", { scope: ["Profile", "email"] }));
-
+  authenticator(req, res, next);
+});
 
 /**
  * @swagger
@@ -200,9 +201,9 @@ authRouter.get("/google", cookieCheck, passport.authenticate("google", { scope: 
  *     tags: [Auth]
  */
 authRouter.get(
-    "/google/callback",
-    passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
-    googleCallback,
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
+  googleCallback,
 );
 
 export default authRouter;
