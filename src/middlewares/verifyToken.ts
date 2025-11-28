@@ -31,6 +31,7 @@ export const verifyToken = async(
     return res.status(401).json({ message: "Session ID missing" });
   }
 
+  console.log(sessionId)
   const session = await refreshModel.findOne({ _id: sessionId });
 
   if (!session) {

@@ -7,6 +7,7 @@ export const googleCallback = async (req: Request, res: Response) => {
   try {
     const user = req.user as any;
 
+    const redirect = typeof req.query.state === "string" ? req.query.state : "/home";
     const accessToken = Jwt.sign(
       {
         id: user._id.toString(),
@@ -48,7 +49,9 @@ export const googleCallback = async (req: Request, res: Response) => {
     });
 
     const frontendURL = process.env.CLIENT_URL!;
-    res.redirect(`${frontendURL}/auth/callback?token=${accessToken}&sessionId=${session._id}`);
+    res.redirect(
+      `${frontendURL}/auth/callback?token=${accessToken}&sessionId=${session._id}&redirect=${redirect}`,
+    );
   } catch (err) {
     console.log("Google OAuth error:", err);
     res.status(500).json({ message: "Google auth failed" });
