@@ -8,8 +8,10 @@ export const signJwt = (payload: object) => {
 };
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
+  console.log("|||Incoming refresh token request...|||");
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
+    console.log("no refresh token in cookie")
     return res.status(401).json({ success: false, message: "no refresh token" });
   }
   try {

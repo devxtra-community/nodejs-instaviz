@@ -23,7 +23,8 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
     const authedReq = req as AuthedRequest;
     const authHeader = req.headers.authorization;
     try {
-
+      console.log("auth header try",authHeader);
+      
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         
