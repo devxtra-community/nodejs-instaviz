@@ -6,9 +6,8 @@ import { uploadCsvToR2 } from "../services/r2Service";
 import { createDatasetWithRows } from "../services/datasetService";
 import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
 import dataModel from "../model/dataModel";
-import chartModel from "../model/chart";
-import chatModel from "../model/chat";
 import mongoose from "mongoose";
+import { SessionModel } from "../model/session";
 
 
 interface UserPayload {
@@ -78,28 +77,25 @@ export const fileParsing = async (req: Request, res: Response) => {
       barChartData: aiResponse.charts[0]?.data?.length || 0,
       pieChartData: aiResponse.charts[1]?.data?.length || 0,
     });
-//uploding datas to database
-          const nChat = new chatModel({
-        user_id: userId,
-        data_id:dataset._id
-      });
+    //uploding datas to database
+    const session = await SessionModel.create({
+      user_id: userId ?? null,
+      session_token: userId ? null : (req.headers["x-session-token"] as string) || null,
+      data_id: dataset._id,
+      title: req.body.title || file.originalname || "Uploaded dataset",
+      messages: [],
+      charts: aiResponse.charts || [],
+      metrics: aiResponse.metrics || {},
+    });
 
-      const nChart = new chartModel({
-        user_id: userId,
-        chat_id: nChat._id,
-        data_id:dataset._id,
-        chart_data:aiResponse.charts
-      });
+    const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
+    uploadSummary();
 
-      nChat.chart_id = nChart._id;
-      const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
-      await Promise.all([nChat.save(), nChart.save(),uploadSummary()]);
-
-//returning response
     return res.status(200).json({
       success: true,
       message: "Dataset processed successfully",
       datasetId: dataset._id,
+      sessionId: session._id,
       r2Url: fileUrl,
       data: {
         metrics: {
