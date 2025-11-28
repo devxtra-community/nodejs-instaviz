@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import UserSession from "../model/activeModel";
-import UserModel from "../model/user";
+import UserSession from "../model/activeModel.ts.ts";
+import UserModel from "../model/user.ts";
 
 interface JwtUser {
   id: string;
@@ -150,6 +150,5 @@ export const endSession = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
  

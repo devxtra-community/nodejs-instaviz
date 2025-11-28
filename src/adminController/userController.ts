@@ -6,7 +6,7 @@ import { log } from "console";
 import { Type } from "@aws-sdk/client-s3";
 import { performance } from "perf_hooks";
 import { start } from "repl";
-import activeModel from "../model/activeModel";
+import activeModel from "../model/activeModel.ts";
 
 
 //function for get allloged users count to admindashboard graph

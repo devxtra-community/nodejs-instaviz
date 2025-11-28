@@ -20,7 +20,6 @@ import authRouter from "./routes/authRoutes.ts";
 import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
 import paymentRouter from "./routes/paymentRoutes.js";
-import sessionRoutes from "./routes/sessionRouter.ts";
 import chatRouter  from "./routes/chatRouter.ts"
 
 // Admin routes
@@ -31,7 +30,7 @@ import { plansRouter } from "./routes/adminroutes/plansRouter.ts";
 import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
 import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
 import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
-
+import activeTimertracker from "./routes/activeTimetracker.ts"
 
 // Middlewares
 import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
@@ -133,7 +132,7 @@ app.use("/auth", authRouter);
 app.use("/upload", uploadRouter);
 app.use("/user", userRouter);
 app.use("/payment", paymentRouter);
-app.use("/session", sessionRoutes);
+
 
 // admin routes
 
@@ -144,6 +143,7 @@ app.use("/admin", tokenrouter);
 app.use("/admin", plansRouter);
 app.use("/admin", activityRouter);
 app.use("/admin", adminAuthRouter);
+app.use("/admin", activeTimertracker);
 
 // file size check
 app.use(fileSizeCheck);

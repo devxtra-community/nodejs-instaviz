@@ -5,7 +5,7 @@ import userModel from '../model/user.ts';
 import { sendOtp } from '../utils/sendEmail.ts';
 import { resetPasswordSchema } from '../services/validation.ts';
 import mongoose from 'mongoose';
-import userSession from '../model/activeModel.ts';
+import userSession from '../model/activeModel.ts.ts';
 import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
 import { loginSchema } from "../services/validation.ts";
