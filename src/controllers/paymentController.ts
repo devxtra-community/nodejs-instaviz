@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { stripe } from "../config/stripe.ts";
 import { CheckoutRequestBody } from "../types/paymentTypes.ts";
+import userModel from "../model/user.ts";
+import { token } from "morgan";
 
 const priceMap: Record<string, number> = {
   Starter: 15,
@@ -38,7 +40,26 @@ export const createCheckoutSession = async (
       success_url: `${process.env.CLIENT_URL}/success`,
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
     });
+    console.log("plan that user take:", plan,"!plan");
+    let user = await userModel.findById(req.cookies.userId);
 
+    if (!user) {
+      res.status(404).json({ message: "User not found", success: false });
+      return;
+    }
+    if (plan === 'Starter') {
+      user.token = (user.token ?? 0) + 3;
+      await user.save();
+    }
+    if (plan === 'Pro') {
+      user.token = (user.token ?? 0) + 7;
+      await user.save();
+    }
+
+    if (plan === 'Enterprise') {
+      user.token = (user.token ?? 0) + 10;
+      await user.save();
+    }
     res
       .status(200)
       .json({ url: session.url, message: "checkout created", success: true });
