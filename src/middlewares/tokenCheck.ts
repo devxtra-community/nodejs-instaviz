@@ -48,7 +48,8 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       }
     }
     catch (err) {
-      console.log("error while cheking  jwt:", err)
+      console.log("error while cheking  jwt:", err);
+      return res.status(401).json({message:"access token expired",success:false})
     }
     const guestIdFromCookie = req.cookies?.userId;
 
