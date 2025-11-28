@@ -8,7 +8,6 @@ export const verifyToken = async (
   next: NextFunction
 ) => {
   console.log("inside verify token");
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
