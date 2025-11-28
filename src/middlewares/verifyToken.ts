@@ -7,7 +7,7 @@ export const verifyToken = async(
   res: Response,
   next: NextFunction
 ) => {
-  console.log("inside verify token");
+  console.log("|||||||inside verify token|||||||");
   
   const authHeader = req.headers.authorization;
 
