@@ -3,6 +3,12 @@ import { Request, Response } from "express";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { SessionModel } from "../model/session";
+import { createChatPrompt } from "../utils/chatPrompt";
+import { modelLight } from "../services/aiModels";
+import { userWantsChart } from "../utils/chatDetection";
+import { runChartAnalysis } from "../services/chatAiService";
+
+import dataModel from "../model/dataModel";
 
 function getUserId(req: Request): string | null {
     return (req as any).user?.userId ?? null;
@@ -46,7 +52,7 @@ export const getSession = async (req: Request, res: Response) => {
     try {
         const userId = getUserId(req);
         const id = req.params.id;
-        console.log(id,userId)
+        console.log(id, userId)
 
         if (!mongoose.Types.ObjectId.isValid(id))
             return res.status(400).json({ error: "Invalid session id" });
@@ -57,7 +63,7 @@ export const getSession = async (req: Request, res: Response) => {
         })
             .populate("data_id")
             .lean();
-            console.log(session);
+        console.log(session);
 
         if (!session) return res.status(404).json({ error: "Not found" });
 
@@ -86,33 +92,66 @@ export const listSessions = async (req: Request, res: Response) => {
 };
 
 export const appendMessage = async (req: Request, res: Response) => {
-  try {
-    const userId = getUserId(req);
-    const id = req.params.id;
+    try {
+        const userId = getUserId(req);
+        const id = req.params.id;
+        const userMessage = req.body.user;
 
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).json({ error: "Invalid session id" });
+        if (!mongoose.Types.ObjectId.isValid(id))
+            return res.status(400).json({ error: "Invalid session id" });
 
-    const message = {
-      user: req.body.user ?? "",
-      ai: req.body.ai ?? "",
-      createdAt: new Date(),
-    };
+        const session = await SessionModel.findOne({ _id: id, user_id: userId }).populate("data_id");
+        if (!session) return res.status(404).json({ error: "Session not found" });
 
-    const session = await SessionModel.findOneAndUpdate(
-      { _id: id, user_id: userId },
-      {
-        $push: { messages: message },
-        updatedAt: new Date()
-      },
-      { new: true }
-    );
+        const dataset = session.data_id;
+        if (!dataset) {
+            return res.json({
+                reply: "Please upload a dataset first.",
+                chart: null,
+            });
+        }
 
-    return res.json(session);
-  } catch (err) {
-    console.error("appendMessage error", err);
-    return res.status(500).json({ error: "Server error" });
-  }
+        let aiReply = "";
+        let generatedChart = null;
+
+        if (userWantsChart(userMessage)) {
+            generatedChart = await runChartAnalysis(userMessage, dataset);
+
+            aiReply = generatedChart
+                ? "Here is the chart you requested."
+                : "I could not generate a chart for that query.";
+        } else {
+            const prompt = createChatPrompt(userMessage, dataset);
+            const chat = modelLight.startChat({ history: [] });
+            const reply = await chat.sendMessage(prompt);
+            aiReply = reply.response.text();
+        }
+
+        console.log("chart",generatedChart);
+
+        session.messages.push({
+            user: userMessage,
+            ai: aiReply,
+            createdAt: new Date(),
+        });
+
+        if (generatedChart) {
+            console.log("inside generated chart")
+            session.charts.push(generatedChart.chart);
+        }
+
+        session.updatedAt = new Date();
+        await session.save();
+
+        return res.json({
+            reply: aiReply,
+            chart: generatedChart,
+        });
+
+    } catch (err) {
+        console.error("appendMessage error", err);
+        return res.status(500).json({ error: "Server error" });
+    }
 };
 
 
@@ -120,23 +159,42 @@ export const appendMessage = async (req: Request, res: Response) => {
 export const appendChart = async (req: Request, res: Response) => {
     try {
         const userId = getUserId(req);
+
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized: No userId found" });
+        }
+
         const id = req.params.id;
 
         if (!req.body.chart)
             return res.status(400).json({ error: "Missing chart data" });
 
-        const session = await SessionModel.findOneAndUpdate(
-            { _id: id, user_id: userId },
-            { $push: { charts: req.body.chart }, updatedAt: new Date() },
-            { new: true }
-        );
+        let session = await SessionModel.findById(id);
+
+        if (!session)
+            return res.status(404).json({ error: "Session not found" });
+
+        if (!session.user_id) {
+            session.user_id = userId;
+        }
+
+        if (session.user_id.toString() !== userId.toString()) {
+            return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        // Now push chart
+        session.charts.push(req.body.chart);
+        session.updatedAt = new Date();
+        await session.save();
 
         return res.json(session);
+
     } catch (err) {
         console.error("appendChart error", err);
         return res.status(500).json({ error: "Server error" });
     }
 };
+
 
 
 export const updateSession = async (req: Request, res: Response) => {
