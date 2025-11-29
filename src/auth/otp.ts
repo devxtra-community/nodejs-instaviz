@@ -68,7 +68,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
     res.cookie("userId", createUser._id, {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     // res.cookie("isGuest", false, {

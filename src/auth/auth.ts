@@ -110,11 +110,11 @@ export const loginCheck = async (req: Request, res: Response) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -221,17 +221,23 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
-     res.clearCookie("refreshToken", {
+    // DELETE refreshToken cookie
+    res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure:process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
     });
 
     res.clearCookie("userId", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
     });
+
     return res.json({
       success: true,
       message: "Device logged out successfully",
@@ -266,7 +272,22 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       _id: { $ne: currentSessionId },
     });
 
-  
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+
+    res.clearCookie("userId", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+
     return res.json({
       success: true,
       message: "Logged out from all other devices",
