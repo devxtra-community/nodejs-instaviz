@@ -24,6 +24,8 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
   try {
     const decoded = Jwt.verify(token, process.env.JWT_SECRET!);
     req.user = decoded;
+  
+    
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
