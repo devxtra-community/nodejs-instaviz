@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Router } from "express";
 
-import { googleCallback } from "../auth/googleAuth.ts"
-import { register, loginCheck, } from "../auth/auth.ts";
+import { googleCallback } from "../auth/googleAuth.ts";
+import { register, loginCheck } from "../auth/auth.ts";
 import { verifyOtp, resendOtp } from "../auth/otp.ts";
 import { refreshAccessToken } from "../services/jwtServices.ts";
 import { deviceLogger } from "../utils/deviceLogger.ts";
@@ -11,13 +11,18 @@ import { forgotPassword } from "../auth/password.ts";
 import { verifyForgotOtp } from "../auth/otp.ts";
 import { resetPassword } from "../auth/password.ts";
 import { getAllSessions } from "../auth/auth.ts";
-import { logoutDevice, } from "../auth/auth.ts";
-import { logoutAllDevices } from "../auth/auth.ts";
-import { cookieCheck } from "../middlewares/cookieCheck.ts"
+import { logoutDevice } from "../auth/logoutAuth.ts";
+import { logoutAllDevices } from "../auth/logoutAuth.ts";
+import { cookieCheck } from "../middlewares/cookieCheck.ts";
 
 const authRouter = Router();
 
-authRouter.post("/logoutAllDevices", verifyToken, logoutAllDevices)
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: User authentication, registration, OTP, password reset, sessions & OAuth
+ */
 
 /**
  * @swagger
@@ -67,11 +72,6 @@ authRouter.post("/login", cookieCheck, loginCheck, deviceLogger);
  *                 type: string
  *               password:
  *                 type: string
- *     responses:
- *       200:
- *         description: OTP sent
- *       400:
- *         description: User already exists
  */
 authRouter.post("/register", register);
 
@@ -79,27 +79,8 @@ authRouter.post("/register", register);
  * @swagger
  * /auth/verifyOtp:
  *   post:
- *     summary: Verify user OTP during registration
+ *     summary: Verify OTP during registration
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - otp
- *             properties:
- *               email:
- *                 type: string
- *               otp:
- *                 type: string
- *     responses:
- *       200:
- *         description: OTP verified successfully
- *       400:
- *         description: Invalid OTP
  */
 authRouter.post("/verifyOtp", verifyOtp);
 
@@ -107,22 +88,8 @@ authRouter.post("/verifyOtp", verifyOtp);
  * @swagger
  * /auth/resendOtp:
  *   post:
- *     summary: Resend OTP
+ *     summary: Resend OTP to email
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: OTP resent
  */
 authRouter.post("/resendOtp", resendOtp);
 
@@ -130,13 +97,8 @@ authRouter.post("/resendOtp", resendOtp);
  * @swagger
  * /auth/newRefreshToken:
  *   post:
- *     summary: Get a new access token using refresh token
+ *     summary: Generate new access token using refresh token
  *     tags: [Auth]
- *     responses:
- *       200:
- *         description: New access token issued
- *       401:
- *         description: Invalid or expired refresh token
  */
 authRouter.post("/newRefreshToken", refreshAccessToken);
 
@@ -146,20 +108,6 @@ authRouter.post("/newRefreshToken", refreshAccessToken);
  *   post:
  *     summary: Request OTP for forgotten password
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: OTP sent
  */
 authRouter.post("/forgotPassword", forgotPassword);
 
@@ -167,7 +115,16 @@ authRouter.post("/forgotPassword", forgotPassword);
  * @swagger
  * /auth/verifyForgotOtp:
  *   post:
- *     summary: Verify OTP for password reset
+ *     summary: Verify OTP sent for password reset
+ *     tags: [Auth]
+ */
+authRouter.post("/verifyForgotOtp", verifyForgotOtp);
+
+/**
+ * @swagger
+ * /auth/resetPassword:
+ *   post:
+ *     summary: Reset password after OTP verification
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -177,21 +134,12 @@ authRouter.post("/forgotPassword", forgotPassword);
  *             type: object
  *             required:
  *               - email
- *               - otp
+ *               - newPassword
  *             properties:
  *               email:
  *                 type: string
- *               otp:
+ *               newPassword:
  *                 type: string
- */
-authRouter.post("/verifyForgotOtp", verifyForgotOtp);
-
-/**
- * @swagger
- * /auth/resetPassword:
- *   post:
- *     summary: Reset user password
- *     tags: [Auth]
  */
 authRouter.post("/resetPassword", resetPassword);
 
@@ -199,7 +147,7 @@ authRouter.post("/resetPassword", resetPassword);
  * @swagger
  * /auth/getAllSessions:
  *   get:
- *     summary: Get all user login sessions
+ *     summary: Get all login sessions for the user
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -210,22 +158,40 @@ authRouter.get("/getAllSessions", verifyToken, getAllSessions);
  * @swagger
  * /auth/logoutDevice:
  *   post:
- *     summary: Logout from a single device session
+ *     summary: Logout from a single device
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  */
 authRouter.post("/logoutDevice", verifyToken, logoutDevice);
 
-// google authentication
+/**
+ * @swagger
+ * /auth/logoutAllDevices:
+ *   post:
+ *     summary: Logout user from all active devices
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ */
+authRouter.post("/logoutAllDevices", verifyToken, logoutAllDevices);
+
 /**
  * @swagger
  * /auth/google:
  *   get:
- *     summary: Google OAuth login
+ *     summary: Login with Google OAuth
  *     tags: [Auth]
  */
-authRouter.get("/google", cookieCheck, passport.authenticate("google", { scope: ["Profile", "email"] }));
+authRouter.get("/google", cookieCheck, (req, res, next) => {
+  const redirect = typeof req.query.redirect === "string" ? req.query.redirect : "/home";
+  const authenticator = passport.authenticate("google", {
+    scope: ["profile", "email"],
+    state: redirect,
+  });
+
+  authenticator(req, res, next);
+});
 
 /**
  * @swagger
@@ -235,12 +201,9 @@ authRouter.get("/google", cookieCheck, passport.authenticate("google", { scope: 
  *     tags: [Auth]
  */
 authRouter.get(
-    "/google/callback",
-    passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
-    googleCallback,
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/auth/google" }),
+  googleCallback,
 );
-
-
-
 
 export default authRouter;

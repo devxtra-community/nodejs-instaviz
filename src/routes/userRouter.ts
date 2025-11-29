@@ -21,7 +21,7 @@ userRouter.get("/token", tokenCount)
  *     description: Fetches the profile details of a user using userId.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -47,7 +47,7 @@ userRouter.get("/:userId", verifyToken, getUserProfile);
  *     description: Allows a user to upload or update their profile picture.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -77,7 +77,7 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *     description: Allows a user to change their password.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -85,9 +85,13 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *           schema:
  *             type: object
  *             required:
+ *               - userId
  *               - oldPassword
  *               - newPassword
  *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: objectId
  *               oldPassword:
  *                 type: string
  *               newPassword:

@@ -2,11 +2,7 @@ import Jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import refreshModel from "../model/refreshtoken";
 
-export const verifyToken = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   console.log("inside verify token");
   const authHeader = req.headers.authorization;
 

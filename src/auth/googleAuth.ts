@@ -2,11 +2,54 @@ import { Request, Response } from "express";
 import Jwt from "jsonwebtoken";
 import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens";
-
+import userModel from "../model/user";
 
 export const googleCallback = async (req: Request, res: Response) => {
   try {
-    const user = req.user as any;
+    const userFromReq = req.user as any;
+
+    const user = await userModel.findById(userFromReq._id);
+
+    if (!user) {
+      const frontendURL = process.env.CLIENT_URL!;
+      const errorMessage = encodeURIComponent("User not found.");
+      return res.redirect(`${frontendURL}/auth/error?message=${errorMessage}`);
+    }
+
+    if (user.isDeleted) {
+      const frontendURL = process.env.CLIENT_URL!;
+      const errorMessage = encodeURIComponent("This account has been deleted.");
+      return res.redirect(`${frontendURL}/auth/error?message=${errorMessage}`);
+    }
+
+    if (user.status === "disabled") {
+      const frontendURL = process.env.CLIENT_URL!;
+      const errorMessage = encodeURIComponent(
+        "Your account has been deactivated by admin. Please contact support.",
+      );
+      return res.redirect(`${frontendURL}/auth/error?message=${errorMessage}`);
+    }
+
+    if (user.isSuspended) {
+      const now = new Date();
+
+      if (user.suspensionEnd && user.suspensionEnd <= now) {
+        user.isSuspended = false;
+        user.suspensionEnd = null;
+        await user.save();
+      } else {
+        const frontendURL = process.env.CLIENT_URL!;
+        const suspensionEndFormatted = user.suspensionEnd
+          ? new Date(user.suspensionEnd).toLocaleString()
+          : "indefinitely";
+        const errorMessage = encodeURIComponent(
+          `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`,
+        );
+        return res.redirect(`${frontendURL}/auth/error?message=${errorMessage}`);
+      }
+    }
+
+    const redirect = typeof req.query.state === "string" ? req.query.state : "/home";
 
     const accessToken = Jwt.sign(
       {
@@ -24,6 +67,7 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     const userAgent = req.headers["user-agent"] || "unknown";
     const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.ip || "unknown";
+
     const session = await refreshModel
       .findOneAndUpdate(
         { userId: user._id },
@@ -43,15 +87,18 @@ export const googleCallback = async (req: Request, res: Response) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     const frontendURL = process.env.CLIENT_URL!;
-    res.redirect(`${frontendURL}/auth/callback?token=${accessToken}&sessionId=${session._id}`);
+    res.redirect(
+      `${frontendURL}/auth/callback?token=${accessToken}&sessionId=${session._id}&redirect=${redirect}`,
+    );
   } catch (err) {
-    console.log("Google OAuth error:", err);
-    res.status(500).json({ message: "Google auth failed" });
+    console.error("Google OAuth error:", err);
+    const frontendURL = process.env.CLIENT_URL!;
+    res.redirect(`${frontendURL}/auth/error?message=Google%20auth%20failed`);
   }
 };

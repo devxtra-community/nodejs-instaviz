@@ -8,7 +8,6 @@ import guestModel from "../model/guest";
 export const userImageUpdate = async (req: Request, res: Response) => {
   try {
     const { userId, image } = req.body;
-    console.log("image router reached");
 
     if (!userId || !image) {
       return res.status(400).json({ message: "image and userId are required." });
@@ -33,8 +32,6 @@ export const userImageUpdate = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log(" User image updated:", updatedUser.picture);
-
     return res.status(200).json({
       message: "Profile image updated successfully",
       imageUrl: updatedUser.picture,
@@ -49,13 +46,11 @@ export const userImageUpdate = async (req: Request, res: Response) => {
 export const changePassword = async (req: Request, res: Response) => {
   try {
     const { userId, oldPassword, newPassword } = req.body;
-    console.log(req.body);
 
     if (!userId || !oldPassword || !newPassword) {
       return res.status(403).json({ message: "All fields required.." });
     }
     const user = await userModel.findOne({ _id: userId });
-    console.log(user);
     if (!user) {
       return res.status(400).json({ message: "User is not found.." });
     }
@@ -80,7 +75,6 @@ export const changePassword = async (req: Request, res: Response) => {
     res.status(500).json(err);
   }
 };
-
 
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
