@@ -41,7 +41,7 @@ const userSchema = new Schema(
     },
     token: {
       type: Number,
-      default: 3
+      default: 2
     },
     place: {
       type: String
@@ -65,8 +65,6 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
-
-
 const userModel = mongoose.model<User>("user", userSchema);
 
 export default userModel;

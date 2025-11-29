@@ -42,6 +42,6 @@ const uploadRouter = Router();
  *       500:
  *         description: Server error
  */
-uploadRouter.post("/fileupload", upload.single("file"), tokenCheck, fileParsing);
+uploadRouter.post("/fileupload",tokenCheck, upload.single("file"), fileParsing);
 
 export default uploadRouter;

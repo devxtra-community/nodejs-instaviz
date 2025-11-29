@@ -6,10 +6,11 @@ import { uploadCsvToR2 } from "../services/r2Service";
 import { createDatasetWithRows } from "../services/datasetService";
 import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
 import dataModel from "../model/dataModel";
-import chartModel from "../model/chart";
-import chatModel from "../model/chat";
 import mongoose from "mongoose";
 import { SessionModel } from "../model/session";
+import userModel from "../model/user";
+import { token } from "morgan";
+import guestModel from "../model/guest";
 
 
 interface UserPayload {
@@ -90,24 +91,16 @@ export const fileParsing = async (req: Request, res: Response) => {
       metrics: aiResponse.metrics || {},
     });
 
-    const nChat = new chatModel({
-      session_id: session._id,
-      messages: []
-    });
-
-
-    const nChart = new chartModel({
-      user_id:dataset.user_id,
-      session_id: session._id,
-      data_id: dataset._id,
-      chart_data: aiResponse.charts,
-    });
-
-    nChat.chart_id = nChart._id;
     const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
-    await Promise.all([nChat.save(), nChart.save(), uploadSummary()]);
-
-    //returning response
+    uploadSummary();
+    console.log("console logging cookie before sending response :", req.cookies)
+    if (req.cookies.isGuest) {
+      const tokenDecrease = await guestModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      if (tokenDecrease) console.log("token decreased succesfully from the guest user :", tokenDecrease.token)
+    } else {
+      const tokenDecrease = await userModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      if (tokenDecrease) console.log("token decreased succesfully from the user:", tokenDecrease.token)
+    }
     return res.status(200).json({
       success: true,
       message: "Dataset processed successfully",
