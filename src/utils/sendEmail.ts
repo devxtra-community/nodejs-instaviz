@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
-export const sendOtp = async (email: string, otp: string) => {
-  console.log("reached here at send otp");
 
+export const sendOtp = async (email: string, otp: string) => {
   try {
-    let sendMail = nodemailer.createTransport({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL,
@@ -11,15 +10,27 @@ export const sendOtp = async (email: string, otp: string) => {
       },
     });
 
-    const info = await sendMail.sendMail({
-      from: "shanuvr.work.org@gmail.com",
+    await transporter.sendMail({
+      from: "itsteamnextra@gmail.com",
       to: email,
-      subject: "from you 2000 years ago",
-      text: `your otp is ${otp}`,
+      subject: "Here’s your verification code ",
+      text: `
+Hey there!
+
+Just confirming it's you. 
+Here’s your OTP:
+
+ ${otp}
+
+This code will be valid for the next 10 minutes.
+
+If you didn’t request this, feel free to ignore this email.
+– InstaviZ
+      `,
     });
-    console.log("opt sentttt");
+
+    console.log("OTP sent");
   } catch (err) {
-    console.log("eroor woeked");
-    console.log("error sending email", err);
+    console.log("Error sending OTP:", err);
   }
 };

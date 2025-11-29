@@ -1,8 +1,5 @@
 import express from "express";
-import {
-  createCheckoutSession,
-  handleWebhook,
-} from "../controllers/paymentController.ts";
+import { createCheckoutSession, handleWebhook } from "../controllers/paymentController.ts";
 
 const router = express.Router();
 
@@ -59,10 +56,6 @@ router.post("/create-checkout-session", createCheckoutSession);
  *       400:
  *         description: Invalid signature or error
  */
-router.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  handleWebhook
-);
+router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
 
 export default router;

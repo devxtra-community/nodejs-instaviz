@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import otpModel from "../model/otpModel.ts";
 import userModel from "../model/user.ts";
@@ -14,16 +14,20 @@ import { theValidation } from "../services/validation.ts";
 export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Email and password are required",
       });
     }
+
     const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
-      const details = error.details.map(err => err.message);
-      return res.status(400).json({ success: false, message: details });
+      return res.status(400).json({
+        success: false,
+        message: error.details.map(d => d.message),
+      });
     }
 
     const user = await userModel.findOne({ email });
@@ -35,6 +39,13 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    if (user.isDeleted) {
+      return res.status(403).json({
+        success: false,
+        message: "This account has been deleted.",
+      });
+    }
+
     if (!user.password) {
       return res.status(400).json({
         success: false,
@@ -42,19 +53,42 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password!);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
+
+    if (user.status === "disabled") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been deactivated by admin. Please contact support.",
+      });
+    }
+
+    if (user.isSuspended) {
+      const now = new Date();
+
+      if (user.suspensionEnd && user.suspensionEnd <= now) {
+        user.isSuspended = false;
+        user.suspensionEnd = null;
+        await user.save();
+      } else {
+        const suspensionEndFormatted = user.suspensionEnd
+          ? new Date(user.suspensionEnd).toLocaleString()
+          : "an indefinite period";
+
+        return res.status(403).json({
+          success: false,
+          message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`,
+        });
+      }
+    }
     const accessToken = signJwt({ id: user._id, email: user.email });
     const refreshToken = Jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-      },
+      { id: user._id, email: user.email },
       process.env.REFRESH_SECRET!,
       { expiresIn: "30d" },
     );
@@ -73,11 +107,12 @@ export const loginCheck = async (req: Request, res: Response) => {
       lastActiveAt: new Date(),
       isValid: true,
     });
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
     return res.status(200).json({
@@ -89,12 +124,17 @@ export const loginCheck = async (req: Request, res: Response) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        picture: user.picture,
+        status: user.status,
+        token: user.token,
       },
     });
   } catch (err) {
+    console.error("Login error:", err);
+
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error. Please try again later.",
     });
   }
 };
@@ -102,6 +142,8 @@ export const loginCheck = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
+
+    console.log("Here", req.body);
 
     const { error } = theValidation.validate(req.body, { abortEarly: false });
 

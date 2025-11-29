@@ -2,9 +2,9 @@ import { Router } from "express";
 import upload from "../utils/multerUpload";
 import { fileParsing } from "../controllers/uploadController";
 import { tokenCheck } from "../middlewares/tokenCheck";
+import { deviceLogger } from "../utils/deviceLogger";
 
 const uploadRouter = Router();
-
 /**
  * @swagger
  * tags:
