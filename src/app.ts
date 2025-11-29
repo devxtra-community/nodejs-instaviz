@@ -113,12 +113,10 @@ app.use("/auth", authRouter)
 app.use("/payment", paymentRouter)
 app.use("/chat",chatRouter)
 app.use("/session",sessionRouter)
+
 // admin routes
 app.use("/admin/dashboard", adminrouter);
 app.use("/admin/dashboard", insightsRouter);
-
-//file upload check
-app.use(fileSizeCheck);
 
 //listening
 app.listen(process.env.PORT, async () => {

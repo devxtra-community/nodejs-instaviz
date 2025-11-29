@@ -6,8 +6,6 @@ import { uploadCsvToR2 } from "../services/r2Service";
 import { createDatasetWithRows } from "../services/datasetService";
 import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
 import dataModel from "../model/dataModel";
-import chartModel from "../model/chart";
-import chatModel from "../model/chat";
 import mongoose from "mongoose";
 import { SessionModel } from "../model/session";
 
@@ -90,24 +88,9 @@ export const fileParsing = async (req: Request, res: Response) => {
       metrics: aiResponse.metrics || {},
     });
 
-    const nChat = new chatModel({
-      session_id: session._id,
-      messages: []
-    });
-
-
-    const nChart = new chartModel({
-      user_id:dataset.user_id,
-      session_id: session._id,
-      data_id: dataset._id,
-      chart_data: aiResponse.charts,
-    });
-
-    nChat.chart_id = nChart._id;
     const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
-    await Promise.all([nChat.save(), nChart.save(), uploadSummary()]);
+    uploadSummary();
 
-    //returning response
     return res.status(200).json({
       success: true,
       message: "Dataset processed successfully",
