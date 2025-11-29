@@ -1,8 +1,11 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import otpModel from "../model/otpModel.ts";
 import userModel from "../model/user.ts";
 import { sendOtp } from "../utils/sendEmail.ts";
+import { resetPasswordSchema } from '../services/validation.ts';
+import mongoose from 'mongoose';
+import userSession from '../model/activeModel.ts.ts';
 import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
 import { loginSchema } from "../services/validation.ts";
@@ -11,10 +14,12 @@ import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens.ts";
 import { theValidation } from "../services/validation.ts";
 
+
 export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
+    // Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -22,6 +27,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    // Validate with Joi schema
     const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
       return res.status(400).json({
@@ -30,6 +36,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    // Fetch user
     const user = await userModel.findOne({ email });
 
     if (!user) {
@@ -39,6 +46,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    // Check if account is deleted
     if (user.isDeleted) {
       return res.status(403).json({
         success: false,
@@ -46,13 +54,16 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+    // Check if password exists (for non-Google users)
     if (!user.password) {
       return res.status(400).json({
         success: false,
-        message: "This account was created using Google. Please login with Google.",
+        message:
+          "This account was created using Google. Please login with Google.",
       });
     }
 
+    // Verify password
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -61,6 +72,9 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
+
+
+    // STATUS CHECK - Check if user is disabled by admin
     if (user.status === "disabled") {
       return res.status(403).json({
         success: false,
@@ -68,34 +82,49 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-    if (user.isSuspended) {
-      const now = new Date();
+  
+  // suspension check
+// suspension check (your existing code is correct, just improved message)
+if (user.isSuspended) {
+  const now = new Date();
 
-      if (user.suspensionEnd && user.suspensionEnd <= now) {
-        user.isSuspended = false;
-        user.suspensionEnd = null;
-        await user.save();
-      } else {
-        const suspensionEndFormatted = user.suspensionEnd
-          ? new Date(user.suspensionEnd).toLocaleString()
-          : "an indefinite period";
+  // If suspension expired → auto unsuspend
+  if (user.suspensionEnd && user.suspensionEnd <= now) {
+    user.isSuspended = false;
+    user.suspensionEnd = null;
+    await user.save();
+  } else {
+    // Format the date properly for better UX
+    const suspensionEndFormatted = user.suspensionEnd
+      ? new Date(user.suspensionEnd).toLocaleString()
+      : "an indefinite period";
+    
+    return res.status(403).json({
+      success: false,
+      message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`
+    });
+  }
+}    // All checks passed - Create tokens
 
-        return res.status(403).json({
-          success: false,
-          message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`,
-        });
-      }
-    }
     const accessToken = signJwt({ id: user._id, email: user.email });
     const refreshToken = Jwt.sign(
       { id: user._id, email: user.email },
       process.env.REFRESH_SECRET!,
+
+
       { expiresIn: "30d" },
+
+     
+
     );
 
+    // Store refresh token hash
     const hashed = hashToken(refreshToken);
     const userAgent = req.headers["user-agent"] || "unknown";
-    const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.ip || "unknown";
+    const ip =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
+      req.ip ||
+      "unknown";
 
     const session = await refreshModel.create({
       userId: user._id,
@@ -108,15 +137,19 @@ export const loginCheck = async (req: Request, res: Response) => {
       isValid: true,
     });
 
+    // Set refresh token cookie
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // Use secure in production
       sameSite: "strict",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
+    // ✅ Success Response
     return res.status(200).json({
       success: true,
+
       message: "Login successful",
       accessToken,
       sessionId: session._id,
@@ -130,6 +163,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
+
     console.error("Login error:", err);
 
     return res.status(500).json({
@@ -138,6 +172,33 @@ export const loginCheck = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getUserProfile = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
+    }
+
+
+    const user = await userModel.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : undefined },
+        { googleId: userId },
+      ].filter(Boolean),
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      user,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user", err });
+  }
+};
+
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -190,6 +251,94 @@ export const getAllSessions = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Get sessions error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const logoutDevice = async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.body;
+    interface JwtUser {
+      id: string;
+      email: string;
+    }
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: "Session ID required" });
+    }
+
+    const session = await refreshModel.findOne({
+      _id: sessionId,
+      userId,
+    });
+
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Session not found" });
+    }
+
+    await refreshModel.deleteOne({ _id: sessionId });
+
+
+    res.clearCookie("refreshToken", {
+
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    res.clearCookie("userId", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    return res.json({
+      success: true,
+      message: "Device logged out successfully",
+    });
+  } catch (err) {
+    console.error("Logout Device Error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+
+};
+
+export const logoutAllDevices = async (req: Request, res: Response) => {
+  console.log("reached here at logout all devices");
+  try {
+    interface JwtUser {
+      id: string;
+      email: string;
+    }
+
+    const user = req.user as JwtUser;
+    const userId = user.id;
+
+    const { currentSessionId } = req.body;
+    if (!currentSessionId) {
+      return res.status(400).json({ success: false, message: "Current session ID required" });
+    }
+
+    await refreshModel.deleteMany({
+      userId,
+      _id: { $ne: currentSessionId },
+    });
+
+  
+    return res.json({
+      success: true,
+      message: "Logged out from all other devices",
+    });
+  } catch (err) {
+    console.error("Logout All Devices Error", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
