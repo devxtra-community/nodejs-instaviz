@@ -3,11 +3,11 @@ import bcrypt from "bcrypt";
 import userModel from "../model/user";
 import { uploadimageToSupabase } from "../utils/imageUploader";
 import mongoose from "mongoose";
+import guestModel from "../model/guest";
 
 export const userImageUpdate = async (req: Request, res: Response) => {
   try {
     const { userId, image } = req.body;
-    console.log("image router reached");
 
     if (!userId || !image) {
       return res.status(400).json({ message: "image and userId are required." });
@@ -32,8 +32,6 @@ export const userImageUpdate = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log(" User image updated:", updatedUser.picture);
-
     return res.status(200).json({
       message: "Profile image updated successfully",
       imageUrl: updatedUser.picture,
@@ -48,13 +46,11 @@ export const userImageUpdate = async (req: Request, res: Response) => {
 export const changePassword = async (req: Request, res: Response) => {
   try {
     const { userId, oldPassword, newPassword } = req.body;
-    console.log(req.body);
 
     if (!userId || !oldPassword || !newPassword) {
       return res.status(403).json({ message: "All fields required.." });
     }
     const user = await userModel.findOne({ _id: userId });
-    console.log(user);
     if (!user) {
       return res.status(400).json({ message: "User is not found.." });
     }
@@ -80,7 +76,6 @@ export const changePassword = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -105,3 +100,23 @@ export const getUserProfile = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching user", err });
   }
 };
+
+export const tokenCount = async (req: Request, res: Response) => {
+  try {
+    console.log("cookie logging inside tokencount:", req.cookies)
+    if (req.cookies.isGuest == 'true') {
+      const user = await guestModel.findById(req.cookies.userId)
+      const userToken = user?.token
+      return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
+    }
+    else {
+      const user = await userModel.findById(req.cookies.userId)
+      const userToken = user?.token
+      return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
+    }
+  }
+  catch (err) {
+    console.log("errer at usertoken checking :", err);
+    return res.status(500).json({ message: "internal server error", err, success: false })
+  }
+}

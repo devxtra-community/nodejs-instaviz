@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { getUserProfile } from "../controllers/userController.ts";
-import { changePassword, userImageUpdate } from "../controllers/userController.ts";
+import { changePassword, userImageUpdate, tokenCount } from "../controllers/userController.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
 
 const userRouter = Router();
+userRouter.get("/token", tokenCount)
 
 /**
  * @swagger
@@ -106,5 +107,6 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *         description: Server error
  */
 userRouter.post("/newpassword", verifyToken, changePassword);
+
 
 export default userRouter;
