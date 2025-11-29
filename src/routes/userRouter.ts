@@ -4,6 +4,7 @@ import { changePassword, userImageUpdate, tokenCount } from "../controllers/user
 import { verifyToken } from "../middlewares/verifyToken.ts";
 
 const userRouter = Router();
+userRouter.get("/token", tokenCount)
 
 /**
  * @swagger
@@ -103,6 +104,5 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  */
 userRouter.post("/newpassword", verifyToken, changePassword);
 
-userRouter.get("/token", tokenCount)
 
 export default userRouter;
