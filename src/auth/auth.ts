@@ -137,7 +137,13 @@ if (user.isSuspended) {
       isValid: true,
     });
 
-    // Set refresh token cookie
+    res.cookie("userId", user._id.toString(), {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
