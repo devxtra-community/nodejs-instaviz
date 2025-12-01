@@ -84,6 +84,7 @@ export const fetchAllgustusers = async(req:Request,res:Response)=>{
    const getAllgustusers  = await guestModel.find().countDocuments()
    res.status(200).json({message:"all gust users fetched successfully",allgustusers:getAllgustusers,success:true})
    
+   
   }
   catch(err){console.log(err),res.status(500).json({message:"not get gustusers count"});
   }
