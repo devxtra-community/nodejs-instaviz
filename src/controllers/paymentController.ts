@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { stripe } from "../config/stripe.ts";
 import { CheckoutRequestBody } from "../types/paymentTypes.ts";
+import userModel from "../model/user.ts";
+import { token } from "morgan";
 
 const priceMap: Record<string, number> = {
   Starter: 15,
@@ -13,18 +15,21 @@ export const createCheckoutSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { plan } = req.body;
+    let { plan } = req.body;
+    plan = plan.trim();
 
     if (!priceMap[plan]) {
-      res
-        .status(400)
-        .json({ message: "Invalid plan selected", success: false });
+      res.status(400).json({ message: "Invalid plan selected", success: false });
       return;
     }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
+      metadata:{
+        userId: req.cookies.userId,
+        plan,
+      },
       line_items: [
         {
           price_data: {
@@ -39,9 +44,11 @@ export const createCheckoutSession = async (
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
     });
 
-    res
-      .status(200)
-      .json({ url: session.url, message: "checkout created", success: true });
+    res.status(200).json({
+      url: session.url,
+      success: true
+    });
+
   } catch (error: any) {
     console.error("Stripe Error (createCheckoutSession):", error);
     res.status(500).json({
@@ -51,6 +58,7 @@ export const createCheckoutSession = async (
   }
 };
 
+
 export const handleWebhook = async (
   req: Request,
   res: Response
@@ -59,6 +67,7 @@ export const handleWebhook = async (
   let event;
 
   try {
+    console.log("reached here at webhook !!!!!")
     event = stripe.webhooks.constructEvent(
       req.body,
       sig as string,
@@ -66,16 +75,32 @@ export const handleWebhook = async (
     );
   } catch (err: any) {
     console.error("Webhook Error:", err.message);
-    res
-      .status(400)
-      .json({ message: `Webhook Error: ${err.message}`, success: false });
-    return;
+    res.status(400).json({ message: `Webhook Error: ${err.message}`, success: false });
+    return;  
   }
 
   if (event.type === "checkout.session.completed") {
+    console.log("reached here at webhook")
+
     const session = event.data.object as any;
-    console.log("Payment successful:", session);
+
+    const userId = session.metadata.userId;
+    const plan = session.metadata.plan;
+
+    let user = await userModel.findById(userId);
+    console.log("user!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",user);
+    if (!user) {
+      res.status(404).json({ message: "User not found", success: false });
+      return;  
+    }
+
+    if (plan === "Starter") user.token += 3;
+    if (plan === "Pro") user.token += 7;
+    if (plan === "Enterprise") user.token += 10;
+
+    await user.save();
   }
 
-  res.json({ received: true, message: "payment received", success: true });
+  res.json({ received: true, message: "payment received", success: true }); 
 };
+

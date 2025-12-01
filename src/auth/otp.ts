@@ -6,6 +6,7 @@ import { sendOtp } from "../utils/sendEmail.ts";
 import { generateOtp } from "../utils/otpGenerate.ts";
 import Jwt from "jsonwebtoken";
 import { signJwt } from "../services/jwtServices.ts";
+import guestModel from "../model/guest.ts";
 
 
 export const verifyOtp = async (req: Request, res: Response) => {
@@ -33,40 +34,57 @@ export const verifyOtp = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(otpData.password, 10);
-    console.log("after hashed pass");
-
+    console.log("checking user cookie :", req.cookies);
+    if (req.cookies.userId && req.cookies.isGuest == 'true') {
+      const guestUser = await guestModel.findById(req.cookies.userId);
+      const existingUserToken = guestUser?.token;
+      await guestModel.findByIdAndDelete(req.cookies.userId)
+      const createUser = await userModel.create({
+        _id: req.cookies.userId,
+        token: existingUserToken,
+        name: otpData.name,
+        email: otpData.email,
+        password: hashedPassword,
+      });
+      await otpModel.deleteOne({ email });
+      res.clearCookie("isGuest", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+      return res.status(200).json({
+        success: true,
+        message: "Registration completed successfully"
+      });
+    }
+    console.log("there is no guest:userId  on cookie", req.cookies);
     const createUser = await userModel.create({
       name: otpData.name,
       email: otpData.email,
       password: hashedPassword,
     });
     console.log("after create user");
-
-    console.log(createUser);
-
-    console.log("after loging create logging");
-    const accessToken = signJwt({ id: otpData._id, email: otpData.email });
-    const refreshToken = Jwt.sign(
-      { id: otpData._id, email: otpData.email },
-      process.env.REFRESH_SECRET!,
-      { expiresIn: "30d" },
-    );
-
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("userId", createUser._id, {
       httpOnly: true,
       secure: false,
       sameSite: "strict",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
+    // res.cookie("isGuest", false, {
+    //   httpOnly: true,
+    //   secure: false,
+    //   sameSite: "strict",
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    // });
     await otpModel.deleteOne({ email });
 
     return res.status(200).json({
       success: true,
-      message: "Registration completed successfully",
-      accessToken: accessToken,
+      message: "Registration completed successfully"
     });
   } catch (err) {
-    console.log("veryfyotp catch woerked", err);
+    console.log("veryfyotp catch worked", err);
     res.status(500).json({ message: "Internal server errror", error: err });
   }
 };

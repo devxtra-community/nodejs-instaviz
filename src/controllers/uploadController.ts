@@ -6,9 +6,10 @@ import { uploadCsvToR2 } from "../services/r2Service";
 import { createDatasetWithRows } from "../services/datasetService";
 import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
 import dataModel from "../model/dataModel";
-import chartModel from "../model/chart";
-import chatModel from "../model/chat";
 import mongoose from "mongoose";
+import { SessionModel } from "../model/session";
+import userModel from "../model/user";
+import guestModel from "../model/guest";
 
 
 interface UserPayload {
@@ -71,35 +72,32 @@ export const fileParsing = async (req: Request, res: Response) => {
       console.error(" Invalid AI response structure:", aiResponse);
       throw new Error("AI response missing required fields");
     }
-
-    console.log(" Final response summary:", {
-      totalRows: aiResponse.metrics.total_rows,
-      charts: aiResponse.charts.length,
-      barChartData: aiResponse.charts[0]?.data?.length || 0,
-      pieChartData: aiResponse.charts[1]?.data?.length || 0,
+    
+    const session = await SessionModel.create({
+      user_id: userId ?? null,
+      session_token: userId ? null : (req.headers["x-session-token"] as string) || null,
+      data_id: dataset._id,
+      title: req.body.title || file.originalname || "Uploaded dataset",
+      messages: [],
+      charts: aiResponse.charts || [],
+      metrics: aiResponse.metrics || {},
     });
-//uploding datas to database
-          const nChat = new chatModel({
-        user_id: userId,
-        data_id:dataset._id
-      });
 
-      const nChart = new chartModel({
-        user_id: userId,
-        chat_id: nChat._id,
-        data_id:dataset._id,
-        chart_data:aiResponse.charts
-      });
-
-      nChat.chart_id = nChart._id;
-      const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
-      await Promise.all([nChat.save(), nChart.save(),uploadSummary()]);
-
-//returning response
+    const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
+    uploadSummary();
+    console.log("console logging cookie before sending response :", req.cookies)
+    if (req.cookies.isGuest) {
+      const tokenDecrease = await guestModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      if (tokenDecrease) console.log("token decreased succesfully from the guest user :", tokenDecrease.token)
+    } else {
+      const tokenDecrease = await userModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      if (tokenDecrease) console.log("token decreased succesfully from the user:", tokenDecrease.token)
+    }
     return res.status(200).json({
       success: true,
       message: "Dataset processed successfully",
       datasetId: dataset._id,
+      sessionId: session._id,
       r2Url: fileUrl,
       data: {
         metrics: {

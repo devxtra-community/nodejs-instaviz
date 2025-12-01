@@ -10,10 +10,10 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 }
 
 const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
+  destination: function (_req:Request, _file, cb) {
     cb(null, UPLOAD_DIR);
   },
-  filename: function (_req, file, cb) {
+  filename: function (_req:Request, file, cb) {
     const suffix = Date.now() + '_' + Math.round(Math.random() * 1e9);
     const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     cb(null, `${suffix}_${safeName}`);
@@ -31,10 +31,10 @@ function fileFiltercsv(_req: Request, file: Express.Multer.File, cb: FileFilterC
   cb(null, true);
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 const upload = multer({
-  storage,
+  storage:storage,
   fileFilter: fileFiltercsv,
   limits: { fileSize: MAX_FILE_SIZE, files: 1 },
 });
