@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import userModel from "../model/user";
 import { uploadimageToSupabase } from "../utils/imageUploader";
 import mongoose from "mongoose";
+import guestModel from "../model/guest";
 
 export const userImageUpdate = async (req: Request, res: Response) => {
   try {
@@ -99,3 +100,23 @@ export const getUserProfile = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching user", err });
   }
 };
+
+export const tokenCount = async (req: Request, res: Response) => {
+  try {
+    console.log("cookie logging inside tokencount:", req.cookies)
+    if (req.cookies.isGuest == 'true') {
+      const user = await guestModel.findById(req.cookies.userId)
+      const userToken = user?.token
+      return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
+    }
+    else {
+      const user = await userModel.findById(req.cookies.userId)
+      const userToken = user?.token
+      return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
+    }
+  }
+  catch (err) {
+    console.log("errer at usertoken checking :", err);
+    return res.status(500).json({ message: "internal server error", err, success: false })
+  }
+}

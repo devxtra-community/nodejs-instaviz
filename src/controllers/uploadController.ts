@@ -8,6 +8,9 @@ import { analyzeDatasetWithAiOrFallback } from "../services/aiAnalysisService";
 import dataModel from "../model/dataModel";
 import mongoose from "mongoose";
 import { SessionModel } from "../model/session";
+import userModel from "../model/user";
+import { token } from "morgan";
+import guestModel from "../model/guest";
 
 
 interface UserPayload {
@@ -90,7 +93,14 @@ export const fileParsing = async (req: Request, res: Response) => {
 
     const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
     uploadSummary();
-
+    console.log("console logging cookie before sending response :", req.cookies)
+    if (req.cookies.isGuest) {
+      const tokenDecrease = await guestModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      if (tokenDecrease) console.log("token decreased succesfully from the guest user :", tokenDecrease.token)
+    } else {
+      const tokenDecrease = await userModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      if (tokenDecrease) console.log("token decreased succesfully from the user:", tokenDecrease.token)
+    }
     return res.status(200).json({
       success: true,
       message: "Dataset processed successfully",
