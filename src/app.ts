@@ -14,13 +14,11 @@ import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
 import sessionRouter from "./routes/sessionRoutes.ts";
 import paymentRouter from "./routes/paymentRoutes.js";
+import { handleWebhook } from "./controllers/paymentController.ts";
 // Admin routes
 import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
 import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
 dotenv.config();
-// import multer, { FileFilterCallback } from "multer";
-// import path from "path";
-// import { raw } from "body-parser";
 
 import { tokenrouter } from "./routes/adminroutes/tokenRouter.ts";
 import { plansRouter } from "./routes/adminroutes/plansRouter.ts";
@@ -33,6 +31,8 @@ import router from "./routes/sessionRouter.ts";
 import activeTimertracker from "./routes/activeTimetracker.ts";
 
 const app = express();
+
+app.post("/payment/webhook", express.raw({ type: "application/json" }),handleWebhook);
 
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
@@ -120,7 +120,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return limiter(req, res, next);
 });
 
-app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
 
