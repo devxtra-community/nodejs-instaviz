@@ -103,15 +103,17 @@ export const getUserProfile = async (req: Request, res: Response) => {
 
 export const tokenCount = async (req: Request, res: Response) => {
   try {
-    console.log("cookie logging inside tokencount:", req.cookies)
+    // console.log("cookie logging inside tokencount:", req.cookies)
     if (req.cookies.isGuest == 'true') {
       const user = await guestModel.findById(req.cookies.userId)
       const userToken = user?.token
+      console.log("user token as a guest user")
       return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
     }
     else {
       const user = await userModel.findById(req.cookies.userId)
       const userToken = user?.token
+      console.log("user token as a user")
       return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
     }
   }

@@ -14,7 +14,6 @@ import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
 import sessionRouter from "./routes/sessionRoutes.ts";
 import paymentRouter from "./routes/paymentRoutes.js";
-import chatRouter from "./routes/chatRouter.ts";
 // Admin routes
 import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
 import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
@@ -130,7 +129,6 @@ app.use("/upload", fileSizeCheck, uploadRouter);
 app.use("/user", userRouter);
 app.use("/auth", authRouter);
 app.use("/payment", paymentRouter);
-app.use("/chat", chatRouter);
 app.use("/session", sessionRouter);
 // admin routes
 
