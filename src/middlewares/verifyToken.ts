@@ -41,6 +41,8 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
       message: "Session expired or logged out",
     });
   }
+  session.lastActiveAt = new Date();
+  await session.save();
 
   next();
 };

@@ -4,7 +4,7 @@ import { hashToken } from "../utils/hashTokens";
 import refreshModel from "../model/refreshtoken";
 
 export const signJwt = (payload: object) => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "10s" });
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "15m" });
 };
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
@@ -28,7 +28,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     const jwtPayload = { id: correctCheck.id, email: correctCheck.email };
 
     const newAccessToken = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
-      expiresIn: "10s",
+      expiresIn: "15m",
     });
 
     return res.status(200).json({ success: true, newAccessToken });
