@@ -17,6 +17,7 @@ export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => 
 
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+      
 
       if (decoded.role !== "admin") {
         return res.status(403).json({

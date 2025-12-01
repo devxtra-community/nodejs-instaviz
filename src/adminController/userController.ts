@@ -104,18 +104,61 @@ export const getAllusers = async (req: Request, res: Response) => {
 
 //get allusers to a single page
 
-export const alluserspage = async(req:Request,res:Response)=>{
+export const alluserspage = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;  // default page = 1
+    const limit = 24;                          // 24 users per page
 
-  try{
-    const loggedusers = await userModel.find();
-    const gustusers = await guestModel.find();
-    const allusertopage = [...loggedusers,...gustusers].flat()
-    res.status(200).json({message:"allusers got to page",alluser:allusertopage,success:true})}
+    // Fetch logged users
+    const loggedUsers = await userModel
+      .find()
+      .select("_id name email picture avatar profilePicture")
+      .lean();
 
-  catch(err){
-   res.status(500).json({message:"all users couldint get page",success:false,err})
+    // Fetch guest users
+    const guestUsers = await guestModel
+      .find()
+      .select("_id name email picture avatar profilePicture")
+      .lean();
+
+    // Combine both user types
+    let allUsers = [...loggedUsers, ...guestUsers];
+
+    // Optional sorting (newest first)
+    allUsers.sort((a, b) => (b._id.toString() > a._id.toString() ? 1 : -1));
+
+    // Pagination
+    const total = allUsers.length;
+    const totalPages = Math.ceil(total / limit);
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const users = allUsers.slice(startIndex, endIndex);
+
+    // Send response
+    return res.status(200).json({
+      success: true,
+      message: "Paginated users fetched",
+      users,         // 24 users here
+      total,         // total count of all users
+      totalPages,    // number of pages
+      page,          // current page
+      limit          // always 24
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to paginate users",
+      error: err
+    });
   }
-}
+};
+
+
+
+
 
 //user single page 
 
@@ -383,18 +426,4 @@ export const unsuspendUser = async (req: Request, res: Response) => {
 };
 
 //pagination for all users page
-export const getalluserspagination = async(req:Request,res:Response)=>{
-  try{
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 30;
-  const skip = (page - 1) * limit;
 
-    const [users, total] = await Promise.all([
-      userModel.find().skip(skip).limit(limit),userModel.countDocuments()
-      ]);
-      res.json({ success: true,users,total,page,totalPages: Math.ceil(total / limit)});
-       }
-  catch(err){
-     res.status(500).json({message:"pegination not corrected",err})
-  }
-}

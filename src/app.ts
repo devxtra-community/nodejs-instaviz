@@ -29,7 +29,7 @@ import { dashboardRouter } from "./routes/adminroutes/dashboardRouter.ts";
 import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
 import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
 import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
-import router from "./routes/sessionRouter.ts";
+import router from "./routes/sessionRoutes.ts"
 import activeTimertracker from "./routes/activeTimetracker.ts";
 
 const app = express();
@@ -90,6 +90,7 @@ app.use(limiter);
 //database connection
 const connection = async () => {
   try {
+    
     await mongoose.connect(process.env.mongo_uri!);
     console.log("Mongoose connected");
   } catch (err) {
@@ -140,7 +141,7 @@ app.use("/admin/activities", activityRouter);
 app.use("/admin/user", adminUserRouter);
 app.use("/admin/token", tokenrouter);
 app.use("/admin/plans", plansRouter);
-app.use("/session", router);
+
 
 app.use("/admin", activeTimertracker);
 
