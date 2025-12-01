@@ -7,8 +7,8 @@ import { createChatPrompt } from "../utils/chatPrompt";
 import { modelLight } from "../services/aiModels";
 import { userWantsChart } from "../utils/chatDetection";
 import { runChartAnalysis } from "../services/chatAiService";
+import userModel from "../model/user";
 
-import dataModel from "../model/dataModel";
 
 function getUserId(req: Request): string | null {
     return (req as any).user?.userId ?? null;
@@ -31,14 +31,14 @@ export const createSession = async (req: Request, res: Response) => {
             messages: req.body.messages || [],
             charts: req.body.charts || [],
             metrics: req.body.metrics || {},
+            chart_count: 0,
+            free_chart_limit: 2,
         };
 
         const session = await SessionModel.create(payload);
 
-        // Return consistent envelope the frontend expects
         return res.status(201).json({
             session,
-            // only send session_token when we generated/used one (guest)
             ...(session_token ? { session_token } : {}),
         });
     } catch (err) {
@@ -63,7 +63,6 @@ export const getSession = async (req: Request, res: Response) => {
         })
             .populate("data_id")
             .lean();
-        // console.log(session);
 
         if (!session) return res.status(404).json({ error: "Not found" });
 
@@ -111,42 +110,83 @@ export const appendMessage = async (req: Request, res: Response) => {
             });
         }
 
-        let aiReply = "";
-        let generatedChart = null;
-
-        if (userWantsChart(userMessage)) {
-            generatedChart = await runChartAnalysis(userMessage, dataset);
-
-            aiReply = generatedChart
-                ? "Here is the chart you requested."
-                : "I could not generate a chart for that query.";
-        } else {
+        if (!userWantsChart(userMessage)) {
             const prompt = createChatPrompt(userMessage, dataset);
             const chat = modelLight.startChat({ history: [] });
             const reply = await chat.sendMessage(prompt);
-            aiReply = reply.response.text();
+            const aiReply = reply.response.text();
+
+            session.messages.push({
+                user: userMessage,
+                ai: aiReply,
+                createdAt: new Date(),
+            });
+            session.updatedAt = new Date();
+            await session.save();
+
+            return res.json({ reply: aiReply, chart: null });
         }
 
-        console.log("chart",generatedChart);
+        if (session.chart_count < session.free_chart_limit) {
+            const generatedChart = await runChartAnalysis(userMessage, dataset);
+
+            session.chart_count = (session.chart_count || 0) + 1;
+            if (generatedChart?.chart) session.charts.push(generatedChart.chart);
+
+            session.messages.push({
+                user: userMessage,
+                ai: generatedChart ? "Here is your chart." : "Could not generate chart.",
+                createdAt: new Date(),
+            });
+            session.updatedAt = new Date();
+            await session.save();
+
+            return res.json({
+                reply: generatedChart ? "Here is your chart." : "Could not generate chart.",
+                chart: generatedChart?.chart || null
+            });
+
+        }
+        const confirmToken: boolean = req.body.confirmToken === true;
+        if (!confirmToken) {
+            return res.json({
+                needTokenConfirmation: true,
+                message: "You have used all free charts. Spend 1 token to unlock 2 more charts?",
+            });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user || typeof user.token !== "number" || user.token <= 0) {
+            return res.json({
+                reply: "You don't have enough tokens.",
+                chart: null,
+            });
+        }
+
+        user.token -= 1;
+        await user.save();
+
+        session.free_chart_limit = (session.free_chart_limit || 0) + 2;
+
+        const generatedChart = await runChartAnalysis(userMessage, dataset);
+
+        session.chart_count = (session.chart_count || 0) + 1;
+        if (generatedChart?.chart) session.charts.push(generatedChart.chart);
 
         session.messages.push({
             user: userMessage,
-            ai: aiReply,
+            ai: generatedChart ? "Token used — here is your chart." : "Could not generate chart.",
             createdAt: new Date(),
         });
-
-        if (generatedChart) {
-            console.log("inside generated chart")
-            session.charts.push(generatedChart.chart);
-        }
 
         session.updatedAt = new Date();
         await session.save();
 
         return res.json({
-            reply: aiReply,
-            chart: generatedChart,
+            reply: generatedChart ? "Token used — here is your chart." : "Could not generate chart.",
+            chart: generatedChart?.chart || null
         });
+
 
     } catch (err) {
         console.error("appendMessage error", err);
@@ -155,45 +195,44 @@ export const appendMessage = async (req: Request, res: Response) => {
 };
 
 
+// export const appendChart = async (req: Request, res: Response) => {
+//     try {
+//         const userId = getUserId(req);
 
-export const appendChart = async (req: Request, res: Response) => {
-    try {
-        const userId = getUserId(req);
+//         if (!userId) {
+//             return res.status(401).json({ error: "Unauthorized: No userId found" });
+//         }
 
-        if (!userId) {
-            return res.status(401).json({ error: "Unauthorized: No userId found" });
-        }
+//         const id = req.params.id;
 
-        const id = req.params.id;
+//         if (!req.body.chart)
+//             return res.status(400).json({ error: "Missing chart data" });
 
-        if (!req.body.chart)
-            return res.status(400).json({ error: "Missing chart data" });
+//         let session = await SessionModel.findById(id);
 
-        let session = await SessionModel.findById(id);
+//         if (!session)
+//             return res.status(404).json({ error: "Session not found" });
 
-        if (!session)
-            return res.status(404).json({ error: "Session not found" });
+//         if (!session.user_id) {
+//             session.user_id = userId;
+//         }
 
-        if (!session.user_id) {
-            session.user_id = userId;
-        }
+//         if (session.user_id.toString() !== userId.toString()) {
+//             return res.status(403).json({ error: "Unauthorized" });
+//         }
 
-        if (session.user_id.toString() !== userId.toString()) {
-            return res.status(403).json({ error: "Unauthorized" });
-        }
+//         // Now push chart
+//         session.charts.push(req.body.chart);
+//         session.updatedAt = new Date();
+//         await session.save();
 
-        // Now push chart
-        session.charts.push(req.body.chart);
-        session.updatedAt = new Date();
-        await session.save();
+//         return res.json(session);
 
-        return res.json(session);
-
-    } catch (err) {
-        console.error("appendChart error", err);
-        return res.status(500).json({ error: "Server error" });
-    }
-};
+//     } catch (err) {
+//         console.error("appendChart error", err);
+//         return res.status(500).json({ error: "Server error" });
+//     }
+// };
 
 
 

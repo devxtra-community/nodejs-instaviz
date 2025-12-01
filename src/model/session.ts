@@ -22,6 +22,8 @@
     messages: ISessionMessage[];
     charts: IChartData[];
     metrics: any;
+    chart_count: number;
+    free_chart_limit: number;
     createdAt: Date;
     updatedAt: Date;
   }
@@ -54,6 +56,8 @@
       ],
 
       metrics: { type: Schema.Types.Mixed, default: {} },
+      chart_count: { type: Number, default: 0 },  
+      free_chart_limit: { type: Number, default: 2 },
     },
     { timestamps: true }
   );
