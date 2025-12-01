@@ -9,10 +9,9 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     "/auth/newRefreshToken",
   ];
 
-  if (publicRoutes.some((route) => req.originalUrl.startsWith(route))) {
-    return next();
-  }
-
+  if (publicRoutes.some(route => req.originalUrl.includes(route))) {
+  return next();
+}
 
   const authHeader = req.headers.authorization;
   if (!authHeader) {
