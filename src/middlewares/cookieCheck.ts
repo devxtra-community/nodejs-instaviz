@@ -2,6 +2,11 @@ import { NextFunction, Request, Response } from "express"
 
 export const cookieCheck = (req: Request, res: Response, next: NextFunction) => {
     try {
+        res.clearCookie("isGuest", {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+        })
         res.clearCookie("userId", {
             httpOnly: true,
             secure: false,
