@@ -91,6 +91,7 @@ app.use(limiter);
 //database connection
 const connection = async () => {
   try {
+    
     await mongoose.connect(process.env.mongo_uri!);
     console.log("Mongoose connected");
   } catch (err) {
