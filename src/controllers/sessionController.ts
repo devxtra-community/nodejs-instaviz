@@ -63,7 +63,7 @@ export const getSession = async (req: Request, res: Response) => {
         })
             .populate("data_id")
             .lean();
-        console.log(session);
+        // console.log(session);
 
         if (!session) return res.status(404).json({ error: "Not found" });
 
