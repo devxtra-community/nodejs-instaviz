@@ -23,7 +23,8 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
     const authedReq = req as AuthedRequest;
     const authHeader = req.headers.authorization;
     try {
-
+      console.log("auth header try",authHeader);
+      
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
 
@@ -41,7 +42,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
         res.cookie('userId', decoded.id.toString(), {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
+          sameSite: 'none',
           maxAge: 1 * 24 * 60 * 60 * 1000,
         });
         return next();
@@ -85,13 +86,13 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
     res.cookie('userId', newGuestUser._id.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
     res.cookie('isGuest', true, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
     console.log('Guest cookie set successfully:', newGuestUser._id.toString());

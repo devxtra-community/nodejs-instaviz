@@ -2,8 +2,11 @@ import { Request, Response } from "express";
 import refreshModel from '../model/refreshtoken'
 
 export const logoutDevice = async (req: Request, res: Response) => {
+  console.log("reached logoutDevice");
+
   try {
-    const { sessionId } = req.body;
+    const { sessionId, currentSessionId } = req.body;  
+
     interface JwtUser {
       id: string;
       email: string;
@@ -25,21 +28,31 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
-     res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
 
-    res.clearCookie("userId", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
+  
+    if (currentSessionId && sessionId === currentSessionId) {
+      console.log("Clearing cookies because user logged out THIS device");
+
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        path: "/",
+      });
+
+      res.clearCookie("userId", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        path: "/",
+      });
+    }
+
     return res.json({
       success: true,
       message: "Device logged out successfully",
     });
+
   } catch (err) {
     console.error("Logout Device Error", err);
     return res.status(500).json({
@@ -48,6 +61,7 @@ export const logoutDevice = async (req: Request, res: Response) => {
     });
   }
 };
+
 
 export const logoutAllDevices = async (req: Request, res: Response) => {
   console.log("reached here at logout all devices");
@@ -70,7 +84,6 @@ export const logoutAllDevices = async (req: Request, res: Response) => {
       _id: { $ne: currentSessionId },
     });
 
-  
     return res.json({
       success: true,
       message: "Logged out from all other devices",
