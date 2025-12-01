@@ -85,10 +85,11 @@ export const googleCallback = async (req: Request, res: Response) => {
       )
       .select("_id");
 
-    res.cookie("refreshToken", refreshToken, {
+     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
+      path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
