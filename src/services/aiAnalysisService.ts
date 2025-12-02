@@ -1,10 +1,6 @@
-// services/aiAnalysisService.ts
-
 import { generateAiPrompt } from "../utils/aiPrompt";
 import mcpClient from "../services/mcpClient";
 import { generateChartsFromData } from "./chartGenerator";
-
-// import your central model + API switching
 import { getModel, switchApi, getApiKeyCount } from "./switchingApi";
 
 export async function analyzeDatasetWithAiOrFallback(
@@ -55,9 +51,9 @@ export async function analyzeDatasetWithAiOrFallback(
     } catch (err: any) {
       const msg = String(err?.message || "");
       const errorStatus =
-      err?.response?.status ||
-      err?.error?.status ||
-      err?.response?.data?.error?.status;
+        err?.response?.status ||
+        err?.error?.status ||
+        err?.response?.data?.error?.status;
       console.log("Gemini error:", msg);
 
       if (
@@ -79,26 +75,23 @@ export async function analyzeDatasetWithAiOrFallback(
       break;
     }
   }
+  // aiResponse =null
   if (!aiResponse) {
     console.log("Fallback → local chart + intelligent insight generation");
 
     const { barData, pieData, columns } = generateChartsFromData(results);
 
-    // Basic metrics
     const totalRows = computedMetrics.total_rows;
     const totalCols = computedMetrics.total_columns;
     const missing = computedMetrics.missing_values;
 
-    // Chart info
     const topBar = barData[0];
     const topPie = pieData[0];
 
-    // Detect imbalance
     const pieTotal = pieData.reduce((s, p) => s + p.value, 0);
     const pieDominance =
       topPie && pieTotal > 0 ? (topPie.value / pieTotal) * 100 : 0;
 
-    // Detect if numeric column is skewed / high variance
     const numericCols = results.length
       ? Object.keys(results[0]).filter((c) =>
         results.some((r) => !isNaN(Number(r[c])))
@@ -124,7 +117,6 @@ export async function analyzeDatasetWithAiOrFallback(
       }
     });
 
-    // Build human-quality summary
     const summary = [
       `Your dataset contains ${totalRows} rows and ${totalCols} columns, giving enough data for reliable analysis.`,
 
@@ -181,7 +173,7 @@ export async function analyzeDatasetWithAiOrFallback(
         },
       ],
 
-      summary: summary.filter(Boolean), // remove empty items
+      summary: summary.filter(Boolean),
 
       key_fields: Object.keys(results[0] || {}).slice(0, 5),
     };

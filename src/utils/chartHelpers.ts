@@ -32,7 +32,7 @@ export function generateChartData(
 
       const rows = Object.entries(cat.counts).map(([label, count]) => ({
         xValue: label,
-        yValue: Number(count), // <-- FIXED (no more unknown)
+        yValue: Number(count), 
       }));
 
       finalCharts.push({
@@ -52,7 +52,7 @@ export function generateChartData(
 
       const rows = Object.entries(cat.counts).map(([name, count]) => ({
         xValue: name,
-        value: Number(count), // <-- FIXED
+        value: Number(count), 
       }));
 
       finalCharts.push({

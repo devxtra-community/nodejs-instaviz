@@ -11,7 +11,7 @@ const userSessionSchema = new Schema(
     lastHeartbeat: { type: Date, default: Date.now },
     endTime: { type: Date, default: null },
 
-    duration: { type: Number, default: 0 }, // seconds
+    duration: { type: Number, default: 0 }, 
 
     userAgent: String,
     ipAddress: String,
@@ -20,7 +20,6 @@ const userSessionSchema = new Schema(
 
     ended: { type: Boolean, default: false },
 
-    // YYYY-MM-DD
     day: {
       type: String,
       index: true,
@@ -31,8 +30,3 @@ const userSessionSchema = new Schema(
 );
 
 export default mongoose.model("UserSession", userSessionSchema);
-
- // userAgent : 
-    // ipAddress : 
-    // screenWidth
-    // screenHeight
