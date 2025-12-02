@@ -66,6 +66,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
           sameSite: "strict",
           maxAge: 30 * 24 * 60 * 60 * 1000,
         });
+
         return res.json({ message: "internal server error : Please upload the file again ", success: false })
       }
       if (UserToken?.token == 0) {
@@ -97,6 +98,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       userId: newGuestUser._id.toString(),
       isGuest: true,
     };
+    console.log("authedReq.user logging in tokencheck: ", authedReq.user.userId)
     if (newGuestUser.token == 0) {
       return res.json({ message: "Token is finished ! buy more token..", success: false })
     }
