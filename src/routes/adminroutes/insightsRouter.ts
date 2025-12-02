@@ -1,7 +1,56 @@
 import express from "express";
-import { getUserDevices } from "../../admincontroller/insightsController";
-import { verifyToken } from "../../middleware/verifytoken";
+import { getTotalDeviceSplit } from "../../adminController/insightController/device";
+import { verifyAdmin } from "../../middlewares/verifyAdmin";
+import { getWeeklyUser } from "../../adminController/insightController/userWeekly";
+import {getUserHeatScore} from '../../adminController/insightController/userheatscore'
+import {getUploadFrequency} from '../../adminController/insightController/uploadFrequency'
 
-export  const insightsRouter = express.Router()
+export const insightsRouter = express.Router();
 
-insightsRouter.get('/device' , getUserDevices)
+/**
+ * @swagger
+ * tags:
+ *   name: AdminInsights
+ *   description: Analytics and insights for admin dashboard
+ */
+
+/**
+ * @swagger
+ * /admin/device:
+ *   get:
+ *     summary: Get device distribution statistics
+ *     description: Returns the percentage split of devices used by users (mobile, desktop, etc.)
+ *     tags: [AdminInsights]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Device insight data retrieved successfully
+ *       401:
+ *         description: Unauthorized — Admin token required
+ *       500:
+ *         description: Server error
+ */
+insightsRouter.get("/device", verifyAdmin, getTotalDeviceSplit);
+
+/**
+ * @swagger
+ * /admin/weeklyuser:
+ *   get:
+ *     summary: Get weekly user growth data
+ *     description: Returns the count of new users for the past weeks.
+ *     tags: [AdminInsights]
+ *     responses:
+ *       200:
+ *         description: Weekly user insight data retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+insightsRouter.get("/weeklyuser", getWeeklyUser);
+
+insightsRouter.get('/userheatscore' , getUserHeatScore)
+
+insightsRouter.get('/uploadfrequency' , getUploadFrequency)
+
+
+

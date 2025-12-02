@@ -1,35 +1,48 @@
-import mongoose, { Schema, SchemaType } from "mongoose";
+import mongoose, { Schema, model, Document } from "mongoose";
 
-interface Data {
-    data: Record<string, any>[];
-    user_id: mongoose.Types.ObjectId,
-    chat_id?: string,
-    chart_id?: mongoose.Types.ObjectId,
-    createdAt: Date,
-    updatedAt: Date
-};
+export interface IDataset extends Document {
+  _id: mongoose.Types.ObjectId;
+  user_id: mongoose.Types.ObjectId;
+  name: string;
+  r2_url: string;
+  row_count: number;
+  column_count: number;
+  sample_data: any[];
+   summary: string[];
+  device?: "mobile" | "desktop";
+  status?: "success" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-const dataSchema = new Schema<Data>({
-
-    data: [
-        {
-            type: Map, of: Schema.Types.Mixed
-        }
-    ],
-    user_id: {
-        type: Schema.Types.ObjectId, ref: "user"
+const DatasetSchema = new Schema(
+  {
+     user_id: { type: mongoose.Types.ObjectId, default: null },
+    name: { type: String, required: true },
+    r2_url: { type: String, required: true },
+    row_count: { type: Number, required: true },
+    column_count: { type: Number, required: true },
+    summary: { type: [String], required: true },
+    sample_data: {
+      type: [Schema.Types.Mixed],
+      default: [],
     },
-    chat_id: {
-        type: Schema.Types.ObjectId, ref: "chat"
+
+    device: {
+      type: String,
+      enum: ["mobile", "desktop"],
+      default: "desktop",
     },
-    chart_id: {
-        type: Schema.Types.ObjectId, ref: "chart"
+
+    status: {
+      type: String,
+      enum: ["success", "failed"],
+      default: "success",
     }
-},
-    {
-        timestamps: true
-    });
+  },
+  {
+    timestamps: true,  
+  }
+);
 
-const dataModel = mongoose.model<Data>('data', dataSchema);
-
-export default dataModel;
+export default model<IDataset>("datas", DatasetSchema);

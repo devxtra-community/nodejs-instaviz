@@ -14,7 +14,7 @@ export default passport.use(
             callbackURL: process.env.GOOGLE_CALLBACK_URL!,
         },
         async (_accessToken, _refreshToken, profile: Profile, done) => {
-            try {
+            try {  console.log("inside passport config");
                 const googleId = profile.id;
                 const email = profile.emails?.[0]?.value;
                 const picture = profile.photos?.[0]?.value;

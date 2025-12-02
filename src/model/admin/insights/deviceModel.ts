@@ -1,3 +1,4 @@
+import { required } from "joi";
 import mongoose from "mongoose";
 
 const deviceSchema = new mongoose.Schema({
@@ -13,6 +14,11 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+
+action:{
+  type : String,
+  default : 'login'
+},
   createdAt: {
     type: Date,
     default: Date.now,

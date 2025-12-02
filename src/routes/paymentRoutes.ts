@@ -1,8 +1,41 @@
 import express from "express";
-import { createCheckoutSession, handleWebhook } from "../controllers/paymentController.ts";
+import { createCheckoutSession } from "../controllers/paymentController.ts";
 
 const router = express.Router();
-router.post("/create-checkout-session", createCheckoutSession);
-router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
 
-export default router;  
+/**
+ * @swagger
+ * tags:
+ *   name: Payment
+ *   description: Payment and Stripe operations
+ */
+
+/**
+ * @swagger
+ * /payment/create-checkout-session:
+ *   post:
+ *     summary: Create Stripe checkout session
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example:
+ *               planId: "basic"
+ *               price: 299
+ *     responses:
+ *       200:
+ *         description: Checkout session created
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
+ */
+router.post("/create-checkout-session", createCheckoutSession);
+
+
+export default router;
