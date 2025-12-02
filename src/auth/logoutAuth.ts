@@ -3,6 +3,7 @@ import refreshModel from '../model/refreshtoken'
 
 export const logoutDevice = async (req: Request, res: Response) => {
   console.log("reached logoutDevice");
+  console.log(req.body)
 
   try {
     const { sessionId, currentSessionId } = req.body;  
@@ -28,6 +29,7 @@ export const logoutDevice = async (req: Request, res: Response) => {
     }
 
     await refreshModel.deleteOne({ _id: sessionId });
+ 
 
   
     if (currentSessionId && sessionId === currentSessionId) {
