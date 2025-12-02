@@ -1,6 +1,5 @@
 import passport from "passport";
 import { Router } from "express";
-
 import { googleCallback } from "../auth/googleAuth.ts";
 import { register, loginCheck } from "../auth/auth.ts";
 import { verifyOtp, resendOtp } from "../auth/otp.ts";
