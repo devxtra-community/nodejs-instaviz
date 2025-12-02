@@ -1,4 +1,3 @@
-// controllers/sessionController.ts
 import { Request, Response } from "express";
 import crypto from "crypto";
 import mongoose from "mongoose";

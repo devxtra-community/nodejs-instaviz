@@ -97,7 +97,6 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       return next();
     }
 
-    // ------------------- CREATE NEW GUEST -------------------
     const newGuest = await guestModel.create({});
     authedReq.user = { userId: newGuest._id.toString(), isGuest: true };
 
