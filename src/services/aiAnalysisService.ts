@@ -54,131 +54,138 @@ export async function analyzeDatasetWithAiOrFallback(
       console.log("AI analysis completed with key", attempts + 1);
     } catch (err: any) {
       const msg = String(err?.message || "");
+      const errorStatus =
+      err?.response?.status ||
+      err?.error?.status ||
+      err?.response?.data?.error?.status;
       console.log("Gemini error:", msg);
 
       if (
         msg.includes("quota") ||
         msg.includes("429") ||
         msg.includes("exceeded") ||
-        err.status === 503
+        err.response?.status === 429 ||
+        err.response?.status === 503 ||
+        errorStatus === "RESOURCE_EXHAUSTED"
       ) {
-        console.log("Rate limit  switching key...");
+        console.log("Rate limit → switching API key...");
         switchApi();
         attempts++;
         continue;
       }
+
 
       console.log("Non-limit AI error  stopping.");
       break;
     }
   }
   if (!aiResponse) {
-  console.log("Fallback → local chart + intelligent insight generation");
+    console.log("Fallback → local chart + intelligent insight generation");
 
-  const { barData, pieData, columns } = generateChartsFromData(results);
+    const { barData, pieData, columns } = generateChartsFromData(results);
 
-  // Basic metrics
-  const totalRows = computedMetrics.total_rows;
-  const totalCols = computedMetrics.total_columns;
-  const missing = computedMetrics.missing_values;
+    // Basic metrics
+    const totalRows = computedMetrics.total_rows;
+    const totalCols = computedMetrics.total_columns;
+    const missing = computedMetrics.missing_values;
 
-  // Chart info
-  const topBar = barData[0];
-  const topPie = pieData[0];
+    // Chart info
+    const topBar = barData[0];
+    const topPie = pieData[0];
 
-  // Detect imbalance
-  const pieTotal = pieData.reduce((s, p) => s + p.value, 0);
-  const pieDominance =
-    topPie && pieTotal > 0 ? (topPie.value / pieTotal) * 100 : 0;
+    // Detect imbalance
+    const pieTotal = pieData.reduce((s, p) => s + p.value, 0);
+    const pieDominance =
+      topPie && pieTotal > 0 ? (topPie.value / pieTotal) * 100 : 0;
 
-  // Detect if numeric column is skewed / high variance
-  const numericCols = results.length
-    ? Object.keys(results[0]).filter((c) =>
+    // Detect if numeric column is skewed / high variance
+    const numericCols = results.length
+      ? Object.keys(results[0]).filter((c) =>
         results.some((r) => !isNaN(Number(r[c])))
       )
-    : [];
+      : [];
 
-  let skewNotes : any = [];
-  numericCols.forEach((col) => {
-    const nums = results
-      .map((r) => Number(r[col]))
-      .filter((n) => !isNaN(n));
-    if (nums.length < 5) return;
+    let skewNotes: any = [];
+    numericCols.forEach((col) => {
+      const nums = results
+        .map((r) => Number(r[col]))
+        .filter((n) => !isNaN(n));
+      if (nums.length < 5) return;
 
-    const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
-    const max = Math.max(...nums);
-    const min = Math.min(...nums);
+      const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+      const max = Math.max(...nums);
+      const min = Math.min(...nums);
 
-    if (max > mean * 4) {
-      skewNotes.push(`${col} has very large outliers.`);
-    }
-    if (min < mean * 0.25) {
-      skewNotes.push(`${col} is highly left-skewed.`);
-    }
-  });
+      if (max > mean * 4) {
+        skewNotes.push(`${col} has very large outliers.`);
+      }
+      if (min < mean * 0.25) {
+        skewNotes.push(`${col} is highly left-skewed.`);
+      }
+    });
 
-  // Build human-quality summary
-  const summary = [
-    `Your dataset contains ${totalRows} rows and ${totalCols} columns, giving enough data for reliable analysis.`,
+    // Build human-quality summary
+    const summary = [
+      `Your dataset contains ${totalRows} rows and ${totalCols} columns, giving enough data for reliable analysis.`,
 
-    missing > 0
-      ? `There are ${missing} missing values, indicating that some cleaning or preprocessing may improve accuracy.`
-      : `No missing values detected — the dataset appears clean and consistent.`,
+      missing > 0
+        ? `There are ${missing} missing values, indicating that some cleaning or preprocessing may improve accuracy.`
+        : `No missing values detected — the dataset appears clean and consistent.`,
 
-    topBar
-      ? `In the bar chart analysis, ${topBar.xValue} contributes the most with a total of ${topBar.yValue}, making it the most influential category for numeric trends.`
-      : `Not enough numeric/categorical combinations found to generate a bar insight.`,
+      topBar
+        ? `In the bar chart analysis, ${topBar.xValue} contributes the most with a total of ${topBar.yValue}, making it the most influential category for numeric trends.`
+        : `Not enough numeric/categorical combinations found to generate a bar insight.`,
 
-    topPie
-      ? `In the category distribution, ${topPie.xValue} is the dominant group with ${topPie.value} occurrences, representing ${pieDominance.toFixed(
+      topPie
+        ? `In the category distribution, ${topPie.xValue} is the dominant group with ${topPie.value} occurrences, representing ${pieDominance.toFixed(
           1
         )}% of all records.`
-      : `Pie distribution could not identify strong category groupings.`,
+        : `Pie distribution could not identify strong category groupings.`,
 
-    pieDominance > 60
-      ? `The dataset has high category imbalance, meaning one category dominates the distribution.`
-      : pieDominance > 30
-      ? `Category distribution shows moderate imbalance, with a few categories standing out.`
-      : `Category distribution appears balanced without extreme dominance.`,
+      pieDominance > 60
+        ? `The dataset has high category imbalance, meaning one category dominates the distribution.`
+        : pieDominance > 30
+          ? `Category distribution shows moderate imbalance, with a few categories standing out.`
+          : `Category distribution appears balanced without extreme dominance.`,
 
-    skewNotes.length > 0
-      ? `Notable numeric anomalies: ${skewNotes.join(" ")}`
-      : `Numeric columns appear evenly distributed without strong outliers.`,
+      skewNotes.length > 0
+        ? `Notable numeric anomalies: ${skewNotes.join(" ")}`
+        : `Numeric columns appear evenly distributed without strong outliers.`,
 
-    `Key fields that provide the most insight: ${Object.keys(results[0])
-      .slice(0, 5)
-      .join(", ")}.`,
-  ];
+      `Key fields that provide the most insight: ${Object.keys(results[0])
+        .slice(0, 5)
+        .join(", ")}.`,
+    ];
 
-  aiResponse = {
-    metrics: computedMetrics,
+    aiResponse = {
+      metrics: computedMetrics,
 
-    charts: [
-      {
-        type: "bar",
-        title: `${columns.barChartNumeric} by ${columns.barChartCategory}`,
-        description: `Visualizes how ${columns.barChartNumeric} values change across different ${columns.barChartCategory} groups.`,
-        x: columns.barChartCategory,
-        y: columns.barChartNumeric,
-        data: barData,
-        style: { layout: "vertical", limit: 15 },
-      },
-      {
-        type: "pie",
-        title: `Distribution of ${columns.pieChartCategory}`,
-        description: `Shows the proportion of records by ${columns.pieChartCategory}, helping highlight dominant categories.`,
-        x: columns.pieChartCategory,
-        y: "count",
-        data: pieData,
-        style: { showLabels: true, showLegend: true },
-      },
-    ],
+      charts: [
+        {
+          type: "bar",
+          title: `${columns.barChartNumeric} by ${columns.barChartCategory}`,
+          description: `Visualizes how ${columns.barChartNumeric} values change across different ${columns.barChartCategory} groups.`,
+          x: columns.barChartCategory,
+          y: columns.barChartNumeric,
+          data: barData,
+          style: { layout: "vertical", limit: 15 },
+        },
+        {
+          type: "pie",
+          title: `Distribution of ${columns.pieChartCategory}`,
+          description: `Shows the proportion of records by ${columns.pieChartCategory}, helping highlight dominant categories.`,
+          x: columns.pieChartCategory,
+          y: "count",
+          data: pieData,
+          style: { showLabels: true, showLegend: true },
+        },
+      ],
 
-    summary: summary.filter(Boolean), // remove empty items
+      summary: summary.filter(Boolean), // remove empty items
 
-    key_fields: Object.keys(results[0] || {}).slice(0, 5),
-  };
-}
+      key_fields: Object.keys(results[0] || {}).slice(0, 5),
+    };
+  }
 
 
   return aiResponse;

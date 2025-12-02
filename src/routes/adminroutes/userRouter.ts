@@ -16,6 +16,7 @@ import { suspendUser } from "../../adminController/userController";
 import { unsuspendUser } from "../../adminController/userController";
 
 
+
 export  const adminUserRouter = Router()
 
 adminUserRouter.get('/loggedusers', loggedusers);
@@ -38,6 +39,7 @@ adminUserRouter.get('/newusers',  getNewUsersPerMonth);
  *         description: Unauthorized
  */
 adminUserRouter.get("/allusers", verifyAdmin, alluserspage);
+
 
 /**
  * @swagger

@@ -99,7 +99,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       isGuest: true,
     };
     if (newGuestUser.token == 0) {
-      return res.status(404).json({ message: "User dont have token ..!", success: true })
+      return res.json({ message: "Token is finished ! buy more token..", success: false })
     }
     return next();
   } catch (err) {

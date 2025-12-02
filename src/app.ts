@@ -14,14 +14,11 @@ import uploadRouter from "./routes/uploadRouter.ts";
 import userRouter from "./routes/userRouter.ts";
 import sessionRouter from "./routes/sessionRoutes.ts";
 import paymentRouter from "./routes/paymentRoutes.js";
-import chatRouter from "./routes/chatRouter.ts";
+import { handleWebhook } from "./controllers/paymentController.ts";
 // Admin routes
 import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
 import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
 dotenv.config();
-// import multer, { FileFilterCallback } from "multer";
-// import path from "path";
-// import { raw } from "body-parser";
 
 import { tokenrouter } from "./routes/adminroutes/tokenRouter.ts";
 import { plansRouter } from "./routes/adminroutes/plansRouter.ts";
@@ -30,10 +27,12 @@ import { dashboardRouter } from "./routes/adminroutes/dashboardRouter.ts";
 import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
 import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
 import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
-import router from "./routes/sessionRouter.ts";
+import router from "./routes/sessionRoutes.ts"
 import activeTimertracker from "./routes/activeTimetracker.ts";
 
 const app = express();
+
+app.post("/payment/webhook", express.raw({ type: "application/json" }),handleWebhook);
 
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
@@ -91,6 +90,7 @@ app.use(limiter);
 //database connection
 const connection = async () => {
   try {
+    
     await mongoose.connect(process.env.mongo_uri!);
     console.log("Mongoose connected");
   } catch (err) {
@@ -121,7 +121,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return limiter(req, res, next);
 });
 
-app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
 //middleware
 
@@ -129,7 +128,6 @@ app.use("/upload", fileSizeCheck, uploadRouter);
 app.use("/user", userRouter);
 app.use("/auth", authRouter);
 app.use("/payment", paymentRouter);
-app.use("/chat", chatRouter);
 app.use("/session", sessionRouter);
 // admin routes
 
@@ -142,7 +140,7 @@ app.use("/admin/activities", activityRouter);
 app.use("/admin/user", adminUserRouter);
 app.use("/admin/token", tokenrouter);
 app.use("/admin/plans", plansRouter);
-app.use("/session", router);
+
 
 app.use("/admin", activeTimertracker);
 
