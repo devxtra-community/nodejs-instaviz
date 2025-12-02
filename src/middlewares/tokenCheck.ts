@@ -29,8 +29,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
 
         const decoded = Jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
         authedReq.user = {
-          userId: decoded.id,
-          isGuest: false,
+          userId: decoded.id
         };
         console.log('Authenticated user from JWT:', decoded.id);
         const currentUserToken = await userModel.findById({ _id: decoded.id })
