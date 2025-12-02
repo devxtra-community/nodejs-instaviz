@@ -51,26 +51,30 @@ export const getSession = async (req: Request, res: Response) => {
     try {
         const userId = getUserId(req);
         const id = req.params.id;
-        // console.log(id, userId)
 
         if (!mongoose.Types.ObjectId.isValid(id))
             return res.status(400).json({ error: "Invalid session id" });
 
-        const session = await SessionModel.findOne({
-            _id: id,
-            user_id: userId,
-        })
+        let query: any = { _id: id };
+
+        if (userId) {
+            query.user_id = userId;
+        }
+
+        const session = await SessionModel.findOne(query)
             .populate("data_id")
             .lean();
 
         if (!session) return res.status(404).json({ error: "Not found" });
 
         return res.json(session);
+
     } catch (err) {
         console.error("getSession error", err);
         return res.status(500).json({ error: "Server error" });
     }
 };
+
 
 export const listSessions = async (req: Request, res: Response) => {
     try {

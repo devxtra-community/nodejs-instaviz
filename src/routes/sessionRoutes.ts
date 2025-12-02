@@ -1,11 +1,9 @@
 // src/routes/sessionRoutes.ts
 import express from "express";
 import * as controller from "../controllers/sessionController";
-import {tokenCheck} from "../middlewares/tokenCheck";
 
 const sessionRouter = express.Router();
 
-sessionRouter.use(tokenCheck);
 
 sessionRouter.post("/", controller.createSession);
 sessionRouter.get("/", controller.listSessions);
