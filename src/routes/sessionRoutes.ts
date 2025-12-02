@@ -4,6 +4,7 @@ import * as controller from "../controllers/sessionController";
 
 const sessionRouter = express.Router();
 
+// sessionRouter.use(tokenCheck);
 
 sessionRouter.post("/", controller.createSession);
 sessionRouter.get("/", controller.listSessions);
