@@ -2,12 +2,12 @@ import { Request, Response } from "express";
 import { stripe } from "../config/stripe.ts";
 import { CheckoutRequestBody } from "../types/paymentTypes.ts";
 import userModel from "../model/user.ts";
-import { token } from "morgan";
+import Payment from "../model/paymentModel.ts";
 
 const priceMap: Record<string, number> = {
-  Starter: 15,
-  Pro: 29,
-  Enterprise: 59,
+  Starter: 50,
+  Pro: 100,
+  Enterprise: 150,
 };
 
 export const createCheckoutSession = async (
@@ -99,6 +99,17 @@ export const handleWebhook = async (
     if (plan === "Enterprise") user.token += 10;
 
     await user.save();
+
+    await Payment.create({
+      userId,
+      amount:session.amount_total/100,
+      currency:session.currency || "USD",
+      planName:plan.toLowerCase(),
+      paymentId:session.payment_intent,
+      status:"success",
+    })
+
+    console.log("payment saved");
   }
 
   res.json({ received: true, message: "payment received", success: true }); 
