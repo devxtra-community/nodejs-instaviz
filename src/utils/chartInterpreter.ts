@@ -1,5 +1,3 @@
-// utils/chartInterpreter.ts
-
 import type { Aggregations } from "./streamAggregations";
 
 export interface ChartIntent {

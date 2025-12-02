@@ -1,4 +1,3 @@
-// utils/streamAggregations.ts
 export type Row = Record<string, any>;
 
 export type NumericSummary = {

@@ -1,4 +1,3 @@
-// prompts/chatPrompt.ts
 export function createChatPrompt(message: string, dataset: any) {
   return `
 You are InstaviZ AI. A user is chatting about their uploaded dataset.

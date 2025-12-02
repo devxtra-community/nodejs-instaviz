@@ -129,7 +129,6 @@ app.use("/user", userRouter);
 app.use("/auth", authRouter);
 app.use("/payment", paymentRouter);
 app.use("/session", sessionRouter);
-// admin routes
 
 //admin routes
 app.use("/admin", adminAuthRouter);

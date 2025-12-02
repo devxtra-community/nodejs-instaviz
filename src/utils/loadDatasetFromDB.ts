@@ -1,4 +1,3 @@
-// utils/loadDatasetFromDB.ts
 import dataModel from "../model/dataModel";
 
 export async function loadDatasetFromDB() {

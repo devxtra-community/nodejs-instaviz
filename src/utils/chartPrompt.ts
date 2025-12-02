@@ -1,4 +1,3 @@
-// utils/chartPrompt.ts
 import type { IDataset } from "../model/dataModel";
 
 export function generateChartPrompt(userMessage: string, dataset: IDataset) {

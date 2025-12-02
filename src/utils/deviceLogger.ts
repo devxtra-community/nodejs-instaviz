@@ -11,7 +11,7 @@ export const deviceLogger = (req: Request, res: Response, next: NextFunction) =>
         ? "mobile"
         : "desktop";
 
-    (req as any).device = device; // attach device type
+    (req as any).device = device; 
     next();
   } catch (err) {
     console.log("Device detection error:", err);
