@@ -49,7 +49,7 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
     }
     catch (err) {
       console.log("error while cheking  jwt:", err);
-      return res.status(401).json({message:"access token expired",success:false})
+      return res.status(401).json({ message: "access token expired", success: false })
     }
     const guestIdFromCookie = req.cookies?.userId;
 
@@ -75,12 +75,10 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       return next();
     }
 
-    console.log('Creating new guest user');
-
     const newGuestUser = await guestModel.create({
       isGuest: true,
     });
-
+    console.log('Creating new guest user :', newGuestUser._id);
     // setting the cookie
     res.cookie('userId', newGuestUser._id.toString(), {
       httpOnly: true,
@@ -100,7 +98,9 @@ export const tokenCheck = async (req: Request, res: Response, next: NextFunction
       userId: newGuestUser._id.toString(),
       isGuest: true,
     };
-
+    if (newGuestUser.token == 0) {
+      return res.status(404).json({ message: "User dont have token ..!", success: true })
+    }
     return next();
   } catch (err) {
     console.error('Error in tokenCheck middleware:', err);
