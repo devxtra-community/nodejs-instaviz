@@ -1,5 +1,3 @@
-// utils/chartInterpreter.ts
-
 import type { Aggregations } from "./streamAggregations";
 
 export interface ChartIntent {
@@ -36,7 +34,6 @@ export function interpretChartRequest(
     return { valid: false, type: null, category: null, numeric: null };
   }
 
-  // type now supports line
   if (!["bar", "pie", "line"].includes(type)) {
     return { valid: false, type: null, category: null, numeric: null };
   }
@@ -80,7 +77,7 @@ export function fallbackChartGenerator(
     let yCol = numeric;
 
     if (!yCol || yCol === "count") {
-      yCol = Object.keys(aggregations.numeric)[0]; // default numeric column
+      yCol = Object.keys(aggregations.numeric)[0]; 
     }
 
     const cat = aggregations.categorical[category!];
@@ -107,7 +104,7 @@ export function fallbackChartGenerator(
     };
   }
 
-  //  LINE (NEW) 
+  
   if (type === "line") {
     let yCol = numeric;
 
@@ -125,7 +122,6 @@ export function fallbackChartGenerator(
         data: [],
       };
 
-    // Turn categorical distribution into a time-like series
     const rows = Object.entries(cat.counts).map(([name, count]) => ({
       xValue: name,
       yValue: count,

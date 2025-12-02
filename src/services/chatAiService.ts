@@ -35,7 +35,7 @@ export async function runChartAnalysis(message: string, dataset: any) {
   //  SAFE JSON PARSING 
   const rawText = response.text().trim();
 
-  // remove ```json and ``` fences
+  // remove ` json and fences
   const withoutFences = rawText.replace(/```json\s*|```\s*/g, "").trim();
 
   // in case the model adds text around the JSON, grab only the outermost object

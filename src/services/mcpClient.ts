@@ -38,7 +38,7 @@ class MCPClient {
   }
 
   private async _connect(): Promise<Client> {
-    // Spawn MCP server (mongodb-mcp-server)
+    // Spawn MCP server 
     const transport = new StdioClientTransport({
       command: "npx",
       args: ["-y", "mongodb-mcp-server@latest", "--readOnly"],
@@ -59,7 +59,7 @@ class MCPClient {
     );
 
     await client.connect(transport);
-    console.log("✓ MCP Connected to MongoDB");
+    console.log(" MCP Connected to MongoDB");
 
     return client;
   }
@@ -78,7 +78,7 @@ class MCPClient {
 
       console.log(`MCP tool ${toolName} completed successfully`);
       
-      // Check if result has content
+      // check if result has content
       if (result && result.content) {
         console.log('Result type:', typeof result.content);
         console.log('Result preview:', JSON.stringify(result.content).slice(0, 200));
