@@ -5,7 +5,7 @@ import {tokenCheck} from "../middlewares/tokenCheck";
 
 const sessionRouter = express.Router();
 
-sessionRouter.use(tokenCheck);
+// sessionRouter.use(tokenCheck);
 
 sessionRouter.post("/", controller.createSession);
 sessionRouter.get("/", controller.listSessions);

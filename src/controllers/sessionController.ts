@@ -10,9 +10,11 @@ import userModel from "../model/user";
 
 
 function getUserId(req: Request): string | null {
-    console.log("req.user :",req.user);
-    return (req as any).user?.userId ?? null;
+    const decode_id = (req as any).user?.userId
+    const cookie_id = req.cookies?.userId
+    return decode_id ?? cookie_id ?? null
 }
+
 
 export const createSession = async (req: Request, res: Response) => {
     try {
@@ -50,7 +52,7 @@ export const createSession = async (req: Request, res: Response) => {
 
 export const getSession = async (req: Request, res: Response) => {
     try {
-        // console.log("req.user:",req.user)
+        console.log("req.user:",req.user)
         const userId = getUserId(req);
         const id = req.params.id;
         console.log("session Id", id, "userId", userId);
