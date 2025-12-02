@@ -89,9 +89,11 @@ export const fileParsing = async (req: Request, res: Response) => {
     if (req.cookies.isGuest) {
       const tokenDecrease = await guestModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
       if (tokenDecrease) console.log("token decreased succesfully from the guest user :", tokenDecrease.token)
+        else console.log("guestuser token decreasing not done")
     } else {
       const tokenDecrease = await userModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
       if (tokenDecrease) console.log("token decreased succesfully from the user:", tokenDecrease.token)
+        else console.log("user token decreasing not done")
     }
     return res.status(200).json({
       success: true,
