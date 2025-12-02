@@ -1,4 +1,3 @@
-// controllers/sessionController.ts
 import { Request, Response } from "express";
 import crypto from "crypto";
 import mongoose from "mongoose";
@@ -11,8 +10,11 @@ import userModel from "../model/user";
 
 
 function getUserId(req: Request): string | null {
-    return (req as any).user?.userId ?? null;
+    const decode_id = (req as any).user?.userId
+    const cookie_id = req.cookies?.userId
+    return decode_id ?? cookie_id ?? null
 }
+
 
 export const createSession = async (req: Request, res: Response) => {
     try {
@@ -50,28 +52,34 @@ export const createSession = async (req: Request, res: Response) => {
 
 export const getSession = async (req: Request, res: Response) => {
     try {
+        console.log("req.user:",req.user)
         const userId = getUserId(req);
         const id = req.params.id;
-        console.log(id, userId)
+        console.log("session Id", id, "userId", userId);
 
         if (!mongoose.Types.ObjectId.isValid(id))
             return res.status(400).json({ error: "Invalid session id" });
 
-        const session = await SessionModel.findOne({
-            _id: id,
-            user_id: userId,
-        })
+        let query: any = { _id: id };
+
+        if (userId) {
+            query.user_id = userId;
+        }
+
+        const session = await SessionModel.findOne(query)
             .populate("data_id")
             .lean();
 
         if (!session) return res.status(404).json({ error: "Not found" });
 
         return res.json(session);
+
     } catch (err) {
         console.error("getSession error", err);
         return res.status(500).json({ error: "Server error" });
     }
 };
+
 
 export const listSessions = async (req: Request, res: Response) => {
     try {

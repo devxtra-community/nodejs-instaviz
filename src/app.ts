@@ -27,7 +27,6 @@ import { dashboardRouter } from "./routes/adminroutes/dashboardRouter.ts";
 import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
 import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
 import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
-import router from "./routes/sessionRoutes.ts"
 import activeTimertracker from "./routes/activeTimetracker.ts";
 
 const app = express();

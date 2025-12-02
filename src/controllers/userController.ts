@@ -107,13 +107,13 @@ export const tokenCount = async (req: Request, res: Response) => {
     if (req.cookies.isGuest == 'true') {
       const user = await guestModel.findById(req.cookies.userId)
       const userToken = user?.token
-      console.log("user token as a guest user")
+      console.log("user token as a guest user :",user?.token)
       return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
     }
     else {
       const user = await userModel.findById(req.cookies.userId)
       const userToken = user?.token
-      console.log("user token as a user")
+      console.log("user token as a user  :",user?.token)
       return res.status(200).json({ message: "user token successfully checked", token: userToken, success: true })
     }
   }

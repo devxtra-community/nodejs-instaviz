@@ -9,7 +9,7 @@ const guestSchema = new Schema<Guest>(
   {
     token: {
       type: Number,
-      default: 2,
+      default: 1,
     },
   },
   { timestamps: true },

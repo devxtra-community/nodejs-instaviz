@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from "express";
-import Jwt from "jsonwebtoken";
-import userModel from "../model/user";
-import guestModel from "../model/guest";
+import { NextFunction, Request, Response } from 'express';
+import Jwt from 'jsonwebtoken';
+import userModel from '../model/user';
+import guestModel from '../model/guest';
 
 interface JwtPayload {
   id: string;
@@ -19,97 +19,92 @@ type AuthedRequest = Request & {
 
 export const tokenCheck = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log("tokenCheck middleware");
-
+    console.log('api now on tokencheck middleware');
     const authedReq = req as AuthedRequest;
-
-    const fullPath = req.baseUrl + req.path;
-    const routeKey = `${req.method}:${fullPath}`;
-    console.log("routeKey:", routeKey);
-
-    let isSafe = false;
-
-    if (
-      routeKey.startsWith("GET:/session") ||     
-      routeKey.startsWith("DELETE:/session") ||  
-      routeKey.startsWith("PATCH:/session") ||   
-      routeKey.startsWith("POST:/session") ||    
-      routeKey.startsWith("POST:/session/") ||   
-      routeKey.startsWith("GET:/user/token") ||
-      routeKey.startsWith("GET:/user/")
-    ) {
-      isSafe = true;
-    }
-
-
-
     const authHeader = req.headers.authorization;
+    try {
 
-    if (authHeader?.startsWith("Bearer ")) {
-      try {
-        const token = authHeader.split(" ")[1];
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+
         const decoded = Jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-
-        authedReq.user = { userId: decoded.id, isGuest: false };
-
-        const user = await userModel.findById(decoded.id);
-
-        if (!user) {
-          return res.status(401).json({ success: false, message: "Invalid user" });
+        authedReq.user = {
+          userId: decoded.id
+        };
+        console.log('Authenticated user from JWT:', decoded.id);
+        const currentUserToken = await userModel.findById({ _id: decoded.id })
+        console.log("before cheking usertoken:")
+        if (currentUserToken?.token == 0) {
+          return res.json({ message: "Token is finished ! buy more token..", success: false })
         }
-
-        if (!isSafe && user.token === 0) {
-          return res.status(401).json({
-            success: false,
-            message: "Token finished",
-          });
-        }
-
+        res.cookie('userId', decoded.id.toString(), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 1 * 24 * 60 * 60 * 1000,
+        });
         return next();
-      } catch (err) {
-        console.log("JWT decode failed");
-        return res.status(401).json({ success: false, message: "Session expired" });
       }
     }
+    catch (err) {
+      console.log("error while cheking  jwt:", err);
+      return res.status(401).json({ message: "access token expired", success: false })
+    }
+    const guestIdFromCookie = req.cookies?.userId;
 
-    const guestId = req.cookies?.userId;
-
-    if (guestId) {
-      authedReq.user = { userId: guestId, isGuest: true };
-
-      const guest = await guestModel.findById(guestId);
-
-      if (!guest) {
-        res.clearCookie("userId");
-        return res.status(401).json({
-          success: false,
-          message: "Guest expired, upload again.",
+    if (guestIdFromCookie) {
+      authedReq.user = {
+        userId: guestIdFromCookie,
+        isGuest: true,
+      };
+      console.log('Using existing guest cookie:', guestIdFromCookie);
+      const UserToken = await guestModel.findById({ _id: req.cookies.userId })
+      if (!UserToken) {
+        res.clearCookie("userId", {
+          httpOnly: true,
+          secure: false,
+          sameSite: "strict",
+          maxAge: 30 * 24 * 60 * 60 * 1000,
         });
-      }
 
-      if (!isSafe && guest.token === 0) {
-        return res.status(401).json({
-          success: false,
-          message: "Token finished",
-        });
+        return res.json({ message: "internal server error : Please upload the file again ", success: false })
       }
-
+      if (UserToken?.token == 0) {
+        return res.json({ message: "Token is finished ! buy more token..", success: false })
+      }
       return next();
     }
 
-    // ------------------- CREATE NEW GUEST -------------------
-    const newGuest = await guestModel.create({});
-    authedReq.user = { userId: newGuest._id.toString(), isGuest: true };
-
-    res.cookie("userId", newGuest._id.toString(), {
-      httpOnly: true,
-      sameSite: "none",
-      secure: process.env.NODE_ENV === "production",
+    const newGuestUser = await guestModel.create({
+      isGuest: true,
     });
+    console.log('Creating new guest user :', newGuestUser._id);
+    // setting the cookie
+    res.cookie('userId', newGuestUser._id.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+    });
+    res.cookie('isGuest', true, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+    });
+    console.log('Guest cookie set successfully:', newGuestUser._id.toString());
 
+    authedReq.user = {
+      userId: newGuestUser._id.toString(),
+      isGuest: true,
+    };
+    console.log("authedReq.user logging in tokencheck: ", authedReq.user.userId)
+    if (newGuestUser.token == 0) {
+      return res.json({ message: "Token is finished ! buy more token..", success: false })
+    }
     return next();
   } catch (err) {
-    console.error("tokenCheck error:", err);
-    return res.status(401).json({ message: "Invalid token" });
+    console.error('Error in tokenCheck middleware:', err);
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
