@@ -1,4 +1,3 @@
-// controllers/sessionController.ts
 import { Request, Response } from "express";
 import crypto from "crypto";
 import mongoose from "mongoose";
@@ -52,7 +51,7 @@ export const getSession = async (req: Request, res: Response) => {
     try {
         const userId = getUserId(req);
         const id = req.params.id;
-        console.log(id, userId)
+        // console.log(id, userId)
 
         if (!mongoose.Types.ObjectId.isValid(id))
             return res.status(400).json({ error: "Invalid session id" });

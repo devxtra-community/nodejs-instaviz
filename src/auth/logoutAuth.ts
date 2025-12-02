@@ -6,7 +6,7 @@ export const logoutDevice = async (req: Request, res: Response) => {
   console.log(req.body)
 
   try {
-    const { sessionId, currentSessionId } = req.body;  
+    const { sessionId, currentSessionId } = req.body;
 
     interface JwtUser {
       id: string;
@@ -31,7 +31,7 @@ export const logoutDevice = async (req: Request, res: Response) => {
     await refreshModel.deleteOne({ _id: sessionId });
  
 
-  
+    console.log("logging sessionId before logout :", currentSessionId, " : ", sessionId)
     if (currentSessionId && sessionId === currentSessionId) {
       console.log("Clearing cookies because user logged out THIS device");
 
