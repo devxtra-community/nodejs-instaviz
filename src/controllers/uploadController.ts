@@ -72,7 +72,7 @@ export const fileParsing = async (req: Request, res: Response) => {
       console.error(" Invalid AI response structure:", aiResponse);
       throw new Error("AI response missing required fields");
     }
-    
+
     const session = await SessionModel.create({
       user_id: userId ?? null,
       session_token: userId ? null : (req.headers["x-session-token"] as string) || null,
@@ -85,13 +85,15 @@ export const fileParsing = async (req: Request, res: Response) => {
 
     const uploadSummary = async () => await dataModel.findByIdAndUpdate(dataset._id, { summary: aiResponse.summary })
     uploadSummary();
-    console.log("console logging cookie before sending response :", req.cookies)
-    if (req.cookies.isGuest) {
-      const tokenDecrease = await guestModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+    let user_Id = authedReq.user?.userId
+    if (authedReq.user?.isGuest) {
+      const tokenDecrease = await guestModel.findByIdAndUpdate(user_Id, { $inc: { token: -1 } }, { new: true })
       if (tokenDecrease) console.log("token decreased succesfully from the guest user :", tokenDecrease.token)
+      else console.log("guestuser token decreasing not done")
     } else {
-      const tokenDecrease = await userModel.findByIdAndUpdate(req.cookies.userId, { $inc: { token: -1 } }, { new: true })
+      const tokenDecrease = await userModel.findByIdAndUpdate(user_Id, { $inc: { token: -1 } }, { new: true })
       if (tokenDecrease) console.log("token decreased succesfully from the user:", tokenDecrease.token)
+      else console.log("user token decreasing not done")
     }
     return res.status(200).json({
       success: true,
