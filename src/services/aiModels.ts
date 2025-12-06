@@ -1,4 +1,4 @@
-// services/aiModels.ts
+// services/aiModels
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { mcpToolDeclarations } from "../config/mcpTools";
 

@@ -1,18 +1,18 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import otpModel from "../model/otpModel.ts";
-import userModel from "../model/user.ts";
-import { sendOtp } from "../utils/sendEmail.ts";
-import { resetPasswordSchema } from '../services/validation.ts';
+import otpModel from "../model/otpModel";
+import userModel from "../model/user";
+import { sendOtp } from "../utils/sendEmail";
+import { resetPasswordSchema } from '../services/validation';
 import mongoose from 'mongoose';
-import userSession from '../model/activeModel.ts.ts';
-import { generateOtp } from "../utils/otpGenerate.ts";
+import userSession from '../model/activeModel';
+import { generateOtp } from "../utils/otpGenerate";
 import Jwt from "jsonwebtoken";
-import { loginSchema } from "../services/validation.ts";
-import { signJwt } from "../services/jwtServices.ts";
+import { loginSchema } from "../services/validation";
+import { signJwt } from "../services/jwtServices";
 import refreshModel from "../model/refreshtoken";
-import { hashToken } from "../utils/hashTokens.ts";
-import { theValidation } from "../services/validation.ts";
+import { hashToken } from "../utils/hashTokens";
+import { theValidation } from "../services/validation";
 
 
 export const loginCheck = async (req: Request, res: Response) => {

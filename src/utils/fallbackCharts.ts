@@ -1,4 +1,4 @@
-// utils/fallbackCharts.ts
+// utils/fallbackCharts
 
 export function generateChartsFromData(rows: any[]) {
   console.log(" Fallback: Generating charts ...");

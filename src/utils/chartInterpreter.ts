@@ -1,4 +1,4 @@
-// utils/chartInterpreter.ts
+// utils/chartInterpreter
 
 import type { Aggregations } from "./streamAggregations";
 

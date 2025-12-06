@@ -13,7 +13,7 @@
   },
   "include": [
     "src/**/*",                 
-    "src/types/express.d.ts"
+    "src/types/express.d"
   ],
   "exclude": [
     "node_modules",

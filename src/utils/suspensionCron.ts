@@ -1,4 +1,4 @@
-// utils/suspensionCron.ts
+// utils/suspensionCron
 import cron from "node-cron";
 import userModel from "../model/user"
 

@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import otpModel from "../model/otpModel.ts";
-import userModel from "../model/user.ts";
-import { sendOtp } from "../utils/sendEmail.ts";
-import { generateOtp } from "../utils/otpGenerate.ts";
-import { resetPasswordSchema, theValidation } from "../services/validation.ts";
+import otpModel from "../model/otpModel";
+import userModel from "../model/user";
+import { sendOtp } from "../utils/sendEmail";
+import { generateOtp } from "../utils/otpGenerate";
+import { resetPasswordSchema, theValidation } from "../services/validation";
 
 
 export const forgotPassword = async (req: Request, res: Response) => {

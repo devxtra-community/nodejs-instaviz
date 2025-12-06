@@ -33,7 +33,7 @@ export interface GeneratedCharts {
 }
 
 
-// src/types/chart.ts
+// src/types/chart
 export interface IChartPoint {
   xValue?: string;
   yValue?: number;

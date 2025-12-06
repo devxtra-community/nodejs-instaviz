@@ -34,7 +34,7 @@ const config = {
       },
     },
     {
-      files: ['*.ts', '*.tsx'],
+      files: ['*', '*x'],
       options: {},
     },
   ],

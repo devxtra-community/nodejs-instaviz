@@ -4,30 +4,30 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import cors from "cors";
-import passport from "./config/passport.ts";
+import passport from "./config/passport";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-import authRouter from "./routes/authRoutes.ts";
-import uploadRouter from "./routes/uploadRouter.ts";
-import userRouter from "./routes/userRouter.ts";
-import sessionRouter from "./routes/sessionRoutes.ts";
+import authRouter from "./routes/authRoutes";
+import uploadRouter from "./routes/uploadRouter";
+import userRouter from "./routes/userRouter";
+import sessionRouter from "./routes/sessionRoutes";
 import paymentRouter from "./routes/paymentRoutes.js";
-import { handleWebhook } from "./controllers/paymentController.ts";
+import { handleWebhook } from "./controllers/paymentController";
 // Admin routes
-import { insightsRouter } from "./routes/adminroutes/insightsRouter.ts";
-import { fileSizeCheck } from "./middlewares/fileSizeCheck.ts";
+import { insightsRouter } from "./routes/adminroutes/insightsRouter";
+import { fileSizeCheck } from "./middlewares/fileSizeCheck";
 dotenv.config();
 
-import { tokenrouter } from "./routes/adminroutes/tokenRouter.ts";
-import { plansRouter } from "./routes/adminroutes/plansRouter.ts";
-import { dashboardRouter } from "./routes/adminroutes/dashboardRouter.ts";
+import { tokenrouter } from "./routes/adminroutes/tokenRouter";
+import { plansRouter } from "./routes/adminroutes/plansRouter";
+import { dashboardRouter } from "./routes/adminroutes/dashboardRouter";
 
-import { activityRouter } from "./routes/adminroutes/activityRouter.ts";
-import adminAuthRouter from "./routes/adminroutes/adminAuthRouter.ts";
-import { adminUserRouter } from "./routes/adminroutes/userRouter.ts";
-import activeTimertracker from "./routes/activeTimetracker.ts";
+import { activityRouter } from "./routes/adminroutes/activityRouter";
+import adminAuthRouter from "./routes/adminroutes/adminAuthRouter";
+import { adminUserRouter } from "./routes/adminroutes/userRouter";
+import activeTimertracker from "./routes/activeTimetracker";
 
 const app = express();
 

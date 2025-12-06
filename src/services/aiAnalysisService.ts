@@ -1,4 +1,4 @@
-// services/aiAnalysisService.ts
+// services/aiAnalysisService
 
 import { generateAiPrompt } from "../utils/aiPrompt";
 import mcpClient from "../services/mcpClient";

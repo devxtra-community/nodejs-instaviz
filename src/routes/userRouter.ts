@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { getUserProfile } from "../controllers/userController.ts";
-import { changePassword, userImageUpdate, tokenCount } from "../controllers/userController.ts";
-import { verifyToken } from "../middlewares/verifyToken.ts";
+import { getUserProfile } from "../controllers/userController";
+import { changePassword, userImageUpdate, tokenCount } from "../controllers/userController";
+import { verifyToken } from "../middlewares/verifyToken";
 
 const userRouter = Router();
 userRouter.get("/token", tokenCount)

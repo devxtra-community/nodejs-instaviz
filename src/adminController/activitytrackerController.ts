@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import UserSession from "../model/activeModel.ts.ts";
-import UserModel from "../model/user.ts";
+import UserSession from "../model/activeModel";
+import UserModel from "../model/user";
 
 interface JwtUser {
   id: string;

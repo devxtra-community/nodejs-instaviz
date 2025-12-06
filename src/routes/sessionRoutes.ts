@@ -1,4 +1,4 @@
-// src/routes/sessionRoutes.ts
+// src/routes/sessionRoutes
 import express from "express";
 import * as controller from "../controllers/sessionController";
 

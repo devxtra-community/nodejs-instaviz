@@ -1,4 +1,4 @@
-// utils/chartNormalizer.ts
+// utils/chartNormalizer
 export function normalizeChartsForFrontend(aiCharts: any[]): any[] {
   if (!Array.isArray(aiCharts)) return [];
 

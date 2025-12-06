@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { stripe } from "../config/stripe.ts";
-import { CheckoutRequestBody } from "../types/paymentTypes.ts";
-import userModel from "../model/user.ts";
-import Payment from "../model/paymentModel.ts";
+import { stripe } from "../config/stripe";
+import { CheckoutRequestBody } from "../types/paymentTypes";
+import userModel from "../model/user";
+import Payment from "../model/paymentModel";
 
 const priceMap: Record<string, number> = {
   Starter: 50,

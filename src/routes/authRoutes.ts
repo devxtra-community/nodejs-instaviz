@@ -1,19 +1,19 @@
 import passport from "passport";
 import { Router } from "express";
 
-import { googleCallback } from "../auth/googleAuth.ts";
-import { register, loginCheck } from "../auth/auth.ts";
-import { verifyOtp, resendOtp } from "../auth/otp.ts";
-import { refreshAccessToken } from "../services/jwtServices.ts";
-import { deviceLogger } from "../utils/deviceLogger.ts";
-import { verifyToken } from "../middlewares/verifyToken.ts";
-import { forgotPassword } from "../auth/password.ts";
-import { verifyForgotOtp } from "../auth/otp.ts";
-import { resetPassword } from "../auth/password.ts";
-import { getAllSessions } from "../auth/auth.ts";
-import { logoutDevice } from "../auth/logoutAuth.ts";
-import { logoutAllDevices } from "../auth/logoutAuth.ts";
-import { cookieCheck } from "../middlewares/cookieCheck.ts";
+import { googleCallback } from "../auth/googleAuth";
+import { register, loginCheck } from "../auth/auth";
+import { verifyOtp, resendOtp } from "../auth/otp";
+import { refreshAccessToken } from "../services/jwtServices";
+import { deviceLogger } from "../utils/deviceLogger";
+import { verifyToken } from "../middlewares/verifyToken";
+import { forgotPassword } from "../auth/password";
+import { verifyForgotOtp } from "../auth/otp";
+import { resetPassword } from "../auth/password";
+import { getAllSessions } from "../auth/auth";
+import { logoutDevice } from "../auth/logoutAuth";
+import { logoutAllDevices } from "../auth/logoutAuth";
+import { cookieCheck } from "../middlewares/cookieCheck";
 
 const authRouter = Router();
 

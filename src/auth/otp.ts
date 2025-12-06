@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import otpModel from "../model/otpModel.ts";
-import userModel from "../model/user.ts";
-import { sendOtp } from "../utils/sendEmail.ts";
-import { generateOtp } from "../utils/otpGenerate.ts";
+import otpModel from "../model/otpModel";
+import userModel from "../model/user";
+import { sendOtp } from "../utils/sendEmail";
+import { generateOtp } from "../utils/otpGenerate";
 import Jwt from "jsonwebtoken";
-import { signJwt } from "../services/jwtServices.ts";
-import guestModel from "../model/guest.ts";
+import { signJwt } from "../services/jwtServices";
+import guestModel from "../model/guest";
 
 
 export const verifyOtp = async (req: Request, res: Response) => {
