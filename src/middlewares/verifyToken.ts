@@ -1,17 +1,27 @@
-import Jwt from "jsonwebtoken";
+import Jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import refreshModel from "../model/refreshtoken";
 
-export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-
-  const publicRoutes = [
-    "/auth/login",
-    "/auth/newRefreshToken",
-  ];
-
-  if (publicRoutes.some(route => req.originalUrl.includes(route))) {
-  return next();
+interface AuthedUser {
+  userId: string;
+  isGuest?: boolean;
 }
+
+type AuthedRequest = Request & {
+  user?: AuthedUser;
+};
+
+export const verifyToken = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  const publicRoutes = ["/auth/login", "/auth/newRefreshToken"];
+
+  // Skip verification for public routes
+  if (publicRoutes.some((route) => req.originalUrl.includes(route))) {
+    return next();
+  }
 
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -21,10 +31,22 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = Jwt.verify(token, process.env.JWT_SECRET!);
-    req.user = decoded;
-  
-    
+    const decoded = Jwt.verify(
+      token,
+      process.env.JWT_SECRET as string,
+    ) as JwtPayload;
+
+    // Expecting payload like: { id: string, email: string, ... }
+    if (!decoded || !decoded.id) {
+      return res
+        .status(401)
+        .json({ message: "Invalid token payload (no id found)" });
+    }
+
+    // Set req.user in the shape used everywhere else in your app
+    req.user = {
+      userId: decoded.id as string,
+    };
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
@@ -42,8 +64,9 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
       message: "Session expired or logged out",
     });
   }
+
   session.lastActiveAt = new Date();
   await session.save();
 
   next();
-}
+};

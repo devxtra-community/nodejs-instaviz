@@ -3,9 +3,7 @@ import bcrypt from "bcrypt";
 import otpModel from "../model/otpModel";
 import userModel from "../model/user";
 import { sendOtp } from "../utils/sendEmail";
-import { resetPasswordSchema } from '../services/validation';
-import mongoose from 'mongoose';
-import userSession from '../model/activeModel';
+import mongoose from "mongoose";
 import { generateOtp } from "../utils/otpGenerate";
 import Jwt from "jsonwebtoken";
 import { loginSchema } from "../services/validation";
@@ -14,6 +12,15 @@ import refreshModel from "../model/refreshtoken";
 import { hashToken } from "../utils/hashTokens";
 import { theValidation } from "../services/validation";
 
+// This matches what tokenCheck / verifyToken put on req.user
+interface AuthedUser {
+  userId: string;
+  isGuest?: boolean;
+}
+
+type AuthedRequest = Request & {
+  user?: AuthedUser;
+};
 
 export const loginCheck = async (req: Request, res: Response) => {
   try {
@@ -32,13 +39,12 @@ export const loginCheck = async (req: Request, res: Response) => {
     if (error) {
       return res.status(400).json({
         success: false,
-        message: error.details.map(d => d.message),
+        message: error.details.map((d) => d.message),
       });
     }
 
     // Fetch user
     const user = await userModel.findOne({ email });
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -72,57 +78,50 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-
-
-    // STATUS CHECK - Check if user is disabled by admin
+    // STATUS CHECK - disabled by admin
     if (user.status === "disabled") {
       return res.status(403).json({
         success: false,
-        message: "Your account has been deactivated by admin. Please contact support.",
+        message:
+          "Your account has been deactivated by admin. Please contact support.",
       });
     }
 
-  
-  // suspension check
-// suspension check (your existing code is correct, just improved message)
-if (user.isSuspended) {
-  const now = new Date();
+    // Suspension check
+    if (user.isSuspended) {
+      const now = new Date();
 
-  // If suspension expired → auto unsuspend
-  if (user.suspensionEnd && user.suspensionEnd <= now) {
-    user.isSuspended = false;
-    user.suspensionEnd = null;
-    await user.save();
-  } else {
-    // Format the date properly for better UX
-    const suspensionEndFormatted = user.suspensionEnd
-      ? new Date(user.suspensionEnd).toLocaleString()
-      : "an indefinite period";
-    
-    return res.status(403).json({
-      success: false,
-      message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`
-    });
-  }
-}    // All checks passed - Create tokens
+      // If suspension expired → auto unsuspend
+      if (user.suspensionEnd && user.suspensionEnd <= now) {
+        user.isSuspended = false;
+        user.suspensionEnd = null;
+        await user.save();
+      } else {
+        const suspensionEndFormatted = user.suspensionEnd
+          ? new Date(user.suspensionEnd).toLocaleString()
+          : "an indefinite period";
 
+        return res.status(403).json({
+          success: false,
+          message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`,
+        });
+      }
+    }
+
+    // All checks passed - Create tokens
     const accessToken = signJwt({ id: user._id, email: user.email });
+
     const refreshToken = Jwt.sign(
       { id: user._id, email: user.email },
-      process.env.REFRESH_SECRET!,
-
-
+      process.env.REFRESH_SECRET as string,
       { expiresIn: "30d" },
-
-     
-
     );
 
     // Store refresh token hash
     const hashed = hashToken(refreshToken);
     const userAgent = req.headers["user-agent"] || "unknown";
     const ip =
-      (req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
+      (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0] ||
       req.ip ||
       "unknown";
 
@@ -155,7 +154,6 @@ if (user.isSuspended) {
 
     return res.status(200).json({
       success: true,
-
       message: "Login successful",
       accessToken,
       sessionId: session._id,
@@ -169,9 +167,7 @@ if (user.isSuspended) {
       },
     });
   } catch (err) {
-
     console.error("Login error:", err);
-
     return res.status(500).json({
       success: false,
       message: "Internal server error. Please try again later.",
@@ -182,74 +178,85 @@ if (user.isSuspended) {
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+
     if (!userId) {
       return res.status(400).json({ message: "User ID required" });
     }
 
-
     const user = await userModel.findOne({
       $or: [
-        { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : undefined },
+        mongoose.Types.ObjectId.isValid(userId)
+          ? { _id: userId }
+          : undefined,
         { googleId: userId },
-      ].filter(Boolean),
+      ].filter(Boolean) as any[],
     });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     return res.status(200).json({
       message: "User fetched successfully",
       user,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching user", err });
+    console.error("Error fetching user", err);
+    return res.status(500).json({ message: "Error fetching user", err });
   }
 };
-
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
-
     console.log("Here", req.body);
 
     const { error } = theValidation.validate(req.body, { abortEarly: false });
-
     if (error) {
-      const details = error.details.map(err => err.message);
+      const details = error.details.map((err) => err.message);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
         errors: details,
       });
     }
-    const existUser = await userModel.findOne({ email });
 
+    const existUser = await userModel.findOne({ email });
     if (existUser) {
       return res.status(400).json({ message: "user already exists" });
     }
 
     const otp = generateOtp();
     await otpModel.create({ name, password, email, otp });
-
     await sendOtp(email, otp);
 
-    res.status(200).json({ message: "plz verify the otp to continue", otp: true });
+    return res
+      .status(200)
+      .json({ message: "plz verify the otp to continue", otp: true });
   } catch (err) {
     console.error("Register Error", err);
-    res.status(500).json({ message: "someting went wrong", success: false });
+    return res
+      .status(500)
+      .json({ message: "someting went wrong", success: false });
   }
 };
 
-export const getAllSessions = async (req: Request, res: Response) => {
+export const getAllSessions = async (req: AuthedRequest, res: Response) => {
   try {
-    interface JwtUser {
-      id: string;
-      email: string;
-    }
-    const user = req.user as JwtUser;
-    const userId = user.id;
+    const user = req.user;
 
-    const sessions = await refreshModel.find({ userId, isValid: true }).select("-tokenhash");
+    if (!user || !user.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: no user in request",
+      });
+    }
+
+    const userId = user.userId;
+
+    const sessions = await refreshModel
+      .find({ userId, isValid: true })
+      .select("-tokenhash");
 
     return res.status(200).json({
       success: true,
@@ -263,4 +270,3 @@ export const getAllSessions = async (req: Request, res: Response) => {
     });
   }
 };
-//comment
