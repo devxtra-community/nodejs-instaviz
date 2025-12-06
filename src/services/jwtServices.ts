@@ -8,8 +8,10 @@ export const signJwt = (payload: object) => {
 };
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
+  console.log("|||Incoming refresh token request...|||");
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
+    console.log("no refresh token in cookie")
     return res.status(401).json({ success: false, message: "no refresh token" });
   }
   try {
@@ -32,6 +34,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, newAccessToken });
   } catch (err) {
     console.log("error in refresh token worked", err);
-    return res.status(500).json({ success: false, message: "internal server error" });
+   return res.status(401).json({ success: false, message: "invalid or expired refresh token" });
+
   }
 };

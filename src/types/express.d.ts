@@ -10,6 +10,8 @@ declare global {
 
     interface Request {
       user?: UserPayload;
+      device?: 'mobile' | 'desktop'
+      uploadStatus?: 'success' | 'failed'
     }
   }
 }

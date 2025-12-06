@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { getUserProfile } from "../controllers/userController.ts";
-import { changePassword, userImageUpdate } from "../controllers/userController.ts";
+import { changePassword, userImageUpdate, tokenCount } from "../controllers/userController.ts";
 import { verifyToken } from "../middlewares/verifyToken.ts";
 
 const userRouter = Router();
+userRouter.get("/token", tokenCount)
 
 /**
  * @swagger
@@ -20,7 +21,7 @@ const userRouter = Router();
  *     description: Fetches the profile details of a user using userId.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -46,7 +47,7 @@ userRouter.get("/:userId", verifyToken, getUserProfile);
  *     description: Allows a user to upload or update their profile picture.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -76,7 +77,7 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *     description: Allows a user to change their password.
  *     tags: [User]
  *     security:
- *       - bearerAuth: []     
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -84,9 +85,13 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *           schema:
  *             type: object
  *             required:
+ *               - userId
  *               - oldPassword
  *               - newPassword
  *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: objectId
  *               oldPassword:
  *                 type: string
  *               newPassword:
@@ -102,5 +107,6 @@ userRouter.put("/upload", verifyToken, userImageUpdate);
  *         description: Server error
  */
 userRouter.post("/newpassword", verifyToken, changePassword);
+
 
 export default userRouter;

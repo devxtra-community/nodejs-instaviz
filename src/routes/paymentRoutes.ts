@@ -1,8 +1,5 @@
 import express from "express";
-import {
-  createCheckoutSession,
-  handleWebhook,
-} from "../controllers/paymentController.ts";
+import { createCheckoutSession } from "../controllers/paymentController.ts";
 
 const router = express.Router();
 
@@ -40,29 +37,5 @@ const router = express.Router();
  */
 router.post("/create-checkout-session", createCheckoutSession);
 
-/**
- * @swagger
- * /payment/webhook:
- *   post:
- *     summary: Stripe webhook endpoint (RAW body)
- *     description: Stripe uses this to notify your server about events. **No auth is required.**
- *     tags: [Payment]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Webhook received successfully
- *       400:
- *         description: Invalid signature or error
- */
-router.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  handleWebhook
-);
 
 export default router;
