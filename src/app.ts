@@ -99,15 +99,7 @@ const connection = async () => {
 
 app.use((req, res, next) => {
   cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [`https://${req.headers.host}`, process.env.CLIENT_URL, `http://localhost:${process.env.PORT}`];
-
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: [`https://${req.headers.host}`, process.env.CLIENT_URL, `http://localhost:${process.env.PORT}`],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "x-session-id"],
   })(req, res, next)
