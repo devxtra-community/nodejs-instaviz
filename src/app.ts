@@ -31,7 +31,7 @@ import activeTimertracker from "./routes/activeTimetracker.ts";
 
 const app = express();
 
-app.post("/payment/webhook", express.raw({ type: "application/json" }),handleWebhook);
+app.post("/payment/webhook", express.raw({ type: "application/json" }), handleWebhook);
 
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
@@ -89,7 +89,7 @@ app.use(limiter);
 //database connection
 const connection = async () => {
   try {
-    
+
     await mongoose.connect(process.env.mongo_uri!);
     console.log("Mongoose connected");
   } catch (err) {
@@ -97,10 +97,10 @@ const connection = async () => {
   }
 };
 
-app.use(
+app.use((req, res, next) => {
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [process.env.CLIENT_URL, `http://localhost:${process.env.PORT}`];
+      const allowedOrigins = [`https://${req.headers.host}`, process.env.CLIENT_URL, `http://localhost:${process.env.PORT}`];
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -110,8 +110,8 @@ app.use(
     },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "x-session-id"],
-  }),
-);
+  })(req, res, next)
+});
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.path.startsWith("/admin")) {
