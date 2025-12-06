@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import cors from "cors";
-import passport from "./config/passport";
+import passport from "./config/passport.js";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import swaggerJSDoc from "swagger-jsdoc";
