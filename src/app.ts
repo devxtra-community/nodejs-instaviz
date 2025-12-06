@@ -98,8 +98,9 @@ const connection = async () => {
 };
 
 app.use((req, res, next) => {
+  console.log(`https://${req.headers.host}`)
   cors({
-    origin: [`https://${req.headers.host}`, process.env.CLIENT_URL, `http://localhost:${process.env.PORT}`],
+    origin: [`https://nextjs-instaviz.vercel.app`, `http://localhost:${process.env.PORT}`],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "x-session-id"],
   })(req, res, next)
