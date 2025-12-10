@@ -9,7 +9,7 @@ import { start } from "repl";
 import activeModel from "../model/activeModel.ts";
 
 
-//function for get allloged users count to admindashboard graph
+
 export const loggedusers = async(req:Request,res:Response)=>{
 
 try{
@@ -37,7 +37,7 @@ res.status(500).json({message:"user status cant update",success:false})
 }
 }
 
-//function for get new logged users count per month
+
 export const getNewUsersPerMonth = async (req: Request, res: Response) => {
   console.log("reached");
   
@@ -67,7 +67,7 @@ export const getNewUsersPerMonth = async (req: Request, res: Response) => {
   }
 };
 
-//function for add guestusers
+
 export const addGustuser = async(req:Request,res:Response)=>{
       try {
     const newGuest = await guestModel.create({
@@ -78,7 +78,7 @@ export const addGustuser = async(req:Request,res:Response)=>{
 catch{res.status(500).json({message:"guest user not added some error"})}
 }
 
-//function for get full gustusers count
+
 export const fetchAllgustusers = async(req:Request,res:Response)=>{
   try{
    const getAllgustusers  = await guestModel.find().countDocuments()
@@ -89,7 +89,7 @@ export const fetchAllgustusers = async(req:Request,res:Response)=>{
   }
 }
 
-//function for get all users count
+
 export const getAllusers = async (req: Request, res: Response) => {
   try {
     const loggedCount = await userModel.countDocuments();
@@ -102,65 +102,40 @@ export const getAllusers = async (req: Request, res: Response) => {
   }
 };
 
-//get allusers to a single page
+
 
 export const alluserspage = async (req: Request, res: Response) => {
   try {
-    const page = Number(req.query.page) || 1;  // default page = 1
-    const limit = 24;                          // 24 users per page
+    const page = Number(req.query.page) || 1;  
+    const limit = 24;                         
 
-    // Fetch logged users
-    const loggedUsers = await userModel
-      .find()
-      .select("_id name email picture avatar profilePicture")
-      .lean();
 
-    // Fetch guest users
-    const guestUsers = await guestModel
-      .find()
-      .select("_id name email picture avatar profilePicture")
-      .lean();
+    const loggedUsers = await userModel.find().select("_id name email picture avatar profilePicture").lean();
 
-    // Combine both user types
+
+    const guestUsers = await guestModel.find().select("_id name email picture avatar profilePicture").lean();
+
+  
     let allUsers = [...loggedUsers, ...guestUsers];
 
-    // Optional sorting (newest first)
-    allUsers.sort((a, b) => (b._id.toString() > a._id.toString() ? 1 : -1));
+   allUsers.sort((a, b) => (b._id.toString() > a._id.toString() ? 1 : -1));
 
-    // Pagination
+
     const total = allUsers.length;
     const totalPages = Math.ceil(total / limit);
 
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
+   const users = allUsers.slice(startIndex, endIndex);
 
-    const users = allUsers.slice(startIndex, endIndex);
-
-    // Send response
     return res.status(200).json({
-      success: true,
-      message: "Paginated users fetched",
-      users,         // 24 users here
-      total,         // total count of all users
-      totalPages,    // number of pages
-      page,          // current page
-      limit          // always 24
-    });
+      success: true,message: "Paginated users fetched",users,total,totalPages,page,limit});
 
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to paginate users",
-      error: err
-    });
+    return res.status(500).json({success: false,message: "Failed to paginate users",error: err });
   }
 };
 
-
-
-
-
-//user single page 
 
 export const GetSingleuser = async(req:Request,res:Response)=>{
 
@@ -170,24 +145,23 @@ export const GetSingleuser = async(req:Request,res:Response)=>{
      const gustusers = await guestModel.find();
      const allusertopage = [...loggedusers,...gustusers].flat()
      const singleUser = allusertopage.find((user: any) => user._id.toString() === id);
-     res.status(200).json({message:"single user page fetched",singleuser:singleUser,success:true})
-     }
+     res.status(200).json({message:"single user page fetched",singleuser:singleUser,success:true}) }
   catch(err){
     res.status(500).json({message:"user single page cant fetch",err})
   }}
 
 
-//single user token  for each users
+
 export const singleUsertoken = async (req: Request, res: Response) => {
   console.log("hii");
 
   try {
     const { id } = req.params;
+    
     const singleuserToken = await userModel.findById(id).select("token name email");
     res.status(200).json({message:"singleuser token count fetched successfully",singletoken:singleuserToken?.token,success:true})
 }
-
-   catch(err){
+ catch(err){
     console.log(err,"data cant fetch ");res.status(500).json({message:"count not fetched"})
      }}   
 
@@ -241,15 +215,15 @@ export const hourlyActiveUserCount = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Hourly active count error:", err);return res.status(500).json({success: false,message: "Server error",});}};
 
+    
+
 export const getUserDailyActiveTime = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = id;
     const { startDate, endDate } = req.query;
 
-    if (!userId) {return res.status(400).json({success: false,message: "userId is required",
-      });
-    }
+    if (!userId) {return res.status(400).json({success: false,message: "userId is required", });}
    const filter: any = { userId };
 
     if (startDate || endDate) {
@@ -270,7 +244,7 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
       dailyMap.set(day, currentTotal + session.duration);
     });
 
-    // Format the daily active time
+   
     const dailyActiveTime = Array.from(dailyMap.entries()).map(([day, totalSeconds]) => {
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -281,7 +255,7 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
       } else {
         formatted = `${minutes}m`;
       }
-      // Get day name
+
       const date = new Date(day);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -290,13 +264,13 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
       };
     });
 
-    // Calculate overall total
+
     const totalSeconds = sessions.reduce((sum, s) => sum + s.duration, 0);
     const totalHours = Math.floor(totalSeconds / 3600);
     const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
     const totalFormatted = `${totalHours}h ${totalMinutes}m`;
 
-    // Calculate average per day
+
     const avgSeconds = Math.floor(totalSeconds / dailyActiveTime.length);
     const avgHours = Math.floor(avgSeconds / 3600);
     const avgMinutes = Math.floor((avgSeconds % 3600) / 60);
@@ -309,7 +283,7 @@ export const getUserDailyActiveTime = async (req: Request, res: Response) => {
     return res.status(500).json({success: false,message: "Server error", })}
 };
 
-//singleuser avarage time
+
 export const getsingleUserDailyActiveTime = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -368,7 +342,7 @@ export const getsingleUserDailyActiveTime = async (req: Request, res: Response) 
    return res.status(500).json({success: false, message: "Server error",});}
 };
 
-// Suspend user for  days
+
 export const suspendUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -399,7 +373,7 @@ export const suspendUser = async (req: Request, res: Response) => {
   }
 };
 
-// Add this new unsuspend controller
+
 export const unsuspendUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -425,5 +399,5 @@ export const unsuspendUser = async (req: Request, res: Response) => {
   }
 };
 
-//pagination for all users page
+
 

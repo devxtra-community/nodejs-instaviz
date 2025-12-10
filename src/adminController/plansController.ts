@@ -3,36 +3,21 @@ import plansModel from "../model/plans"
 import { title } from "process";
 
 
-//add plan
+
 
 export const addplan = async (req: Request, res: Response) => {
   const { title, price, billed, features, offerlabel } = req.body;
 
   try {
-    const planadd = await plansModel.create({
-      title,
-      price,
-      billed,
-      features,
-      offerlabel,
-    });
+    const planadd = await plansModel.create({title,price,billed,features,offerlabel,});
 
-    res.status(200).json({
-      message: "Plan added successfully",
-      success: true,
-      plan: planadd,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      message: "Failed to add plan",
-      success: false,
-      err,
+    res.status(200).json({message: "Plan added successfully",success: true,plan: planadd,});
+  } catch (err) {console.log(err);res.status(500).json({message: "Failed to add plan",success: false,err,
     });
   }
 };
 
-// GET PLANS
+
 export const showplan = async (req: Request, res: Response) => {
   try {
     const getplan = await plansModel.find();
@@ -51,7 +36,7 @@ export const showplan = async (req: Request, res: Response) => {
   }
 };
 
-// UPDATE PLAN
+
 export const updateplan = async (req: Request, res: Response) => {
   const { id } = req.params;
 
@@ -82,7 +67,7 @@ export const updateplan = async (req: Request, res: Response) => {
   }
 };
 
-// DELETE PLAN
+
 export const deleteplan = async (req: Request, res: Response) => {
   const { id } = req.params;
 

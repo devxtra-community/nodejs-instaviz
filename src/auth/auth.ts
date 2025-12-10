@@ -19,7 +19,7 @@ export const loginCheck = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -27,7 +27,7 @@ export const loginCheck = async (req: Request, res: Response) => {
       });
     }
 
-    // Validate with Joi schema
+
     const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
       return res.status(400).json({
@@ -74,7 +74,7 @@ export const loginCheck = async (req: Request, res: Response) => {
 
 
 
-    // STATUS CHECK - Check if user is disabled by admin
+    // Check if user is disabled by admin
     if (user.status === "disabled") {
       return res.status(403).json({
         success: false,
@@ -83,8 +83,7 @@ export const loginCheck = async (req: Request, res: Response) => {
     }
 
   
-  // suspension check
-// suspension check (your existing code is correct, just improved message)
+
 if (user.isSuspended) {
   const now = new Date();
 
@@ -94,7 +93,7 @@ if (user.isSuspended) {
     user.suspensionEnd = null;
     await user.save();
   } else {
-    // Format the date properly for better UX
+  
     const suspensionEndFormatted = user.suspensionEnd
       ? new Date(user.suspensionEnd).toLocaleString()
       : "an indefinite period";
@@ -104,7 +103,7 @@ if (user.isSuspended) {
       message: `Your account is suspended until ${suspensionEndFormatted}. Please contact support.`
     });
   }
-}    // All checks passed - Create tokens
+}    
 
     const accessToken = signJwt({ id: user._id, email: user.email });
     const refreshToken = Jwt.sign(
@@ -118,7 +117,7 @@ if (user.isSuspended) {
 
     );
 
-    // Store refresh token hash
+
     const hashed = hashToken(refreshToken);
     const userAgent = req.headers["user-agent"] || "unknown";
     const ip =

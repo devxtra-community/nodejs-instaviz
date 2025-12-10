@@ -20,7 +20,7 @@ const userSessionSchema = new Schema(
 
     ended: { type: Boolean, default: false },
 
-    // YYYY-MM-DD
+   
     day: {
       type: String,
       index: true,
@@ -32,7 +32,3 @@ const userSessionSchema = new Schema(
 
 export default mongoose.model("UserSession", userSessionSchema);
 
- // userAgent : 
-    // ipAddress : 
-    // screenWidth
-    // screenHeight
