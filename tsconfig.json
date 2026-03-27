@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
+
     "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "./src",
@@ -12,8 +13,9 @@
     "allowImportingTsExtensions": true
   },
   "include": [
-    "src/**/*",
-    "src/services"
+    "src/*/",
+    "src/services",
+    "src/types/express.d.ts"
   ],
   "exclude": [
     "node_modules"

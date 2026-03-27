@@ -1,20 +1,19 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 interface Guest {
-    token: number,
-    IP_address: number
-};
+  token: number;
+  IP_address: number;
+}
 
-const guestSchema = new Schema<Guest>({
-
+const guestSchema = new Schema<Guest>(
+  {
     token: {
-        type: Number
+      type: Number,
+      default: 3,
     },
-    IP_address: {
-        type: Number
-    }
-
-});
+  },
+  { timestamps: true },
+);
 
 const guestModel = mongoose.model<Guest>('guest', guestSchema);
 
